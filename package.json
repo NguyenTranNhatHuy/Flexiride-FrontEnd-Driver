@@ -14,10 +14,12 @@
     "@react-native-picker/picker": "^2.8.1",
     "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~51.0.28",
+    "expo-image-picker": "^15.0.7",
     "expo-status-bar": "~1.12.1",
     "ionicons": "^7.4.0",
     "react": "18.2.0",
-    "react-native": "0.74.5"
+    "react-native": "0.74.5",
+    "react-native-image-picker": "^7.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

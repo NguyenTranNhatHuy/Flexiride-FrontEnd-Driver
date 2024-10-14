@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 
 
+
+//1. splash đăng kí
 const DriverSignUpScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
 

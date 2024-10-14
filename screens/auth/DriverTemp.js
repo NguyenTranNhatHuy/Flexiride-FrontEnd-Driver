@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
+
+//2. Temp
 const DriverTemp = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [lastName, setLastName] = useState('');
