@@ -9,8 +9,13 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-community/checkbox": "^0.5.17",
+    "@react-native-google-signin/google-signin": "^13.1.0",
+    "@react-native-picker/picker": "^2.8.1",
+    "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~51.0.28",
     "expo-status-bar": "~1.12.1",
+    "ionicons": "^7.4.0",
     "react": "18.2.0",
     "react-native": "0.74.5"
   },
