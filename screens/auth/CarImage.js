@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker'; 
+import * as ImagePicker from 'expo-image-picker'; // Sử dụng ImagePicker để chọn ảnh
 import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
-
-//9.bằng lái xe
-const License = () => {
+const CarImage = () => {
     const [frontImage, setFrontImage] = useState(null);
     const [backImage, setBackImage] = useState(null);
 
@@ -43,10 +41,11 @@ const License = () => {
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 
                 {/* Header */}
-                <Text style={styles.headerText}>Tải lên bằng lái xe</Text>
+                <Text style={styles.headerText}>Tải lên hình xe</Text>
 
                 {/* Front Image Upload */}
-                <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
+                <Text style={styles.labelText}>Hình đầu xe (Bắt buộc)</Text>
+                <Text style={styles.subLabelText}>Thấy rõ nguyên thân xe và đầu xe</Text>
                 <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
                     {frontImage ? (
                         <Image source={{ uri: frontImage }} style={styles.image} />
@@ -59,7 +58,8 @@ const License = () => {
                 </TouchableOpacity>
 
                 {/* Back Image Upload */}
-                <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
+                <Text style={styles.labelText}>Hình đuôi xe (Bắt buộc)</Text>
+                <Text style={styles.subLabelText}>Thấy rõ thân xe và biến số xe</Text>
                 <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
                     {backImage ? (
                         <Image source={{ uri: backImage }} style={styles.image} />
@@ -70,7 +70,6 @@ const License = () => {
                         </>
                     )}
                 </TouchableOpacity>
-
 
                 {/* Save Button */}
                 <TouchableOpacity style={styles.saveButton}>
@@ -105,6 +104,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
     },
+    subLabelText:{
+        fontSize: 16,
+        marginBottom: 10,
+        fontWeight: '300',
+
+    },
     uploadButton: {
         backgroundColor: '#D9D9D9',
         height: 100,
@@ -127,6 +132,18 @@ const styles = StyleSheet.create({
         height: '100%',
         borderRadius: 10,
     },
+    input: {
+        backgroundColor: 'white',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderRadius: 10,
+        marginBottom: 20,
+        fontSize: 16,
+        color: '#000',
+        borderWidth: 1,              // Độ rộng của viền
+        borderColor: 'black',        // Màu viền
+        elevation: 5,                // Đổ bóng dành cho Android
+    },
     saveButton: {
         backgroundColor: '#270C6D',
         paddingHorizontal: 40,
@@ -143,10 +160,10 @@ const styles = StyleSheet.create({
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        zIndex: 10,   
-        padding:10,     
+        zIndex: 10,    
+        padding:10,    
         marginTop:10           
     },
 })
 
-export default License;
+export default CarImage;

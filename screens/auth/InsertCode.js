@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
+
 
 
 //3. Inset code
@@ -54,6 +56,10 @@ const InsertCode = () => {
         style={styles.container}
         behavior={Platform.OS === "android" ? "height" : null}
     >
+        {/* Nút Back */}
+        <TouchableOpacity style={styles.backButton}>
+                <Icon name="arrow-left" size={20} color="black" />
+            </TouchableOpacity>
         <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.container1}>
             <Text style={styles.title}>Kiểm tra tin nhắn SMS của bạn:</Text>
@@ -116,7 +122,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
         color: '#000',
-        marginTop: 50,
+        marginTop: 20,
     },
     description: {
         fontSize: 16,
@@ -170,6 +176,12 @@ const styles = StyleSheet.create({
     buttonText: {
         color: 'white',
         fontSize: 16,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        zIndex: 10,                   
     },
 });
 

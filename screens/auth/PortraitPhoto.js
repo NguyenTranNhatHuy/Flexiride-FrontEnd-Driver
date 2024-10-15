@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
 
 //7. Ảnh chân dung
@@ -9,6 +10,10 @@ const PortraitPhoto = () => {
             style={styles.container}
             behavior={Platform.OS === "android" ? "height" : null}
         >
+            {/* Nút Back */}
+            <TouchableOpacity style={styles.backButton}>
+                <Icon name="arrow-left" size={20} color="black" />
+            </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 
                 {/* Header */}
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 30,
-        marginTop:30
+        marginTop:20
     },
     uploadButton: {
         alignItems: 'center',
@@ -108,6 +113,13 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: 'white',
         fontSize: 16,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 10,
+        padding:10,        
+        marginTop:10           
     },
 });
 

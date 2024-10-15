@@ -3,9 +3,8 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingV
 import * as ImagePicker from 'expo-image-picker'; 
 import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
-
-//9.bằng lái xe
-const License = () => {
+//10. ly lich tu phap
+const JudicialBackground = () => {
     const [frontImage, setFrontImage] = useState(null);
     const [backImage, setBackImage] = useState(null);
 
@@ -33,51 +32,53 @@ const License = () => {
     };
     return (
         <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "android" ? "height" : null}
-        >
-            {/* Nút Back */}
-            <TouchableOpacity style={styles.backButton}>
+        style={styles.container}
+        behavior={Platform.OS === "android" ? "height" : null}
+    >
+        {/* Nút Back */}
+        <TouchableOpacity style={styles.backButton}>
                 <Icon name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
-            <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-                
-                {/* Header */}
-                <Text style={styles.headerText}>Tải lên bằng lái xe</Text>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            
+            {/* Header */}
+            <Text style={styles.headerText}>Tải lên giấy lý lịch tư pháp</Text>
 
-                {/* Front Image Upload */}
-                <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
-                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
-                    {frontImage ? (
-                        <Image source={{ uri: frontImage }} style={styles.image} />
-                    ) : (
-                        <>
-                            <Image source={require('../../assets/camera.png')} style={styles.icon} />
-                            <Text style={styles.uploadText}>Tải ảnh lên</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+            {/* Front Image Upload */}
+            <Text style={styles.labelText}>Trang đầu (Bắt buộc)</Text>
+            <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
+                {frontImage ? (
+                    <Image source={{ uri: frontImage }} style={styles.image} />
+                ) : (
+                    <>
+                        <Image source={require('../../assets/camera.png')} style={styles.icon} />
+                        <Text style={styles.uploadText}>Tải ảnh lên</Text>
+                    </>
+                )}
+            </TouchableOpacity>
 
-                {/* Back Image Upload */}
-                <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
-                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
-                    {backImage ? (
-                        <Image source={{ uri: backImage }} style={styles.image} />
-                    ) : (
-                        <>
-                            <Image source={require('../../assets/camera.png')} style={styles.icon} />
-                            <Text style={styles.uploadText}>Tải ảnh lên</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+            {/* Back Image Upload */}
+            <Text style={styles.labelText}>Trang hai (Không bắt buộc)</Text>
+            <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
+                {backImage ? (
+                    <Image source={{ uri: backImage }} style={styles.image} />
+                ) : (
+                    <>
+                        <Image source={require('../../assets/camera.png')} style={styles.icon} />
+                        <Text style={styles.uploadText}>Tải ảnh lên</Text>
+                    </>
+                )}
+            </TouchableOpacity>
+
+            <TextInput style={styles.input} placeholder="Ngày cấp *" />
 
 
-                {/* Save Button */}
-                <TouchableOpacity style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Lưu</Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </KeyboardAvoidingView>
+            {/* Save Button */}
+            <TouchableOpacity style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>Lưu</Text>
+            </TouchableOpacity>
+        </ScrollView>
+    </KeyboardAvoidingView>
     );
 }
 
@@ -127,6 +128,18 @@ const styles = StyleSheet.create({
         height: '100%',
         borderRadius: 10,
     },
+    input: {
+        backgroundColor: 'white',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderRadius: 10,
+        marginBottom: 20,
+        fontSize: 16,
+        color: '#000',
+        borderWidth: 1,              // Độ rộng của viền
+        borderColor: 'black',        // Màu viền
+        elevation: 5,                // Đổ bóng dành cho Android
+    },
     saveButton: {
         backgroundColor: '#270C6D',
         paddingHorizontal: 40,
@@ -143,10 +156,10 @@ const styles = StyleSheet.create({
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        zIndex: 10,   
-        padding:10,     
+        zIndex: 10,
+        padding:10,        
         marginTop:10           
     },
 })
 
-export default License;
+export default JudicialBackground;

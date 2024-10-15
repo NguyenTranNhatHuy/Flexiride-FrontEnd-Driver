@@ -9,9 +9,12 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-community/checkbox": "^0.5.17",
     "@react-native-google-signin/google-signin": "^13.1.0",
     "@react-native-picker/picker": "^2.8.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.11.0",
     "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~51.0.28",
     "expo-image-picker": "^15.0.7",
@@ -19,7 +22,9 @@
     "ionicons": "^7.4.0",
     "react": "18.2.0",
     "react-native": "0.74.5",
-    "react-native-image-picker": "^7.1.2"
+    "react-native-check-box": "^2.1.7",
+    "react-native-image-picker": "^7.1.2",
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

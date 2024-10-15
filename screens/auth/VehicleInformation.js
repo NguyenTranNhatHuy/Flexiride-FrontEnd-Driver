@@ -2,27 +2,29 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
-//6. Thông tin cá nhân
-const PersonalInformation = () => {
+
+//14. thong tin xe
+const VehicleInformation = () => {
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "android" ? "height" : null}
         >
             {/* Nút Back */}
-            <TouchableOpacity style={styles.backButton}>    
+            <TouchableOpacity style={styles.backButton}>
                 <Icon name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
+
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-                <Text style={styles.headerText}>Thông tin cá nhân</Text>
+                <Text style={styles.headerText}>Thông tin phương tiện</Text>
 
                 {/* Các mục thông tin cá nhân */}
-                {['Ảnh Chân Dung', 'CCCD/Hộ Chiếu', 'Bằng Lái Xe', 'Hồ Sơ Lý Lịch Tư Pháp', 
-                'Thông Tin Liên Hệ Khẩn Cấp Và Địa Chỉ Tạm Trú', 'Tài Khoản Ngân Hàng', 'Cam Kết'].map((item, index) => (
-                    <View style={styles.itemContainer} key={index}>
+                {['Hình Xe', 'Giấy Đăng ký xe', 'Bảo hiểm xe'].map((item, index) => (
+                    <View key={index} style={styles.itemContainer}>
                         <Text style={styles.itemText}>{index + 1}/ {item}</Text>
                         <TouchableOpacity style={styles.requiredButton}>
                             <Text style={styles.requiredButtonText}>Bắt buộc</Text>
+                            {/* Thêm biểu tượng ">" vào đây */}
                             <Icon name="chevron-right" size={14} color="#000" style={styles.icon} />
                         </TouchableOpacity>
                     </View>
@@ -30,7 +32,7 @@ const PersonalInformation = () => {
 
                 {/* Nút tiếp tục */}
                 <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttonText}>Tiếp tục</Text>
+                    <Text style={styles.buttonText}>Gửi Hồ Sơ</Text>
                 </TouchableOpacity>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000',
         marginBottom: 20,
-        marginTop: 20,
+        marginTop: 20
     },
     itemContainer: {
         flexDirection: 'row',
@@ -69,18 +71,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#000',
         flex: 1,
-        fontWeight: 'bold',
+        fontWeight: 'bold'
     },
     requiredButton: {
-        flexDirection: 'row', // Đặt flexDirection để icon nằm cùng hàng với text
-        alignItems: 'center',  // Canh giữa các mục trong button
+        flexDirection: 'row', // Sử dụng flexDirection để sắp xếp icon và text
+        alignItems: 'center',
         paddingHorizontal: 20,
         paddingVertical: 8,
     },
     requiredButtonText: {
-        color: '#008E3F',  
+        color: '#008E3F',
         fontSize: 14,
-        marginRight: 5, // Tạo khoảng cách giữa text và icon
+        marginRight: 5, // Khoảng cách giữa văn bản và biểu tượng
+    },
+    icon: {
+        marginLeft: 5, // Khoảng cách bên trái biểu tượng
     },
     button: {
         backgroundColor: '#270C6D',
@@ -97,9 +102,9 @@ const styles = StyleSheet.create({
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        zIndex: 10,        
-        marginTop: 10,           
+        zIndex: 10,
+        marginTop: 10           
     },
 })
 
-export default PersonalInformation;
+export default VehicleInformation;

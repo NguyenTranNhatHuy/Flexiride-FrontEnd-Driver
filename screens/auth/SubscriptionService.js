@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
 //4. Chọn dịch vụ đăng kí
 const SubscriptionService = () => {
@@ -20,6 +21,10 @@ const SubscriptionService = () => {
             style={styles.container}
             behavior={Platform.OS === "android" ? "height" : null}
         >
+            {/* Nút Back */}
+        <TouchableOpacity style={styles.backButton}>
+                <Icon name="arrow-left" size={20} color="black" />
+            </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <Text style={styles.label}>Chọn dịch vụ muốn đăng ký</Text>
                 
@@ -59,7 +64,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginTop: 50,
+        marginTop: 20,
     },
 
     scrollContainer: {
@@ -99,6 +104,12 @@ const styles = StyleSheet.create({
     buttonText: {
         color: 'white',
         fontSize: 16,
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        zIndex: 10,                   
     },
 
 });

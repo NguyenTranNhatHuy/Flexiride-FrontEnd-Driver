@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
 
 //5. Thông tin
@@ -9,6 +10,10 @@ const Info = () => {
             style={styles.container}
             behavior={Platform.OS === "android" ? "height" : null}
         >
+            {/* Nút Back */}
+            <TouchableOpacity style={styles.backButton}>
+                <Icon name="arrow-left" size={20} color="black" />
+            </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
                 <Text style={styles.register}>Trước khi tiến hành đăng ký...</Text>
@@ -75,7 +80,7 @@ const styles = StyleSheet.create({
 
     register: {
         fontStyle: 'italic',
-        marginTop: 40,
+        marginTop: 20,
     },
     questionContainer: {
         marginBottom: 20,
@@ -122,6 +127,12 @@ const styles = StyleSheet.create({
         color: 'black',  
         fontSize: 16,
         textAlign: 'center',
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 10,    
+        marginTop:10               
     },
 })
 

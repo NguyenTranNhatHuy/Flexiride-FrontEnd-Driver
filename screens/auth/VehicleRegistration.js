@@ -3,9 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingV
 import * as ImagePicker from 'expo-image-picker'; // Sử dụng ImagePicker để chọn ảnh
 import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
-
-//8.CCCD/Hộ Chiếu
-const Passport = () => {
+const VehicleRegistration = () => {
     const [frontImage, setFrontImage] = useState(null);
     const [backImage, setBackImage] = useState(null);
 
@@ -31,59 +29,71 @@ const Passport = () => {
             setImage(result.uri); // Lưu URI ảnh đã chọn
         }
     };
-
     return (
         <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "android" ? "height" : null}
-        >
-            {/* Nút Back */}
-            <TouchableOpacity style={styles.backButton}>
-                <Icon name="arrow-left" size={20} color="black" />
+        style={styles.container}
+        behavior={Platform.OS === "android" ? "height" : null}
+    >
+        {/* Nút Back */}
+        <TouchableOpacity style={styles.backButton}>
+            <Icon name="arrow-left" size={20} color="black" />
+        </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            
+            {/* Header */}
+            <Text style={styles.headerText}>Tải lên giấy đăng ký xe</Text>
+
+            {/* Front Image Upload */}
+            <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
+            <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
+                {frontImage ? (
+                    <Image source={{ uri: frontImage }} style={styles.image} />
+                ) : (
+                    <>
+                        <Image source={require('../../assets/camera.png')} style={styles.icon} />
+                        <Text style={styles.uploadText}>Tải ảnh lên</Text>
+                    </>
+                )}
             </TouchableOpacity>
-            <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-                
-                {/* Header */}
-                <Text style={styles.headerText}>Tải lên CCCD/Hộ chiếu</Text>
 
-                {/* Front Image Upload */}
-                <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
-                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
-                    {frontImage ? (
-                        <Image source={{ uri: frontImage }} style={styles.image} />
-                    ) : (
-                        <>
-                            <Image source={require('../../assets/camera.png')} style={styles.icon} />
-                            <Text style={styles.uploadText}>Tải ảnh lên</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+            {/* Back Image Upload */}
+            <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
+            <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
+                {backImage ? (
+                    <Image source={{ uri: backImage }} style={styles.image} />
+                ) : (
+                    <>
+                        <Image source={require('../../assets/camera.png')} style={styles.icon} />
+                        <Text style={styles.uploadText}>Tải ảnh lên</Text>
+                    </>
+                )}
+            </TouchableOpacity>
 
-                {/* Back Image Upload */}
-                <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
-                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
-                    {backImage ? (
-                        <Image source={{ uri: backImage }} style={styles.image} />
-                    ) : (
-                        <>
-                            <Image source={require('../../assets/camera.png')} style={styles.icon} />
-                            <Text style={styles.uploadText}>Tải ảnh lên</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+           {/* Input Fields */}
+<TextInput
+    style={styles.input}
+    placeholder="Biển số xe *"
+    keyboardType="default"
+    autoCapitalize="characters" // Viết hoa tự động cho biển số xe
+    maxLength={15} // Giới hạn số ký tự
+/>
+<TextInput
+    style={styles.input}
+    placeholder="Loại nhiên liệu *"
+    keyboardType="default"
+    autoCapitalize="words" // Viết hoa chữ cái đầu tiên mỗi từ
+    returnKeyType="done" // Thêm nút "Xong" trên bàn phím
+/>
 
-                {/* Input Fields */}
-                <TextInput style={styles.input} placeholder="Ngày cấp *" />
-                <TextInput style={styles.input} placeholder="Nơi cấp *" />
 
-                {/* Save Button */}
-                <TouchableOpacity style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Lưu</Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </KeyboardAvoidingView>
+            {/* Save Button */}
+            <TouchableOpacity style={styles.saveButton}>
+                <Text style={styles.saveButtonText}>Lưu</Text>
+            </TouchableOpacity>
+        </ScrollView>
+    </KeyboardAvoidingView>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -163,6 +173,6 @@ const styles = StyleSheet.create({
         padding:10,    
         marginTop:10           
     },
-});
+})
 
-export default Passport;
+export default VehicleRegistration;
