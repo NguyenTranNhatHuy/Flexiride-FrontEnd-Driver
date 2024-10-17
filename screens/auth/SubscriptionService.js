@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
 
 //4. Chọn dịch vụ đăng kí
-const SubscriptionService = () => {
+const SubscriptionService = (navigation, route) => {
     const [selectedService, setSelectedService] = useState('');  
 
     const handleContinue = () => {
@@ -23,7 +23,7 @@ const SubscriptionService = () => {
         >
             {/* Nút Back */}
         <TouchableOpacity style={styles.backButton}>
-                <Icon name="arrow-left" size={20} color="black" />
+                <Icon onPress={() => navigation.navigate('DriverTemp', { email: route.params.email  })} name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <Text style={styles.label}>Chọn dịch vụ muốn đăng ký</Text>

@@ -1,15 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện icon
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-
-
-//3. Inset code
-const InsertCode = () => {
-    const [code, setCode] = useState(['', '', '', '']);  // Mỗi phần tử trong mảng là một ô
+// Insert Code Component
+const InsertCode = ({ navigation, route }) => {
+    const [code, setCode] = useState(['', '', '', '']);  // Array for each input field
     const [timer, setTimer] = useState(30);
-
-    // Tạo tham chiếu cho mỗi TextInput
+    const [dummyCode] = useState('1234'); // Dummy verification code
     const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
     React.useEffect(() => {
@@ -22,18 +19,14 @@ const InsertCode = () => {
 
     const handleChange = (text, index) => {
         const newCode = [...code];
-        
-        // Chỉ chấp nhận số và phải chỉ có 1 ký tự
-        if (/^\d$/.test(text)) { // Kiểm tra xem ký tự nhập vào có phải là số không
+
+        if (/^\d$/.test(text)) {
             newCode[index] = text;
             setCode(newCode);
-
-            // Tự động chuyển sang ô tiếp theo nếu ô hiện tại có ký tự
             if (index < 3) {
                 inputRefs[index + 1].current.focus();
             }
         } else if (text === '') {
-            // Nếu xóa (ô trống), giữ nguyên và quay lại ô trước đó nếu có
             newCode[index] = '';
             setCode(newCode);
             if (index > 0) {
@@ -44,60 +37,87 @@ const InsertCode = () => {
 
     const handleKeyPress = (key, index) => {
         if (key === 'Backspace' && code[index] === '') {
-            // Di chuyển về ô trước nếu nhấn Backspace và ô hiện tại đang trống
             if (index > 0) {
                 inputRefs[index - 1].current.focus();
             }
         }
     };
 
+    const handleVerifyCode = () => {
+        const enteredCode = code.join('');
+        if (enteredCode === dummyCode) {
+            // Navigate to SubscriptionService if code is correct
+            navigation.navigate('SubscriptionService', {
+                email: route.params.email,
+                firstName:route.params.firstName,
+                lastName: route.params.lastName,
+                phoneNumber: route.params.phoneNumber,
+                city: route.params.city,
+            });
+        } else {
+            Alert.alert('Thông báo', 'Mã xác thực không đúng. Vui lòng thử lại.');
+        }
+    };
+
+    const handleResendCode = () => {
+        // Reset timer and clear code
+        setTimer(30);
+        setCode(['', '', '', '']);
+        Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
+    };
+
+        // Function to format the phone number
+        const formatPhoneNumber = (number) => {
+            if (number.length === 10 && number.startsWith('0')) {
+                return `+84${number.slice(1, 7)}***`; // +84 and show the first 7 digits
+            }
+            return number; // Return the original number if not 10 digits
+        };
+
     return (
         <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "android" ? "height" : null}
-    >
-        {/* Nút Back */}
-        <TouchableOpacity style={styles.backButton}>
-                <Icon name="arrow-left" size={20} color="black" />
+            style={styles.container}
+            behavior={Platform.OS === "android" ? "height" : null}
+        >
+            <TouchableOpacity style={styles.backButton}>
+                <Icon onPress={() => navigation.navigate('DriverTemp', { email: route.params.email  })} name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.container1}>
-            <Text style={styles.title}>Kiểm tra tin nhắn SMS của bạn:</Text>
-            <Text style={styles.description}>
-                Chúng tôi đã gửi một mã có 4 chữ số đến số điện thoại: 
-            </Text>
-            <Text style={styles.phone}>+84 935536***</Text>
-            <View style={styles.codeInputContainer}>
-                {code.map((digit, index) => (
-                    <TextInput
-                        key={index}
-                        ref={inputRefs[index]}
-                        style={styles.codeInput}
-                        keyboardType="numeric"
-                        maxLength={1}
-                        onChangeText={(text) => handleChange(text, index)}
-                        onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-                        value={digit}
-                    />
-                ))}
-            </View>
+            <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+                <View style={styles.container1}>
+                    <Text style={styles.title}>Kiểm tra tin nhắn SMS của bạn:</Text>
+                    <Text style={styles.description}>
+                        Chúng tôi đã gửi một mã có 4 chữ số đến số điện thoại: 
+                    </Text>
+                    <Text style={styles.phone}>{formatPhoneNumber(route.params.phoneNumber)}</Text>
+                    <View style={styles.codeInputContainer}>
+                        {code.map((digit, index) => (
+                            <TextInput
+                                key={index}
+                                ref={inputRefs[index]}
+                                style={styles.codeInput}
+                                keyboardType="numeric"
+                                maxLength={1}
+                                onChangeText={(text) => handleChange(text, index)}
+                                onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                                value={digit}
+                            />
+                        ))}
+                    </View>
 
-            {/* Chỉnh phần Nhận mã mới và bộ đếm */}
-            <View style={styles.resendContainer}>
-                <Text>Bạn đã nhận được mã chưa ?</Text>
-                <TouchableOpacity style={styles.resendButton} disabled={timer > 0}>
-                    <Text style={styles.resendText}>Nhận mã mới {timer > 0 && (
-                    <Text style={styles.timerText}>sau 00:{timer < 10 ? `0${timer}` : timer}</Text>
-                )}</Text>
-                </TouchableOpacity>
-                
-            </View>
+                    <View style={styles.resendContainer}>
+                        <Text>Bạn đã nhận được mã chưa ?</Text>
+                        <TouchableOpacity style={styles.resendButton} onPress={handleResendCode} disabled={timer > 0}>
+                            <Text style={styles.resendText}>Nhận mã mới {timer > 0 && (
+                                <Text style={styles.timerText}>sau 00:{timer < 10 ? `0${timer}` : timer}</Text>
+                            )}</Text>
+                        </TouchableOpacity>
+                    </View>
 
-            <TouchableOpacity style={styles.button} >
-                <Text style={styles.buttonText}>Tiếp tục</Text>
-            </TouchableOpacity>
-        </View>
-        </ScrollView>
+                    <TouchableOpacity style={styles.button} onPress={handleVerifyCode}>
+                        <Text style={styles.buttonText}>Tiếp tục</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 };
@@ -152,7 +172,7 @@ const styles = StyleSheet.create({
     },
     resendContainer: {
         marginTop: 130,
-        marginRight:150
+        marginRight: 150
     },
     resendButton: {
         marginRight: 10,
@@ -181,7 +201,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 10,
-        zIndex: 10,                   
+        zIndex: 10,
+        width:50
     },
 });
 

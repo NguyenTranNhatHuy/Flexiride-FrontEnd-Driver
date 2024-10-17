@@ -24,6 +24,7 @@
     "react-native": "0.74.5",
     "react-native-check-box": "^2.1.7",
     "react-native-image-picker": "^7.1.2",
+    "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
