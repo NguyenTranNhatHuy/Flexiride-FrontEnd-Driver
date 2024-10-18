@@ -66,14 +66,16 @@ const DriverTemp = ({ navigation, route  }) => {
                 Alert.alert("Thông báo", "Vui lòng đồng ý với các điều khoản và điều kiện."); // Show alert if checkbox is not checked
                 return; // Do not continue if checkbox is not checked
             }
-            console.log('First name entered:', firstName);
+            console.log('First name entered:', firstName);  
             console.log('Last name entered:', lastName);
             console.log('Phone number entered:', phoneNumber);
             console.log('City selected:', selectedCity);
+            console.log('pass: ', route.params.password)
             console.log('email selected:', email);
             // Navigate to the next screen and pass the information
             navigation.navigate('InsertCode', {
                 email: email,
+                password: route.params.password,
                 firstName:firstName,
                 lastName: lastName,
                 phoneNumber: phoneNumber,

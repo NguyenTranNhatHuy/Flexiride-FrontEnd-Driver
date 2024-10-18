@@ -49,6 +49,7 @@ const InsertCode = ({ navigation, route }) => {
             // Navigate to SubscriptionService if code is correct
             navigation.navigate('SubscriptionService', {
                 email: route.params.email,
+                password: route.params.password,
                 firstName:route.params.firstName,
                 lastName: route.params.lastName,
                 phoneNumber: route.params.phoneNumber,

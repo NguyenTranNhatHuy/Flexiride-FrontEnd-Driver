@@ -1,28 +1,28 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import Login from './screens/auth/Login';
-import PartnerSignUpScreen from './screens/auth/DriverSignUpScreen';
-import DriverTemp from './screens/auth/DriverTemp';
-import InsertCode from './screens/auth/InsertCode';
-import SubscriptionService from './screens/auth/SubscriptionService';
-import Info from './screens/auth/Info';
-import PersonalInformation from './screens/auth/PersonalInformation';
-import PortraitPhoto from './screens/auth/PortraitPhoto';
-import Passport from './screens/auth/Passport';
-import License from './screens/auth/License';
-import JudicialBackground from './screens/auth/JudicialBackground';
-import EmergencyContact from './screens/auth/EmergencyContact';
-import BankAccountNumber from './screens/auth/BankAccountNumber';
-import Commitment from './screens/auth/Commitment';
-import VehicleInformation from './screens/auth/VehicleInformation';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View } from "react-native";
+import Login from "./screens/auth/Login";
+import PartnerSignUpScreen from "./screens/auth/DriverSignUpScreen";
+import DriverTemp from "./screens/auth/DriverTemp";
+import InsertCode from "./screens/auth/InsertCode";
+import SubscriptionService from "./screens/auth/SubscriptionService";
+import Info from "./screens/auth/Info";
+import PersonalInformation from "./screens/auth/PersonalInformation";
+import PortraitPhoto from "./screens/auth/PortraitPhoto";
+import Passport from "./screens/auth/Passport";
+import License from "./screens/auth/License";
+import JudicialBackground from "./screens/auth/JudicialBackground";
+import EmergencyContact from "./screens/auth/EmergencyContact";
+import BankAccountNumber from "./screens/auth/BankAccountNumber";
+import Commitment from "./screens/auth/Commitment";
+import VehicleInformation from "./screens/auth/VehicleInformation";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Splash from "./screens/Splash";
-import DriverSignUpScreen from './screens/auth/DriverSignUpScreen';
-import CarImage from './screens/auth/CarImage';
-import VehicleRegistration from './screens/auth/VehicleRegistration';
-import CarInsurance from './screens/auth/CarInsurance';
-import ProfileApproval from './screens/auth/ProfileApproval';
+import DriverSignUpScreen from "./screens/auth/DriverSignUpScreen";
+import CarImage from "./screens/auth/CarImage";
+import VehicleRegistration from "./screens/auth/VehicleRegistration";
+import CarInsurance from "./screens/auth/CarInsurance";
+import ProfileApproval from "./screens/auth/ProfileApproval";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -54,7 +54,7 @@ export default function App() {
           component={Splash}
           options={{ headerShown: false }}
         />
-       <Stack.Screen
+        <Stack.Screen
           name="DriverSignUpScreen"
           component={DriverSignUpScreen}
           options={{ headerShown: false }}
@@ -124,22 +124,22 @@ export default function App() {
           component={VehicleInformation}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="CarImage"
           component={CarImage}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="VehicleRegistration"
           component={VehicleRegistration}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="CarInsurance"
           component={CarInsurance}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="ProfileApproval"
           component={ProfileApproval}
           options={{ headerShown: false }}
@@ -152,8 +152,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

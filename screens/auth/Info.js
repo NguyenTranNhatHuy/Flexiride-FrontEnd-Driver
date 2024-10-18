@@ -4,16 +4,27 @@ import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện i
 
 
 //5. Thông tin
-const Info = () => {
+const Info = ({navigation, route}) => {
+    const handleContinue = () => {
+        navigation.navigate('PersonalInformation', {
+            email: route.params.email,
+            password: route.params.password,
+            firstName:route.params.firstName,
+            lastName: route.params.lastName,
+            phoneNumber: route.params.phoneNumber,
+            city: route.params.selectedCity,
+            serviceType: route.params.serviceType
+        });
+    };
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "android" ? "height" : null}
         >
             {/* Nút Back */}
-            <TouchableOpacity style={styles.backButton}>
+            {/* <TouchableOpacity style={styles.backButton}>
                 <Icon name="arrow-left" size={20} color="black" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
 
                 <Text style={styles.register}>Trước khi tiến hành đăng ký...</Text>
@@ -52,10 +63,10 @@ const Info = () => {
 
                 {/* Các nút chọn */}
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={[styles.optionButton, styles.optionLeft]}>
+                    <TouchableOpacity onPress={() => navigation.navigate('SubscriptionService', { email: route.params.email  })} style={[styles.optionButton, styles.optionLeft]}>
                         <Text style={styles.optionLeftText}>Không</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.optionButton, styles.optionRight]}>
+                    <TouchableOpacity onPress={handleContinue} style={[styles.optionButton, styles.optionRight]}>
                         <Text style={styles.optionButtonText}>Có, tiếp tục</Text>
                     </TouchableOpacity>
                 </View>
