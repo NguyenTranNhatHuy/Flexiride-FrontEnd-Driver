@@ -104,7 +104,10 @@ const PersonalInformation = ({ route, navigation }) => {
         ))}
 
         {/* Nút tiếp tục */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("VehicleInformation")}
+          style={styles.button}
+        >
           <Text style={styles.buttonText}>Tiếp tục</Text>
         </TouchableOpacity>
       </ScrollView>
