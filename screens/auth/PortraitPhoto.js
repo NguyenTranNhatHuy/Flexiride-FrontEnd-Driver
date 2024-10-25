@@ -14,7 +14,7 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-import { uploadImageToCloudinary } from "../utils/CloudinaryConfig";
+import { uploadImageToCloudinary } from "../..//utils/CloudinaryConfig";
 
 const PortraitPhoto = ({ route }) => {
   const navigation = useNavigation();
@@ -77,9 +77,7 @@ const PortraitPhoto = ({ route }) => {
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() =>
-            navigation.navigate("PersonalInformation", {})
-          }
+          onPress={() => navigation.navigate("PersonalInformation", {})}
           name="arrow-left"
           size={20}
           color="black"

@@ -15,7 +15,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { uploadImageToCloudinary } from "../utils/CloudinaryConfig"; // Adjust the import path as necessary
+import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
 
 const Passport = ({ route, navigation }) => {
   const [frontImage, setFrontImage] = useState(null);
@@ -57,7 +57,10 @@ const Passport = ({ route, navigation }) => {
     const today = new Date();
     // Check if the issued date is in the future
     if (dateIssued > today) {
-      Alert.alert("Ngày không hợp lệ", "Ngày cấp không được chọn trong tương lai.");
+      Alert.alert(
+        "Ngày không hợp lệ",
+        "Ngày cấp không được chọn trong tương lai."
+      );
       return false;
     }
     // Check if the place of issue contains numbers
@@ -177,7 +180,9 @@ const Passport = ({ route, navigation }) => {
           style={styles.input}
           onPress={() => setShowDatePicker(true)} // Show date picker on press
         >
-          <Text style={styles.inputText}>{dateIssued.toLocaleDateString()}</Text>
+          <Text style={styles.inputText}>
+            {dateIssued.toLocaleDateString()}
+          </Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
