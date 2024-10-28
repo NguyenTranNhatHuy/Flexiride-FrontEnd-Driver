@@ -1,15 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-// Insert Code Component
-const InsertCode = ({ navigation, route }) => {
+const InsertCode = ({ navigation }) => {
     const [code, setCode] = useState(['', '', '', '']);  // Array for each input field
     const [timer, setTimer] = useState(30);
+    const [phoneNumber, setPhoneNumber] = useState('');  // State to store phone number from local storage
     const [dummyCode] = useState('1234'); // Dummy verification code
     const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-    React.useEffect(() => {
+    useEffect(() => {
+        // Fetch phone number from local storage on component mount
+        const fetchPhoneNumber = async () => {
+            try {
+                const storedPersonalInfo = await AsyncStorage.getItem('personalInfo');
+                if (storedPersonalInfo) {
+                    const parsedInfo = JSON.parse(storedPersonalInfo);
+                    setPhoneNumber(parsedInfo.phoneNumber);  // Set the phone number in state
+                }
+            } catch (error) {
+                console.log('Error fetching phone number:', error);
+            }
+        };
+
+        fetchPhoneNumber();
+
         const countdown = setInterval(() => {
             setTimer((prevTimer) => (prevTimer > 0 ? prevTimer - 1 : 0));
         }, 1000);
@@ -46,34 +62,24 @@ const InsertCode = ({ navigation, route }) => {
     const handleVerifyCode = () => {
         const enteredCode = code.join('');
         if (enteredCode === dummyCode) {
-            // Navigate to SubscriptionService if code is correct
-            navigation.navigate('SubscriptionService', {
-                email: route.params.email,
-                password: route.params.password,
-                firstName:route.params.firstName,
-                lastName: route.params.lastName,
-                phoneNumber: route.params.phoneNumber,
-                city: route.params.city,
-            });
+            navigation.navigate('SubscriptionService');
         } else {
             Alert.alert('Thông báo', 'Mã xác thực không đúng. Vui lòng thử lại.');
         }
     };
 
     const handleResendCode = () => {
-        // Reset timer and clear code
         setTimer(30);
         setCode(['', '', '', '']);
         Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
     };
 
-        // Function to format the phone number
-        const formatPhoneNumber = (number) => {
-            if (number.length === 10 && number.startsWith('0')) {
-                return `+84${number.slice(1, 7)}***`; // +84 and show the first 7 digits
-            }
-            return number; // Return the original number if not 10 digits
-        };
+    const formatPhoneNumber = (number) => {
+        if (number.length === 10 && number.startsWith('0')) {
+            return `+84${number.slice(1, 7)}***`; // +84 and show the first 7 digits
+        }
+        return number; // Return the original number if not 10 digits
+    };
 
     return (
         <KeyboardAvoidingView
@@ -81,7 +87,7 @@ const InsertCode = ({ navigation, route }) => {
             behavior={Platform.OS === "android" ? "height" : null}
         >
             <TouchableOpacity style={styles.backButton}>
-                <Icon onPress={() => navigation.navigate('DriverTemp', { email: route.params.email  })} name="arrow-left" size={20} color="black" />
+                <Icon onPress={() => navigation.navigate('DriverTemp')} name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.container1}>
@@ -89,7 +95,7 @@ const InsertCode = ({ navigation, route }) => {
                     <Text style={styles.description}>
                         Chúng tôi đã gửi một mã có 4 chữ số đến số điện thoại: 
                     </Text>
-                    <Text style={styles.phone}>{formatPhoneNumber(route.params.phoneNumber)}</Text>
+                    <Text style={styles.phone}>{formatPhoneNumber(phoneNumber)}</Text>
                     <View style={styles.codeInputContainer}>
                         {code.map((digit, index) => (
                             <TextInput
@@ -203,7 +209,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 10,
         zIndex: 10,
-        width:50
+        width: 50,
     },
 });
 

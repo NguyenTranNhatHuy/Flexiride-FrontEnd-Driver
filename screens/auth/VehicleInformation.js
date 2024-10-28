@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,20 +7,134 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import Icon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import registerDriver from "../../service/AuthDriverService"; // Đảm bảo rằng đường dẫn đúng
+const VehicleInformation = ({ navigation }) => {
+  const [carImageCompleted, setCarImageCompleted] = useState(false);
+  const [carInsuranceCompleted, setCarInsuranceCompleted] = useState(false);
+  const [vehicleRegistrationCompleted, setvehicleRegistrationCompleted] =
+    useState(false);
 
-const VehicleInformation = ({ route, navigation }) => {
+  // Function to check status from local storage
+  const checkStatus = async () => {
+    try {
+      const carImage = await AsyncStorage.getItem("vehicleImages");
+      setCarImageCompleted(!!carImage);
+
+      const carInsurance = await AsyncStorage.getItem("vehicleInsurance");
+      setCarInsuranceCompleted(!!carInsurance);
+
+      const vehicleRegistration = await AsyncStorage.getItem(
+        "vehicleRegistration"
+      );
+      setvehicleRegistrationCompleted(!!vehicleRegistration);
+    } catch (error) {
+      console.error("Error retrieving status:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      checkStatus();
+    }, [])
+  );
+
+  const handleContinue = async () => {
+    if (
+      carImageCompleted &&
+      carInsuranceCompleted &&
+      vehicleRegistrationCompleted
+    ) {
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      const parsedInfo = JSON.parse(storedPersonalInfo);
+
+      const storedAddress = await AsyncStorage.getItem("address");
+      const parsedAddress = JSON.parse(storedAddress);
+
+      const storedEmergencyContact = await AsyncStorage.getItem(
+        "emergencyContact"
+      );
+      const parsedEmergencyContact = JSON.parse(storedEmergencyContact);
+
+      const storedPassport = await AsyncStorage.getItem("passport");
+      const parsedPassport = JSON.parse(storedPassport);
+
+      const storedDriverLicense = await AsyncStorage.getItem("driverLicense");
+      const parsedDriverLicense = JSON.parse(storedDriverLicense);
+
+      const storedCriminalRecord = await AsyncStorage.getItem("criminalRecord");
+      const parsedCriminalRecord = JSON.parse(storedCriminalRecord);
+
+      const storedVehicleRegistration = await AsyncStorage.getItem(
+        "vehicleRegistration"
+      );
+      const parsedVehicleRegistration = JSON.parse(storedVehicleRegistration);
+
+      const storedVehicleInsurance = await AsyncStorage.getItem(
+        "vehicleInsurance"
+      );
+      const parsedVehicleInsurance = JSON.parse(storedVehicleInsurance);
+
+      const storedVehicleImages = await AsyncStorage.getItem("vehicleImages");
+      const parsedVehicleImages = JSON.parse(storedVehicleImages);
+
+      const storedBankAccount = await AsyncStorage.getItem("bankAccount");
+      const parsedBankAccount = JSON.parse(storedBankAccount);
+      const driverData = {
+        personalInfo: {
+          email: parsedInfo.email,
+          password: parsedInfo.password,
+          firstName: parsedInfo.firstName,
+          lastName: parsedInfo.lastName,
+          phoneNumber: parsedInfo.phoneNumber,
+          // gender: "",
+          city: parsedInfo.city,
+          serviceType: parsedInfo.serviceType,
+          avatar: parsedInfo.avatar,
+          address: parsedAddress,
+          emergencyContact: parsedEmergencyContact,
+        },
+        document: {
+          passport: parsedPassport,
+          driverLicense: parsedDriverLicense,
+          criminalRecord: parsedCriminalRecord,
+          vehicleRegistration: parsedVehicleRegistration,
+          vehicleInsurance: parsedVehicleInsurance,
+        },
+        vehicleImages: parsedVehicleImages,
+        bankAccount: parsedBankAccount,
+        role: "booking",
+      };
+
+      try {
+        const response = await registerDriver(driverData);
+        console.log("Driver registered successfully:", response);
+        await AsyncStorage.clear();
+        navigation.navigate("ProfileApproval");
+      } catch (error) {
+        console.error("Registration failed:", error);
+      }
+    } else {
+      Alert.alert(
+        "Thông báo",
+        "Bạn cần hoàn thành tất cả thông tin trước khi tiếp tục."
+      );
+    }
+  };
 
   const handleNavigation = (item) => {
     switch (item) {
-      case "Hình xe":
-          navigation.navigate("CarImage");
+      case "Hình Xe":
+        navigation.navigate("CarImage");
         break;
-      case "Giấy đăng ký xe":
-        navigation.navigate("VehicleRegistration", );
+      case "Giấy Đăng Ký Xe":
+        navigation.navigate("VehicleRegistration");
         break;
-      case "Bảo hiểm xe":
+      case "Bảo Hiểm Xe":
         navigation.navigate("CarInsurance");
         break;
       default:
@@ -33,45 +147,36 @@ const VehicleInformation = ({ route, navigation }) => {
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : null}
     >
-      {/* Nút Back */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
         <Icon name="arrow-left" size={20} color="black" />
       </TouchableOpacity>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.headerText}>Thông tin cá nhân</Text>
 
-        {/* Các mục thông tin cá nhân */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.headerText}>Thông tin xe</Text>
+
         {[
-          "Hình xe",
-          "Giấy đăng ký xe",
-          "Bảo hiểm xe",
+          { name: "Hình Xe", completed: carImageCompleted },
+          { name: "Giấy Đăng Ký Xe", completed: vehicleRegistrationCompleted },
+          { name: "Bảo Hiểm Xe", completed: carInsuranceCompleted },
         ].map((item, index) => (
           <View style={styles.itemContainer} key={index}>
             <Text style={styles.itemText}>
-              {index + 1}/ {item}
+              {index + 1}/ {item.name}
             </Text>
             <TouchableOpacity
               style={styles.requiredButton}
-              onPress={() => handleNavigation(item)}
-              disabled={item === "Ảnh Chân Dung" && PortraitCompleted} // Disable if portrait completed
+              onPress={() => handleNavigation(item.name)}
             >
               <Text
                 style={[
                   styles.requiredButtonText,
-                  item === "Ảnh Chân Dung" && PortraitCompleted
-                    ? { color: "green" } // Change color to green if completed
-                    : { color: "red" },
+                  item.completed ? { color: "green" } : { color: "red" },
                 ]}
               >
-                {item === "Ảnh Chân Dung" && PortraitCompleted
-                  ? "Hoàn thành"
-                  : "Bắt buộc"}
+                {item.completed ? "Hoàn thành" : "Bắt buộc"}
               </Text>
               <Icon
                 name="chevron-right"
@@ -83,11 +188,8 @@ const VehicleInformation = ({ route, navigation }) => {
           </View>
         ))}
 
-        {/* Nút tiếp tục */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate("ProfileApproval")}
-          style={styles.button}
-        >
+        {/* Continue button */}
+        <TouchableOpacity onPress={handleContinue} style={styles.button}>
           <Text style={styles.buttonText}>Tiếp tục</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -95,12 +197,11 @@ const VehicleInformation = ({ route, navigation }) => {
   );
 };
 
+// Style definitions remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFC323",
-    alignItems: "stretch",
-    justifyContent: "flex-start",
     paddingTop: 30,
     paddingHorizontal: 20,
   },
@@ -120,8 +221,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     padding: 5,
-    borderBottomWidth: 1, // Border bottom
-    borderBottomColor: "#000", // Màu của border bottom
+    borderBottomWidth: 1,
+    borderBottomColor: "#000",
   },
   itemText: {
     fontSize: 16,
@@ -130,14 +231,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   requiredButton: {
-    flexDirection: "row", // Đặt flexDirection để icon nằm cùng hàng với text
-    alignItems: "center", // Canh giữa các mục trong button
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
   requiredButtonText: {
     fontSize: 14,
-    marginRight: 5, // Tạo khoảng cách giữa text và icon
+    marginRight: 5,
   },
   button: {
     backgroundColor: "#270C6D",

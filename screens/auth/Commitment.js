@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,11 +7,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import Icon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-//13. cam kết
-const Commitment = ({route, navigation}) => {
+const Commitment = ({ navigation }) => {
   const [checkboxes, setCheckboxes] = useState({
     checkbox1: false,
     checkbox2: false,
@@ -21,12 +22,48 @@ const Commitment = ({route, navigation}) => {
     checkbox6: false,
   });
 
+  // Retrieve commitment data from AsyncStorage when the component mounts
+  useEffect(() => {
+    const loadCommitmentData = async () => {
+      try {
+        const committedData = await AsyncStorage.getItem("committed");
+        if (committedData) {
+          setCheckboxes(JSON.parse(committedData)); // Set checkbox state from stored data
+        }
+      } catch (error) {
+        console.error("Error loading commitment data:", error);
+      }
+    };
+
+    loadCommitmentData();
+  }, []);
+
   // Hàm xử lý khi checkbox được bấm
   const toggleCheckbox = (key) => {
     setCheckboxes((prevState) => ({
       ...prevState,
       [key]: !prevState[key],
     }));
+  };
+
+  // Hàm kiểm tra tất cả các checkbox có được tick hay không
+  const areAllCheckboxesChecked = () => {
+    return Object.values(checkboxes).every((value) => value === true);
+  };
+
+  // Hàm xử lý lưu thông tin
+  const handleSave = async () => {
+    if (areAllCheckboxesChecked()) {
+      try {
+        await AsyncStorage.setItem("committed", JSON.stringify(checkboxes));
+        navigation.navigate("PersonalInformation"); // Điều hướng đến màn hình tiếp theo
+      } catch (error) {
+        console.error("Error saving commitment data:", error);
+        Alert.alert("Lỗi", "Có lỗi xảy ra khi lưu cam kết.");
+      }
+    } else {
+      Alert.alert("Cảnh báo", "Bạn phải cam kết tất cả thông tin trước khi tiếp tục.");
+    }
   };
 
   return (
@@ -37,11 +74,7 @@ const Commitment = ({route, navigation}) => {
       {/* Nút Back */}
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() =>
-            navigation.navigate("PersonalInformation", {
-              //   PortraitCompleted: route.params.PortraitCompleted,
-            })
-          }
+          onPress={() => navigation.navigate("PersonalInformation")}
           name="arrow-left"
           size={20}
           color="black"
@@ -76,7 +109,7 @@ const Commitment = ({route, navigation}) => {
         ))}
 
         {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
           <Text style={styles.saveButtonText}>Lưu</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -116,20 +149,16 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
     zIndex: 10,
-  },
-  backButtonText: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 5,
+    padding: 10,
+    marginTop: 10,
   },
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "justify",
     marginBottom: 50,
-    marginTop: 20, // Tạo khoảng trống cho nút back
+    marginTop: 20,
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -161,19 +190,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     alignSelf: "center",
-    marginLeft: 260,
     marginTop: 5,
+    marginLeft:260
   },
   saveButtonText: {
     color: "white",
     fontSize: 16,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
-    padding: 10,
-    marginTop: 10,
   },
 });
 

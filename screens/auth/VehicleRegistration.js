@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,118 +9,188 @@ import {
   Platform,
   TextInput,
   Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker"; // Sử dụng ImagePicker để chọn ảnh
-import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import * as ImagePicker from "expo-image-picker";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const VehicleRegistration = ({route, navigation}) => {
+const VehicleRegistration = ({ navigation }) => {
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [licensePlate, setLicensePlate] = useState("");
+  const [fuelType, setFuelType] = useState("");
+  const [errors, setErrors] = useState({});
 
-  // Function to handle image picking
+  useEffect(() => {
+    const fetchVehicleRegistrationData = async () => {
+      try {
+        const data = await AsyncStorage.getItem("vehicleRegistration");
+        if (data) {
+          const { frontImage, backImage, licensePlate, fuelType } = JSON.parse(data);
+          setFrontImage(frontImage || null);
+          setBackImage(backImage || null);
+          setLicensePlate(licensePlate || "");
+          setFuelType(fuelType || "");
+        }
+      } catch (error) {
+        console.error("Error fetching vehicleRegistration data:", error);
+      }
+    };
+
+    fetchVehicleRegistrationData();
+  }, []);
+
   const pickImage = async (setImage) => {
-    // Hỏi quyền truy cập thư viện ảnh
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      alert("Bạn cần cho phép quyền truy cập thư viện ảnh để tải ảnh lên!");
+      Alert.alert("Bạn cần cho phép quyền truy cập thư viện ảnh để tải ảnh lên!");
       return;
     }
 
-    // Mở thư viện ảnh để chọn
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, // Cho phép chỉnh sửa ảnh
-      aspect: [4, 3], // Đặt tỉ lệ khung hình
-      quality: 1, // Chất lượng ảnh (từ 0 đến 1)
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
     });
 
-    // Nếu người dùng không hủy chọn ảnh thì lưu URI vào state
     if (!result.canceled) {
-      setImage(result.uri); // Lưu URI ảnh đã chọn
+      setImage(result.assets[0].uri);
     }
   };
+
+  const takePhoto = async (setImage) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Bạn cần cho phép quyền truy cập camera để chụp ảnh!");
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const validateInputs = () => {
+    let valid = true;
+    let newErrors = {};
+
+    if (!licensePlate || !/^[a-zA-Z0-9]{1,10}$/.test(licensePlate)) {
+      newErrors.licensePlate = "Biển số xe phải chứa chữ và số, dưới 10 ký tự";
+      valid = false;
+    }
+
+    if (!fuelType) {
+      newErrors.fuelType = "Loại nhiên liệu không được để trống";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleSave = async () => {
+    if (!frontImage || !backImage) {
+      Alert.alert("Thông báo","Bạn cần tải lên cả hai mặt trước và sau của giấy đăng ký xe");
+      return;
+    }
+
+    if (!validateInputs()) {
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const frontImageUrl = await uploadImageToCloudinary(frontImage);
+      const backImageUrl = await uploadImageToCloudinary(backImage);
+
+      const vehicleRegistrationData = {
+        frontImage: frontImageUrl,
+        backImage: backImageUrl,
+        licensePlate,
+        fuelType,
+      };
+
+      await AsyncStorage.setItem("vehicleRegistration", JSON.stringify(vehicleRegistrationData));
+      setUploading(false);
+      navigation.navigate("VehicleInformation");
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      setUploading(false);
+      Alert.alert("Đã có lỗi xảy ra khi tải ảnh lên.");
+    }
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "android" ? "height" : null}
-    >
-      {/* Nút Back */}
-      <TouchableOpacity style={styles.backButton}>
-        <Icon
-          onPress={() =>
-            navigation.navigate("VehicleInformation", {
-              // PortraitCompleted: route.params.PortraitCompleted,
-            })
-          }
-          name="arrow-left"
-          size={20}
-          color="black"
-        />
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "android" ? "height" : null}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("VehicleInformation")}>
+        <Icon name="arrow-left" size={20} color="black" />
       </TouchableOpacity>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <Text style={styles.headerText}>Tải lên giấy đăng ký xe</Text>
 
-        {/* Front Image Upload */}
         <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => pickImage(setFrontImage)}
-        >
+        <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
           {frontImage ? (
-            <Image source={{ uri: frontImage }} style={styles.image} />
+            <Image source={{ uri: frontImage }} style={styles.fullImage} resizeMode="contain" />
           ) : (
             <>
-              <Image
-                source={require("../../assets/camera.png")}
-                style={styles.icon}
-              />
+              <Image source={require("../../assets/camera.png")} style={styles.icon} />
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.cameraButton} onPress={() => takePhoto(setFrontImage)}>
+          <Text style={styles.cameraButtonText}>Chụp ảnh mặt trước</Text>
+        </TouchableOpacity>
 
-        {/* Back Image Upload */}
         <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => pickImage(setBackImage)}
-        >
+        <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
           {backImage ? (
-            <Image source={{ uri: backImage }} style={styles.image} />
+            <Image source={{ uri: backImage }} style={styles.fullImage} resizeMode="contain" />
           ) : (
             <>
-              <Image
-                source={require("../../assets/camera.png")}
-                style={styles.icon}
-              />
+              <Image source={require("../../assets/camera.png")} style={styles.icon} />
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.cameraButton} onPress={() => takePhoto(setBackImage)}>
+          <Text style={styles.cameraButtonText}>Chụp ảnh mặt sau</Text>
+        </TouchableOpacity>
 
-        {/* Input Fields */}
+        <Text style={styles.labelText}>Biển số xe *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Biển số xe *"
-          keyboardType="default"
-          autoCapitalize="characters" // Viết hoa tự động cho biển số xe
-          maxLength={15} // Giới hạn số ký tự
+          placeholder="Nhập biển số xe"
+          value={licensePlate}
+          onChangeText={setLicensePlate}
         />
+        {errors.licensePlate && <Text style={styles.errorText}>{errors.licensePlate}</Text>}
+
+        <Text style={styles.labelText}>Loại nhiên liệu *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Loại nhiên liệu *"
-          keyboardType="default"
-          autoCapitalize="words" // Viết hoa chữ cái đầu tiên mỗi từ
-          returnKeyType="done" // Thêm nút "Xong" trên bàn phím
+          placeholder="Nhập loại nhiên liệu"
+          value={fuelType}
+          onChangeText={setFuelType}
         />
+        {errors.fuelType && <Text style={styles.errorText}>{errors.fuelType}</Text>}
 
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Lưu</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={uploading}>
+          <Text style={styles.saveButtonText}>
+            {uploading ? <ActivityIndicator color="#FFF" /> : "Lưu"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -153,11 +223,22 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: "#D9D9D9",
-    height: 100,
+    height: 300,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
     marginBottom: 20,
+  },
+  cameraButton: {
+    backgroundColor: "#270C6D",
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  cameraButtonText: {
+    color: "white",
+    fontSize: 16,
   },
   icon: {
     width: 40,
@@ -168,7 +249,7 @@ const styles = StyleSheet.create({
     color: "#6A6A6A",
     fontSize: 16,
   },
-  image: {
+  fullImage: {
     width: "100%",
     height: "100%",
     borderRadius: 10,
@@ -181,29 +262,36 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
     color: "#000",
-    borderWidth: 1, // Độ rộng của viền
-    borderColor: "black", // Màu viền
-    elevation: 5, // Đổ bóng dành cho Android
+    borderWidth: 1,
+    borderColor: "black",
+    elevation: 5,
+  },
+  errorText: {
+    color: "red",
+    marginTop: -15,
+    marginBottom: 10,
+    fontSize: 14,
   },
   saveButton: {
     backgroundColor: "#270C6D",
     paddingHorizontal: 40,
     paddingVertical: 10,
     borderRadius: 20,
-    alignSelf: "center",
     marginLeft: 260,
+    alignSelf: "center",
     marginTop: 20,
+    marginBottom: 20,
   },
   saveButtonText: {
     color: "white",
     fontSize: 16,
   },
   backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
+    position: "absolute",
+    top: 20,
+    left: 10,
     padding: 10,
-    marginTop: 10,
+    zIndex: 1,
   },
 });
 

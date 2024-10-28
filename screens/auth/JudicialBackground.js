@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import {
   StyleSheet,
   Text,
@@ -15,15 +15,34 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { uploadImageToCloudinary } from "../utils/CloudinaryConfig"; // Adjust the import path as necessary
+import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
-const JudicialBackground = ({ route, navigation }) => {
+const JudicialBackground = ({ navigation }) => {
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dateIssued, setDateIssued] = useState(new Date());
-  const [placeIssued, setPlaceIssued] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Fetch JudicialBackground data from local storage when component mounts
+  useEffect(() => {
+    const fetchJudicialBackgroundData = async () => {
+      try {
+        const judicialBackgroundData = await AsyncStorage.getItem("criminalRecord");
+        if (judicialBackgroundData) {
+          const { frontImage, backImage, issueDate } = JSON.parse(judicialBackgroundData);
+          setFrontImage(frontImage || null); // Set front image or null if not available
+          setBackImage(backImage || null); // Set back image or null if not available
+          setDateIssued(new Date(issueDate) || new Date()); // Parse date or set to current date
+        }
+      } catch (error) {
+        console.error("Error fetching passport data:", error);
+      }
+    };
+
+    fetchJudicialBackgroundData();
+  }, []);
 
   // Function to handle image picking
   const pickImage = async (setImage) => {
@@ -45,6 +64,25 @@ const JudicialBackground = ({ route, navigation }) => {
     }
   };
 
+  // Function to open the camera
+  const takePhoto = async (setImage) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      alert("Bạn cần cho phép quyền truy cập camera để chụp ảnh!");
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri); // Set the captured image URI
+    }
+  };
+
   // Function to handle date selection
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || dateIssued;
@@ -55,15 +93,8 @@ const JudicialBackground = ({ route, navigation }) => {
   // Function to validate inputs
   const validateInputs = () => {
     const today = new Date();
-    // Check if the issued date is in the future
     if (dateIssued > today) {
       Alert.alert("Ngày không hợp lệ", "Ngày cấp không được chọn trong tương lai.");
-      return false;
-    }
-    // Check if the place of issue contains numbers
-    const containsNumbers = /\d/;
-    if (containsNumbers.test(placeIssued)) {
-      Alert.alert("Nơi cấp không hợp lệ", "Nơi cấp không được chứa số.");
       return false;
     }
     return true;
@@ -71,32 +102,33 @@ const JudicialBackground = ({ route, navigation }) => {
 
   // Function to handle saving data
   const handleSave = async () => {
-    if (!frontImage || !backImage) {
-      alert("Bạn cần tải lên cả hai mặt trước và sau của CCCD/Hộ chiếu");
+    if (!frontImage ) {
+      alert("Bạn cần tải lên trang đầu của giấy lý lịch tư pháp");
       return;
     }
 
-    // Validate inputs before proceeding
     if (!validateInputs()) {
       return; // Stop if validation fails
     }
 
     try {
       setUploading(true);
-      // Upload front image
       const frontImageUrl = await uploadImageToCloudinary(frontImage);
-      // Upload back image
       const backImageUrl = await uploadImageToCloudinary(backImage);
 
-      // Simulate the saving process and navigation
+      // Create the passport data object
+      const judicialBackgroundData = {
+        frontImage: frontImageUrl,
+        backImage: backImageUrl,
+        issueDate: dateIssued.toISOString(), // Store date as ISO string
+      };
+
+      // Save passport data to local storage
+      await AsyncStorage.setItem("criminalRecord", JSON.stringify(judicialBackgroundData));
+      console.log(judicialBackgroundData);
       setTimeout(() => {
         setUploading(false);
-        navigation.navigate("PersonalInformation", {
-          PortraitCompleted: route.params.PortraitCompleted,
-          PassportUploaded: true,
-          frontImage: frontImageUrl,
-          backImage: backImageUrl,
-        });
+        navigation.navigate("PersonalInformation");
       }, 2000);
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -112,11 +144,7 @@ const JudicialBackground = ({ route, navigation }) => {
     >
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() =>
-            navigation.navigate("PersonalInformation", {
-            //   PortraitCompleted: route.params.PortraitCompleted,
-            })
-          }
+          onPress={() => navigation.navigate("PersonalInformation")}
           name="arrow-left"
           size={20}
           color="black"
@@ -128,7 +156,7 @@ const JudicialBackground = ({ route, navigation }) => {
       >
         <Text style={styles.headerText}>Tải lên giấy lý lịch tư pháp</Text>
 
-        <Text style={styles.labelText}>Trang đầu (Bắt buộc)</Text>
+        <Text style={styles.labelText}>Trang Đầu (Bắt buộc)</Text>
         <TouchableOpacity
           style={styles.uploadButton}
           onPress={() => pickImage(setFrontImage)}
@@ -149,8 +177,14 @@ const JudicialBackground = ({ route, navigation }) => {
             </>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.cameraButton}
+          onPress={() => takePhoto(setFrontImage)}
+        >
+          <Text style={styles.cameraButtonText}>Chụp ảnh trang đầu</Text>
+        </TouchableOpacity>
 
-        <Text style={styles.labelText}>Trang hai (Không bắt buộc)</Text>
+        <Text style={styles.labelText}>Trang Hai (Không Bắt buộc)</Text>
         <TouchableOpacity
           style={styles.uploadButton}
           onPress={() => pickImage(setBackImage)}
@@ -170,6 +204,12 @@ const JudicialBackground = ({ route, navigation }) => {
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.cameraButton}
+          onPress={() => takePhoto(setBackImage)}
+        >
+          <Text style={styles.cameraButtonText}>Chụp ảnh trang hai</Text>
         </TouchableOpacity>
 
         <Text style={styles.labelText}>Ngày cấp *</Text>
@@ -228,11 +268,22 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     backgroundColor: "#D9D9D9",
-    height: 200,
+    height: 300,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
     marginBottom: 20,
+  },
+  cameraButton: {
+    backgroundColor: "#270C6D",
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  cameraButtonText: {
+    color: "white",
+    fontSize: 16,
   },
   icon: {
     width: 40,

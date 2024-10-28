@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,32 +8,160 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Modal,
+  Image,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import Icon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-//12. tài khoản ngân hàng
-const BankAccountNumber = ({route, navigation}) => {
-  // State quản lý trạng thái checkbox
+const BankAccountNumber = ({ route, navigation }) => {
   const [isChecked, setIsChecked] = useState(false);
+  const [banks, setBanks] = useState([]);
+  const [filteredBanks, setFilteredBanks] = useState([]);
+  const [selectedBank, setSelectedBank] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [accountHolder, setAccountHolder] = useState(""); // Tên chủ tài khoản
+  const [accountNumber, setAccountNumber] = useState(""); // Số tài khoản
+  const [errors, setErrors] = useState({}); // Object to hold error messages
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // Hàm xử lý khi checkbox được bấm
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const response = await axios.get("https://api.httzip.com/api/bank/list");
+        const bankData = response.data.data.map(bank => ({
+          label: bank.short_name,
+          value: bank.code, // Use code for unique identification
+          image: bank.logo_url,
+          swiftCode: bank.swift_code, // Example usage of additional field
+        }));
+        setBanks(bankData);
+        setFilteredBanks(bankData);
+        
+        // Call loadBankAccountData here after bank data has been fetched
+        loadBankAccountData(bankData);
+      } catch (error) {
+        console.error("Error fetching bank data:", error);
+      }
+    };
+  
+    const loadBankAccountData = async (bankData) => {
+      try {
+        const storedData = await AsyncStorage.getItem('bankAccount');
+        if (storedData) {
+          const { accountHolderName, accountNumber, bankName } = JSON.parse(storedData);
+          setAccountHolder(accountHolderName || "");
+          setAccountNumber(accountNumber || "");
+          // Set the selected bank only after bankData is available
+          const bank = bankData.find(b => b.label === bankName);
+          setSelectedBank(bank || null);
+        }
+      } catch (error) {
+        console.error("Error loading bank account data:", error);
+      }
+    };
+  
+    fetchBanks(); // Initiate fetching banks
+  }, []); // Empty dependency array to run once on mount
+
   const toggleCheckbox = () => {
     setIsChecked(!isChecked);
   };
+
+  const handleBankSelect = (bank) => {
+    setSelectedBank(bank);
+    setModalVisible(false);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    const filtered = banks.filter(bank =>
+      bank.label.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredBanks(filtered);
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    const nameRegex = /^[A-Za-z\s]+$/; // Regular expression to allow only letters and spaces
+    const accountNumberRegex = /^\d+$/; // Regular expression for only digits
+
+    if (!accountHolder) {
+      newErrors.accountHolder = "Tên chủ tài khoản không được để trống.";
+    } else if (!nameRegex.test(accountHolder)) {
+      newErrors.accountHolder = "Tên chủ tài khoản không chứa số và kí tự đặc biệt.";
+    }
+
+    if (!accountNumber) {
+      newErrors.accountNumber = "Số tài khoản không được để trống.";
+    } else if (!accountNumberRegex.test(accountNumber)) {
+      newErrors.accountNumber = "Số tài khoản phải là số và không chứa chữ và kí tự đặc biệt.";
+    }
+
+    if (!selectedBank) {
+      newErrors.selectedBank = "Bạn phải chọn ngân hàng.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+
+  const handleSave = async () => {
+    // Validate the inputs first
+    if (validate()) {
+      if (!isChecked) {
+        setErrorMessage("Bạn phải cam kết thông tin tài khoản ngân hàng là chính xác.");
+      } else {
+        // Prepare the data for validation
+        const validationData = {
+          bank: selectedBank ? selectedBank.value : "",
+          account: accountNumber,
+        };
+  
+        try {
+          const response = await axios.post(
+            "https://api.httzip.com/api/bank/id-lookup-prod",
+            validationData,
+            {
+              headers: {
+                "x-api-key": "b7501e2a-eb2d-4632-85b1-9850df1e0d0ckey",
+                "x-api-secret": "1d67351f-dd0d-4b0f-a9cc-275454513b18secret",
+              },
+            }
+          );
+  
+          if (response.data.success) {
+            const bankAccountData = {
+              accountHolderName: response.data.data.ownerName,
+              accountNumber,
+              bankName: selectedBank ? selectedBank.label : null,
+            };
+  
+            await AsyncStorage.setItem('bankAccount', JSON.stringify(bankAccountData));
+            navigation.navigate("PersonalInformation");
+          } else {
+            setErrorMessage("Tài khoản ngân hàng không tồn tại.");
+          }
+        } catch (error) {
+          setErrorMessage("Số tài khoản ngân hàng không tồn tại.");
+        }
+      }
+    }
+  };
+  
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : "padding"}
     >
-      {/* Nút Back */}
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() =>
-            navigation.navigate("PersonalInformation", {
-              //   PortraitCompleted: route.params.PortraitCompleted,
-            })
-          }
+          onPress={() => navigation.navigate("PersonalInformation")}
           name="arrow-left"
           size={20}
           color="black"
@@ -43,48 +171,94 @@ const BankAccountNumber = ({route, navigation}) => {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <Text style={styles.headerText}>Tài khoản ngân hàng</Text>
-
-        {/* Bank account Inputs */}
         <TextInput
           style={styles.input}
           placeholder="Tên chủ tài khoản *"
           placeholderTextColor="#999"
           autoCapitalize="words"
           returnKeyType="next"
+          value={accountHolder}
+          onChangeText={setAccountHolder}
         />
+        {errors.accountHolder && (
+          <Text style={styles.errorText}>{errors.accountHolder}</Text>
+        )}
         <TextInput
           style={styles.input}
           placeholder="Số tài khoản *"
           placeholderTextColor="#999"
           keyboardType="phone-pad"
           returnKeyType="done"
+          value={accountNumber}
+          onChangeText={setAccountNumber}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Tên ngân hàng *"
-          placeholderTextColor="#999"
-          autoCapitalize="words"
-          returnKeyType="next"
-        />
+        {errors.accountNumber && (
+          <Text style={styles.errorText}>{errors.accountNumber}</Text>
+        )}
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.dropdownContainer}>
+          <Text style={styles.selectedBankText}>
+            {selectedBank ? selectedBank.label : 'Chọn ngân hàng...'}
+          </Text>
+          <Icon name="chevron-down" size={20} color="black" />
+        </TouchableOpacity>
+        {errors.selectedBank && (
+          <Text style={styles.errorText}>{errors.selectedBank}</Text>
+        )}
 
-        {/* Checkbox */}
+        {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Chọn ngân hàng</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Tìm ngân hàng..."
+                placeholderTextColor="#999"
+                value={searchQuery}
+                onChangeText={handleSearch}
+              />
+              <ScrollView style={styles.bankList}>
+                {filteredBanks.map((bank) => (
+                  <TouchableOpacity
+                    key={bank.value}
+                    style={styles.bankItem}
+                    onPress={() => handleBankSelect(bank)}
+                  >
+                    <Image source={{ uri: bank.image }} style={styles.bankLogo} />
+                    <Text style={styles.bankLabel}>{bank.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
         <View style={styles.checkboxContainer}>
           <TouchableOpacity onPress={toggleCheckbox} style={styles.checkbox}>
             <View style={styles.checkboxBox}>
               {isChecked && (
-                <Icon name="check" size={16} color="green" /> // Hiển thị dấu tick khi được chọn
+                <Icon name="check" size={16} color="green" />
               )}
             </View>
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>
-            Tôi cam kết cung cấp thông tin tài khoản ngân hàng chính chủ của tôi
+            Tôi cam kết cung cấp thông tin tài khoản ngân hàng chính xác
           </Text>
         </View>
 
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
           <Text style={styles.saveButtonText}>Lưu</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -96,56 +270,113 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFC323",
-    alignItems: "stretch",
-    justifyContent: "flex-start",
-    paddingTop: 30,
+    padding: 20,
   },
   scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    textAlign: "justify",
-    marginBottom: 80,
-    marginTop: 20,
+    marginBottom: 20,
   },
   input: {
     backgroundColor: "white",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 15, // Chỉnh sửa khoảng cách dưới trường input
     fontSize: 16,
     color: "#000",
-    borderWidth: 1, // Độ rộng của viền
-    borderColor: "black", // Màu viền
+    borderColor: "#ccc",
     elevation: 5, // Đổ bóng dành cho Android
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  dropdownContainer: {
+    backgroundColor: "white",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    // borderRadius: 5,
+    padding: 14,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  selectedBankText: {
+    color: "#000",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    margin: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  searchInput: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  bankList: {
+    maxHeight: 300,
+  },
+  bankItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+  },
+  bankLogo: {
+    width: 70,
+    height: 40,
+    marginRight: 10,
+    resizeMode:'contain'
+  },
+  bankLabel: {
+    fontSize: 16,
+  },
+  closeButton: {
+    backgroundColor: "#270C6D",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: "#fff",
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    flexWrap: "wrap", // Cho phép text xuống dòng
+    marginVertical: 20,
   },
   checkbox: {
     marginRight: 10,
   },
   checkboxBox: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
+    borderColor: "#000",
     borderWidth: 1,
-    borderColor: "black",
-    backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
   },
   checkboxLabel: {
-    fontSize: 14,
-    color: "#333",
-    flexShrink: 1, // Co giãn để text không tràn ra ngoài
-    flex: 1, // Cho phép text chiếm phần còn lại của dòng
+    flex: 1,
   },
   saveButton: {
     backgroundColor: "#270C6D",
@@ -153,19 +384,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     alignSelf: "center",
-    marginLeft: 260,
     marginTop: 5,
+    marginLeft:260
   },
   saveButtonText: {
     color: "white",
     fontSize: 16,
   },
   backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
-    padding: 10,
-    marginTop: 10,
+    marginBottom: 20,
   },
 });
 
