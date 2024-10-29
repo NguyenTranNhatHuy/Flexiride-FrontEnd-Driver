@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import getAllDrivers from "../../service/DriverService";
 const { height } = Dimensions.get("window");
 
 const DriverSignUpScreen = ({ navigation }) => {
@@ -34,7 +34,7 @@ const DriverSignUpScreen = ({ navigation }) => {
 
   const handleContinue = async () => {
     let valid = true;
-
+  
     // Validate email
     if (!email) {
       setEmailError("Email không được để trống.");
@@ -45,7 +45,7 @@ const DriverSignUpScreen = ({ navigation }) => {
     } else {
       setEmailError("");
     }
-
+  
     // Validate password
     if (!password) {
       setPasswordError("Mật khẩu không được để trống.");
@@ -58,53 +58,54 @@ const DriverSignUpScreen = ({ navigation }) => {
     } else {
       setPasswordError("");
     }
-
-    // If validation passes, save the data
+  
     if (valid) {
-      const userInfo = {
-        email: email,
-        password: password, // Save the password as entered
-      };
-
-      // Log the userInfo object to ensure it's correctly set
-      console.log("UserInfo object:", userInfo);
-
       try {
+        // Lấy danh sách email
+        const driverList = await getAllDrivers();
+  
+        if (!Array.isArray(driverList)) {
+          // console.error("Dữ liệu từ API không hợp lệ:", driverList);
+          setEmailError("Không thể kết nối đến dịch vụ. Vui lòng thử lại sau.");
+          return;
+        }
+  
+        const emails = driverList.map((driver) => driver.personalInfo.email);
+  
+        // Kiểm tra xem email đã tồn tại chưa
+        if (emails.includes(email)) {
+          setEmailError("Email đã được sử dụng trong ứng dụng.");
+          return;
+        }
+  
+        // Lưu email và password
+        const userInfo = {
+          email: email,
+          password: password,
+        };
+  
         await AsyncStorage.setItem("personalInfo", JSON.stringify(userInfo));
         console.log("Email and password saved:", userInfo);
-
-        // Retrieve and log the saved email and password from AsyncStorage
-        // const storedUserInfo = await AsyncStorage.getItem("personalInfo");
-        // if (storedUserInfo !== null) {
-        //   const parsedUserInfo = JSON.parse(storedUserInfo);
-        //   console.log("Retrieved from AsyncStorage:", parsedUserInfo);
-        // } else {
-        //   console.log("No data found in AsyncStorage.");
-        // }
-
-        // Navigate to the next screen
-        navigation.navigate('DriverTemp');
+  
+        // Điều hướng đến màn hình tiếp theo
+        navigation.navigate("DriverTemp");
       } catch (e) {
-        console.error("Failed to save email and password to AsyncStorage:", e);
+        console.error("Lỗi khi kiểm tra hoặc lưu email:", e);
       }
     }
   };
+  
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : null}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.headerText}>Trở thành đối tác của FRide</Text>
           <Text style={styles.subHeaderText}>Mang lại niềm vui </Text>
-          <Text style={styles.subHeaderText}>
-            sự thuận tiện cho khách hàng!
-          </Text>
+          <Text style={styles.subHeaderText}>sự thuận tiện cho khách hàng!</Text>
           <View style={styles.googleSignUpContainer}>
             <View style={styles.line} />
             <Text style={styles.googleText}>Đăng ký tài khoản</Text>
@@ -116,32 +117,28 @@ const DriverSignUpScreen = ({ navigation }) => {
             style={[styles.input, emailError ? styles.inputError : null]}
             onChangeText={(text) => {
               setEmail(text);
-              setEmailError(""); // Clear error when user starts typing
+              setEmailError(""); // Xóa lỗi khi người dùng bắt đầu nhập
             }}
             value={email}
             placeholder="Email"
             keyboardType="email-address"
             placeholderTextColor="#6D6A6A"
           />
-          {emailError ? (
-            <Text style={styles.errorText}>{emailError}</Text>
-          ) : null}
+          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
           {/* Password Input */}
           <TextInput
             style={[styles.input, passwordError ? styles.inputError : null]}
             onChangeText={(text) => {
               setPassword(text);
-              setPasswordError(""); // Clear error when user starts typing
+              setPasswordError(""); // Xóa lỗi khi người dùng bắt đầu nhập
             }}
             value={password}
             placeholder="Mật khẩu"
             secureTextEntry={true}
             placeholderTextColor="#6D6A6A"
           />
-          {passwordError ? (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          ) : null}
+          {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
           {/* Continue Button */}
           <TouchableOpacity style={styles.button} onPress={handleContinue}>

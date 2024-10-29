@@ -87,14 +87,7 @@ const BankAccountNumber = ({ route, navigation }) => {
 
   const validate = () => {
     const newErrors = {};
-    const nameRegex = /^[A-Za-z\s]+$/; // Regular expression to allow only letters and spaces
     const accountNumberRegex = /^\d+$/; // Regular expression for only digits
-
-    if (!accountHolder) {
-      newErrors.accountHolder = "Tên chủ tài khoản không được để trống.";
-    } else if (!nameRegex.test(accountHolder)) {
-      newErrors.accountHolder = "Tên chủ tài khoản không chứa số và kí tự đặc biệt.";
-    }
 
     if (!accountNumber) {
       newErrors.accountNumber = "Số tài khoản không được để trống.";
@@ -172,18 +165,16 @@ const BankAccountNumber = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.headerText}>Tài khoản ngân hàng</Text>
+        
+        {/* Non-editable TextInput for account holder's name */}
         <TextInput
           style={styles.input}
           placeholder="Tên chủ tài khoản *"
           placeholderTextColor="#999"
-          autoCapitalize="words"
-          returnKeyType="next"
           value={accountHolder}
-          onChangeText={setAccountHolder}
+          editable={false} // Set editable to false to make it read-only
         />
-        {errors.accountHolder && (
-          <Text style={styles.errorText}>{errors.accountHolder}</Text>
-        )}
+
         <TextInput
           style={styles.input}
           placeholder="Số tài khoản *"

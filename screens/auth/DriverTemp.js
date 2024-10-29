@@ -13,6 +13,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import getAllDrivers from "../../service/DriverService";
 
 const DriverTemp = ({ navigation }) => {
   const [firstName, setFirstName] = useState("");
@@ -75,11 +76,21 @@ const DriverTemp = ({ navigation }) => {
 
     if (!phoneNumber) {
       newErrors.phoneNumber = "Số điện thoại không hợp lệ.";
-    }
-
-    if (!phoneNumberRegex.test(phoneNumber)) {
+    } else if (!phoneNumberRegex.test(phoneNumber)) {
       newErrors.phoneNumber =
         "Vui lòng nhập số điện thoại bắt đầu bằng 0 và gồm 10 chữ số.";
+    } else {
+      // Check if phone number already exists using getAllDriver method
+      try {
+        const existingDrivers = await getAllDrivers(); // Giả sử phương thức này trả về danh sách tài xế
+        const phoneExists = existingDrivers.some(driver => driver.personalInfo.phoneNumber === phoneNumber);
+
+        if (phoneExists) {
+          newErrors.phoneNumber = "Số điện thoại này đã tồn tại.";
+        }
+      } catch (e) {
+        console.error("Failed to check existing phone number:", e);
+      }
     }
 
     if (!selectedCity) {
@@ -88,7 +99,7 @@ const DriverTemp = ({ navigation }) => {
 
     setErrors(newErrors);
 
-    // If no errors, save all information into AsyncStorage
+    // If no errors, proceed to save information
     if (Object.keys(newErrors).length === 0) {
       if (!isChecked) {
         Alert.alert(
@@ -99,7 +110,7 @@ const DriverTemp = ({ navigation }) => {
       }
 
       try {
-        // Fetch existing personalInfo from AsyncStorage
+        // Retrieve current personal info, if available
         const storedInfo = await AsyncStorage.getItem("personalInfo");
         let updatedInfo = storedInfo ? JSON.parse(storedInfo) : {};
 
@@ -116,13 +127,14 @@ const DriverTemp = ({ navigation }) => {
         await AsyncStorage.setItem("personalInfo", JSON.stringify(updatedInfo));
         console.log("Updated personalInfo saved:", updatedInfo);
 
-        // Navigate to the next screen and pass updated info
+        // Navigate to the next screen
         navigation.navigate('InsertCode');
       } catch (e) {
         console.error("Failed to update and save personal info:", e);
       }
     }
   };
+  
 
   const toggleCheckbox = () => {
     setIsChecked(!isChecked);

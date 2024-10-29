@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 
-const ProfileApproval = ({ route, navigation }) => {
+const ProfileApproval = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -19,7 +19,7 @@ const ProfileApproval = ({ route, navigation }) => {
       {/* Nút Back */}
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate("DriverSignUpScreen")}
           name="arrow-left"
           size={20}
           color="black"
