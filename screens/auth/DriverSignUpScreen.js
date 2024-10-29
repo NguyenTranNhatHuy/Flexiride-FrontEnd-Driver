@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import getAllDrivers from "../../service/DriverService";
+import axios from "axios";
 const { height } = Dimensions.get("window");
 
 const DriverSignUpScreen = ({ navigation }) => {
@@ -32,9 +33,22 @@ const DriverSignUpScreen = ({ navigation }) => {
     return passwordRegex.test(input);
   };
 
+  const verifyEmail = async (email) => {
+    try {
+      const response = await axios.get(
+        `https://emailvalidation.abstractapi.com/v1/?api_key=20dde04ff65b4eeeaaad784643b8ff30&email=${email}`
+      );
+      const { deliverability } = response.data;
+      return deliverability === "DELIVERABLE";
+    } catch (error) {
+      // console.error("Error verifying email:", error);
+      return false;
+    }
+  };
+
   const handleContinue = async () => {
     let valid = true;
-  
+
     // Validate email
     if (!email) {
       setEmailError("Email không được để trống.");
@@ -45,7 +59,7 @@ const DriverSignUpScreen = ({ navigation }) => {
     } else {
       setEmailError("");
     }
-  
+
     // Validate password
     if (!password) {
       setPasswordError("Mật khẩu không được để trống.");
@@ -58,36 +72,35 @@ const DriverSignUpScreen = ({ navigation }) => {
     } else {
       setPasswordError("");
     }
-  
+
     if (valid) {
+      const isEmailValid = await verifyEmail(email);
+      if (!isEmailValid) {
+        setEmailError("Email không khả dụng hoặc không tồn tại.");
+        return;
+      }
+
       try {
-        // Lấy danh sách email
         const driverList = await getAllDrivers();
-  
         if (!Array.isArray(driverList)) {
-          // console.error("Dữ liệu từ API không hợp lệ:", driverList);
           setEmailError("Không thể kết nối đến dịch vụ. Vui lòng thử lại sau.");
           return;
         }
-  
+
         const emails = driverList.map((driver) => driver.personalInfo.email);
-  
-        // Kiểm tra xem email đã tồn tại chưa
         if (emails.includes(email)) {
           setEmailError("Email đã được sử dụng trong ứng dụng.");
           return;
         }
-  
-        // Lưu email và password
+
         const userInfo = {
           email: email,
           password: password,
         };
-  
+
         await AsyncStorage.setItem("personalInfo", JSON.stringify(userInfo));
         console.log("Email and password saved:", userInfo);
-  
-        // Điều hướng đến màn hình tiếp theo
+
         navigation.navigate("DriverTemp");
       } catch (e) {
         console.error("Lỗi khi kiểm tra hoặc lưu email:", e);
