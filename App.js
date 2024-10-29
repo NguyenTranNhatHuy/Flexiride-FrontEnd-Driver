@@ -55,6 +55,11 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="DriverSignUpScreen"
           component={DriverSignUpScreen}
           options={{ headerShown: false }}

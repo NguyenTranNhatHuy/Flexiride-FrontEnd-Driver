@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Image, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
 export default function Login() {
+
+    const navigation = useNavigation();
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -35,7 +37,7 @@ export default function Login() {
                 <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText}>ĐĂNG NHẬP</Text>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={()=> navigation.navigate('DriverSignUpScreen')}>
                     <Text style={styles.signUpText}>Chưa có tài khoản? Đăng ký</Text>
                 </TouchableOpacity>
             </ScrollView>
