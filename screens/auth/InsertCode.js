@@ -2,29 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { generateOtpCode } from '../../common/GenerateOtpCode';
+import sendEmail from "../../utils/SentEmail";
 
-const InsertCode = ({ navigation }) => {
-    const [code, setCode] = useState(['', '', '', '']);  // Array for each input field
+const InsertCode = ({ navigation, route }) => {
+    const [code, setCode] = useState(['', '', '', '', '']);  // Array for each input field
     const [timer, setTimer] = useState(30);
-    const [phoneNumber, setPhoneNumber] = useState('');  // State to store phone number from local storage
-    const [dummyCode] = useState('1234'); // Dummy verification code
-    const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+    const [email, setEmail] = useState('');  // State to store email from local storage
+    const [dummyCode, setDummyCode] = useState(route.params.otpCode); // Dummy verification code
+    const [name] = useState(route.params.name); // Dummy verification code
+
+    const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
 
     useEffect(() => {
-        // Fetch phone number from local storage on component mount
-        const fetchPhoneNumber = async () => {
+        // Fetch email from local storage on component mount
+        const fetchEmail = async () => {
             try {
                 const storedPersonalInfo = await AsyncStorage.getItem('personalInfo');
                 if (storedPersonalInfo) {
                     const parsedInfo = JSON.parse(storedPersonalInfo);
-                    setPhoneNumber(parsedInfo.phoneNumber);  // Set the phone number in state
+                    setEmail(parsedInfo.email);  // Set the email in state
                 }
             } catch (error) {
-                console.log('Error fetching phone number:', error);
+                console.log('Error fetching email:', error);
             }
         };
 
-        fetchPhoneNumber();
+        fetchEmail();
 
         const countdown = setInterval(() => {
             setTimer((prevTimer) => (prevTimer > 0 ? prevTimer - 1 : 0));
@@ -39,7 +43,7 @@ const InsertCode = ({ navigation }) => {
         if (/^\d$/.test(text)) {
             newCode[index] = text;
             setCode(newCode);
-            if (index < 3) {
+            if (index < 4) {
                 inputRefs[index + 1].current.focus();
             }
         } else if (text === '') {
@@ -70,15 +74,11 @@ const InsertCode = ({ navigation }) => {
 
     const handleResendCode = () => {
         setTimer(30);
-        setCode(['', '', '', '']);
+        setCode(['', '', '', '', '']);
         Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
-    };
-
-    const formatPhoneNumber = (number) => {
-        if (number.length === 10 && number.startsWith('0')) {
-            return `+84${number.slice(1, 7)}***`; // +84 and show the first 7 digits
-        }
-        return number; // Return the original number if not 10 digits
+        const newOtpCode = generateOtpCode();
+        sendEmail(name, email, newOtpCode);
+        setDummyCode(newOtpCode);
     };
 
     return (
@@ -91,11 +91,11 @@ const InsertCode = ({ navigation }) => {
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.container1}>
-                    <Text style={styles.title}>Kiểm tra tin nhắn SMS của bạn:</Text>
+                    <Text style={styles.title}>Kiểm tra tin nhắn được gửi đến email của bạn:</Text>
                     <Text style={styles.description}>
-                        Chúng tôi đã gửi một mã có 4 chữ số đến số điện thoại: 
+                        Chúng tôi đã gửi một mã OTP đến email: 
                     </Text>
-                    <Text style={styles.phone}>{formatPhoneNumber(phoneNumber)}</Text>
+                    <Text style={styles.phone}>{email}</Text>
                     <View style={styles.codeInputContainer}>
                         {code.map((digit, index) => (
                             <TextInput
@@ -147,14 +147,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 25,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 20,
         color: '#000',
         marginTop: 20,
     },
     description: {
         fontSize: 16,
         color: '#333',
-        textAlign: 'justify',
     },
     phone: {
         fontSize: 16,
@@ -210,7 +209,7 @@ const styles = StyleSheet.create({
         padding: 10,
         zIndex: 10,
         width: 50,
-    },
+    },  
 });
 
 export default InsertCode;

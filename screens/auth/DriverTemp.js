@@ -14,6 +14,9 @@ import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import getAllDrivers from "../../service/DriverService";
+import axios from "axios";
+import sendEmail from "../../utils/SentEmail";
+import { generateOtpCode } from "../../common/GenerateOtpCode";
 
 const DriverTemp = ({ navigation }) => {
   const [firstName, setFirstName] = useState("");
@@ -27,18 +30,72 @@ const DriverTemp = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-      // List of all provinces/cities in Vietnam
-      const cities = [
-        "An Giang", "Bà Rịa - Vũng Tàu", "Bạc Liêu", "Bắc Giang", "Bắc Kạn", "Bắc Ninh", "Bến Tre", 
-        "Bình Dương", "Bình Định", "Bình Phước", "Bình Thuận", "Cà Mau", "Cần Thơ", "Cao Bằng", 
-        "Đà Nẵng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", 
-        "Hà Giang", "Hà Nam", "Hà Nội", "Hà Tĩnh", "Hải Dương", "Hải Phòng", "Hậu Giang", 
-        "Hòa Bình", "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lạng Sơn", 
-        "Lào Cai", "Lâm Đồng", "Long An", "Nam Định", "Nghệ An", "Ninh Bình", "Ninh Thuận", 
-        "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", 
-        "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hóa", "Thừa Thiên Huế", 
-        "Tiền Giang", "TP. Hồ Chí Minh", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"
-    ];
+  // List of all provinces/cities in Vietnam
+  const cities = [
+    "An Giang",
+    "Bà Rịa - Vũng Tàu",
+    "Bạc Liêu",
+    "Bắc Giang",
+    "Bắc Kạn",
+    "Bắc Ninh",
+    "Bến Tre",
+    "Bình Dương",
+    "Bình Định",
+    "Bình Phước",
+    "Bình Thuận",
+    "Cà Mau",
+    "Cần Thơ",
+    "Cao Bằng",
+    "Đà Nẵng",
+    "Đắk Lắk",
+    "Đắk Nông",
+    "Điện Biên",
+    "Đồng Nai",
+    "Đồng Tháp",
+    "Gia Lai",
+    "Hà Giang",
+    "Hà Nam",
+    "Hà Nội",
+    "Hà Tĩnh",
+    "Hải Dương",
+    "Hải Phòng",
+    "Hậu Giang",
+    "Hòa Bình",
+    "Hưng Yên",
+    "Khánh Hòa",
+    "Kiên Giang",
+    "Kon Tum",
+    "Lai Châu",
+    "Lạng Sơn",
+    "Lào Cai",
+    "Lâm Đồng",
+    "Long An",
+    "Nam Định",
+    "Nghệ An",
+    "Ninh Bình",
+    "Ninh Thuận",
+    "Phú Thọ",
+    "Phú Yên",
+    "Quảng Bình",
+    "Quảng Nam",
+    "Quảng Ngãi",
+    "Quảng Ninh",
+    "Quảng Trị",
+    "Sóc Trăng",
+    "Sơn La",
+    "Tây Ninh",
+    "Thái Bình",
+    "Thái Nguyên",
+    "Thanh Hóa",
+    "Thừa Thiên Huế",
+    "Tiền Giang",
+    "TP. Hồ Chí Minh",
+    "Trà Vinh",
+    "Tuyên Quang",
+    "Vĩnh Long",
+    "Vĩnh Phúc",
+    "Yên Bái",
+  ];
   // Fetch email and password from AsyncStorage when component mounts
   useEffect(() => {
     const fetchPersonalInfo = async () => {
@@ -56,6 +113,26 @@ const DriverTemp = ({ navigation }) => {
 
     fetchPersonalInfo();
   }, []);
+
+  const formatPhoneNumber = (number) => {
+    if (number.startsWith("0") && number.length === 10) {
+      return `84${number.slice(1)}`;
+    }
+    return number;
+  };
+
+  const validatePhone = async (phone) => {
+    try {
+      const phoneNumber = formatPhoneNumber(phone);
+      const response = await axios.get(
+        `https://phonevalidation.abstractapi.com/v1/?api_key=d70746d2ef17484893193d81af4e39c6&phone=${phoneNumber}`
+      );
+      return response.data.valid;
+    } catch (error) {
+      // console.error("Error verifying phone:", error);
+      return false;
+    }
+  };
 
   const handleContinue = async () => {
     let newErrors = {};
@@ -75,15 +152,19 @@ const DriverTemp = ({ navigation }) => {
     }
 
     if (!phoneNumber) {
-      newErrors.phoneNumber = "Số điện thoại không hợp lệ.";
+      newErrors.phoneNumber = "Số điện thoại không được để trống.";
     } else if (!phoneNumberRegex.test(phoneNumber)) {
       newErrors.phoneNumber =
         "Vui lòng nhập số điện thoại bắt đầu bằng 0 và gồm 10 chữ số.";
+    } else if (!(await validatePhone(phoneNumber))) {
+      newErrors.phoneNumber = "Số điện thoại không hợp lệ.";
     } else {
       // Check if phone number already exists using getAllDriver method
       try {
         const existingDrivers = await getAllDrivers(); // Giả sử phương thức này trả về danh sách tài xế
-        const phoneExists = existingDrivers.some(driver => driver.personalInfo.phoneNumber === phoneNumber);
+        const phoneExists = existingDrivers.some(
+          (driver) => driver.personalInfo.phoneNumber === phoneNumber
+        );
 
         if (phoneExists) {
           newErrors.phoneNumber = "Số điện thoại này đã tồn tại.";
@@ -128,13 +209,17 @@ const DriverTemp = ({ navigation }) => {
         console.log("Updated personalInfo saved:", updatedInfo);
 
         // Navigate to the next screen
-        navigation.navigate('InsertCode');
+        const otpCode = generateOtpCode();
+        const name = firstName + lastName;
+        const email = updatedInfo.email;
+        sendEmail(name, email, otpCode);
+        // console.log("code: ", generateOtpCode());
+        navigation.navigate("InsertCode", { otpCode, name });
       } catch (e) {
         console.error("Failed to update and save personal info:", e);
       }
     }
   };
-  
 
   const toggleCheckbox = () => {
     setIsChecked(!isChecked);

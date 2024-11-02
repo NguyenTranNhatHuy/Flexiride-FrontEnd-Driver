@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const DRIVER_API_URL = "http://192.168.1.3:3000/driver/";
+const DRIVER_API_URL = "http://192.168.1.5:3000/driver/";
 
 const getAllDrivers = async () => {
   try {
