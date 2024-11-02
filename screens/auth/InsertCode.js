@@ -10,7 +10,8 @@ const InsertCode = ({ navigation, route }) => {
     const [timer, setTimer] = useState(30);
     const [email, setEmail] = useState('');  // State to store email from local storage
     const [dummyCode, setDummyCode] = useState(route.params.otpCode); // Dummy verification code
-    const [name] = useState(route.params.name); // Dummy verification code
+    const [name] = useState(route.params.name); // User's name
+    const [otpExpiration, setOtpExpiration] = useState(Date.now() + 10 * 60 * 1000); // Set expiration to 10 minutes from now
 
     const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
 
@@ -65,7 +66,11 @@ const InsertCode = ({ navigation, route }) => {
 
     const handleVerifyCode = () => {
         const enteredCode = code.join('');
-        if (enteredCode === dummyCode) {
+        const currentTime = Date.now();
+        
+        if (currentTime > otpExpiration) {
+            Alert.alert('Thông báo', 'Mã xác thực đã hết hiệu lực. Vui lòng yêu cầu mã mới.');
+        } else if (enteredCode === dummyCode) {
             navigation.navigate('SubscriptionService');
         } else {
             Alert.alert('Thông báo', 'Mã xác thực không đúng. Vui lòng thử lại.');
@@ -75,10 +80,11 @@ const InsertCode = ({ navigation, route }) => {
     const handleResendCode = () => {
         setTimer(30);
         setCode(['', '', '', '', '']);
-        Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
         const newOtpCode = generateOtpCode();
-        sendEmail(name, email, newOtpCode);
         setDummyCode(newOtpCode);
+        setOtpExpiration(Date.now() + 10 * 60 * 1000); // Reset expiration time for the new OTP
+        sendEmail(name, email, newOtpCode);
+        Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
     };
 
     return (
