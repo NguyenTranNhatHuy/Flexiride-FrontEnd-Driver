@@ -139,11 +139,6 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Login"
-              component={Login}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
               name="HomeScreen"
               component={HomeScreen}
               options={{ headerShown: false }}
