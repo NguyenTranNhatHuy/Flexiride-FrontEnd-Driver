@@ -32,26 +32,7 @@ import { LocationProvider } from "./provider/LocationCurrentProvider";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
-    // <Login />
-    // <PartnerSignUpScreen />
-    // <DriverTemp />
-    // <InsertCode/>
-    // <SubscriptionService/>
-    // <Info/>
-    // <PersonalInformation/>
-    // <PortraitPhoto/>
-    // <Passport/>
-    // <License/>
-    // <JudicialBackground/>
-    // <EmergencyContact/>
-    // <BankAccountNumber/>
-    // <Commitment/>
-    // <VehicleInformation/>
-    // <CarImage/>
-    // <VehicleRegistration/>
-    // <CarInsurance/>
-    // <ProfileApproval/>
-    // <Splash/>
+    
     // <SocketProvider>
     <LocationProvider>
       <AuthProvider>
@@ -60,6 +41,11 @@ export default function App() {
             <Stack.Screen
               name="Splash"
               component={Splash}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={Login}
               options={{ headerShown: false }}
             />
             <Stack.Screen

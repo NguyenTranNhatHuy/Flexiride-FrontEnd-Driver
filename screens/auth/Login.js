@@ -136,7 +136,7 @@ export default function Login({ navigation }) {
           <Text style={styles.errorText}>{errors.general}</Text>
         )}
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=> navigation.navigate('DriverSignUpScreen')}>
           <Text style={styles.signUpText}>Chưa có tài khoản? Đăng ký</Text>
         </TouchableOpacity>
       </ScrollView>

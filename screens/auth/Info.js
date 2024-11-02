@@ -6,15 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome'; // Thêm thư viện i
 //5. Thông tin
 const Info = ({navigation, route}) => {
     const handleContinue = () => {
-        navigation.navigate('PersonalInformation', {
-            email: route.params.email,
-            password: route.params.password,
-            firstName:route.params.firstName,
-            lastName: route.params.lastName,
-            phoneNumber: route.params.phoneNumber,
-            city: route.params.selectedCity,
-            serviceType: route.params.serviceType
-        });
+        navigation.navigate('PersonalInformation');
     };
     return (
         <KeyboardAvoidingView
@@ -63,7 +55,7 @@ const Info = ({navigation, route}) => {
 
                 {/* Các nút chọn */}
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('SubscriptionService', { email: route.params.email  })} style={[styles.optionButton, styles.optionLeft]}>
+                    <TouchableOpacity onPress={() => navigation.navigate('SubscriptionService')} style={[styles.optionButton, styles.optionLeft]}>
                         <Text style={styles.optionLeftText}>Không</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleContinue} style={[styles.optionButton, styles.optionRight]}>

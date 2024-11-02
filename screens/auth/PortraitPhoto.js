@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import {
   StyleSheet,
   Text,
@@ -14,18 +14,37 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-import { uploadImageToCloudinary } from "../..//utils/CloudinaryConfig";
+import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
-const PortraitPhoto = ({ route }) => {
+const PortraitPhoto = () => {
   const navigation = useNavigation();
   const [selectedImage, setSelectedImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
 
+  // Function to retrieve avatar from local storage
+  const getAvatarFromLocalStorage = async () => {
+    try {
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      if (storedPersonalInfo) {
+        const parsedInfo = JSON.parse(storedPersonalInfo);
+        setAvatarUrl(parsedInfo.avatar || ""); // Set avatar URL or empty if not available
+        setSelectedImage(parsedInfo.avatar || null); // Set selectedImage if avatar URL exists
+      }
+    } catch (error) {
+      console.error("Error retrieving avatar from local storage:", error);
+    }
+  };
+
+  // Fetch avatar when the component mounts
+  useEffect(() => {
+    getAvatarFromLocalStorage();
+  }, []);
+
   // Function to open image picker
   const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
       Alert.alert("Quyền truy cập", "Quyền truy cập thư viện ảnh bị từ chối.");
@@ -44,31 +63,61 @@ const PortraitPhoto = ({ route }) => {
     }
   };
 
-  // Function to handle image upload
-  const handleUpload = async () => {
-    if (!selectedImage) {
-      Alert.alert("Lỗi", "Vui lòng chọn một ảnh trước khi tải lên");
+  // Function to open the camera
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Quyền truy cập", "Quyền truy cập camera bị từ chối.");
       return;
     }
 
-    setUploading(true);
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-    try {
-      const uploadedAvatarUrl = await uploadImageToCloudinary(selectedImage);
-      setAvatarUrl(uploadedAvatarUrl);
-
-      // Navigate to PersonalInformation with avatarUrl and completeFlag
-      navigation.navigate("PersonalInformation", {
-        avatar: uploadedAvatarUrl,
-        PortraitCompleted: true,
-      });
-    } catch (error) {
-      Alert.alert("Lỗi", error.message);
-    } finally {
-      setUploading(false);
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
     }
   };
 
+  // Function to handle image upload
+const handleUpload = async () => {
+  if (!selectedImage) {
+    Alert.alert("Lỗi", "Vui lòng chọn một ảnh trước khi tải lên");
+    return;
+  }
+
+  setUploading(true);
+  console.log("Uploading image:", selectedImage); // Log the selected image URI
+
+  try {
+    const uploadedAvatarUrl = await uploadImageToCloudinary(selectedImage);
+    console.log("Uploaded Avatar URL:", uploadedAvatarUrl); // Log the uploaded URL
+    setAvatarUrl(uploadedAvatarUrl);
+    setSelectedImage(uploadedAvatarUrl); // Set selectedImage to the uploaded URL
+
+    // Save the uploaded avatar URL to local storage
+    const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+    if (storedPersonalInfo) {
+      const parsedInfo = JSON.parse(storedPersonalInfo);
+      parsedInfo.avatar = uploadedAvatarUrl; // Save avatar URL to personalInfo
+      await AsyncStorage.setItem("personalInfo", JSON.stringify(parsedInfo)); // Save back to local storage
+    }
+
+    // Navigate to PersonalInformation with avatarUrl and completeFlag
+    navigation.navigate("PersonalInformation");
+  } catch (error) {
+    console.error("Upload error:", error); // Log any errors
+    Alert.alert("Lỗi", error.message);
+  } finally {
+    setUploading(false);
+  }
+};
+
+  
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -95,6 +144,8 @@ const PortraitPhoto = ({ route }) => {
         <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
           {selectedImage ? (
             <Image source={{ uri: selectedImage }} style={styles.icon} />
+          ) : avatarUrl ? ( // Show avatarUrl if available
+            <Image source={{ uri: avatarUrl }} style={styles.icon} />
           ) : (
             <>
               <Image
@@ -104,6 +155,11 @@ const PortraitPhoto = ({ route }) => {
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
+        </TouchableOpacity>
+
+        {/* Camera Button */}
+        <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
+          <Text style={styles.cameraButtonText}>Chụp ảnh từ camera</Text>
         </TouchableOpacity>
 
         {/* Requirements */}
@@ -139,13 +195,7 @@ const PortraitPhoto = ({ route }) => {
           )}
         </TouchableOpacity>
 
-        {/* Display Avatar */}
-        {avatarUrl && (
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarHeader}>Ảnh đại diện:</Text>
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-          </View>
-        )}
+        
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -194,6 +244,17 @@ const styles = StyleSheet.create({
     color: "#6A6A6A",
     fontSize: 16,
   },
+  cameraButton: {
+    backgroundColor: "#270C6D",
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginVertical: 20,
+    alignItems: "center",
+  },
+  cameraButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
   requirementsContainer: {
     backgroundColor: "#D9D9D9",
     padding: 20,
@@ -213,8 +274,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 10,
     borderRadius: 20,
-    marginTop: 70,
-    marginLeft: 260,
+    marginTop: 20,
+    marginBottom: 20,
+    marginLeft:260,
     alignSelf: "center",
   },
   saveButtonText: {

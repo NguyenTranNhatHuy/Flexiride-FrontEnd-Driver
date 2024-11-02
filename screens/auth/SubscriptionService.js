@@ -10,26 +10,31 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
-//4. Chọn dịch vụ đăng kí
-const SubscriptionService = ({ navigation, route }) => {
+const SubscriptionService = ({ navigation }) => {
   const [selectedService, setSelectedService] = useState("");
-  const handleContinue = () => {
+
+  const handleContinue = async () => {
     if (!selectedService) {
       alert("Vui lòng chọn dịch vụ để tiếp tục.");
       return;
     }
 
+    // Save the selected service to local storage
+    try {
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      if (storedPersonalInfo) {
+        const parsedInfo = JSON.parse(storedPersonalInfo);
+        parsedInfo.serviceType = selectedService; // Add serviceType to the object
+        await AsyncStorage.setItem("personalInfo", JSON.stringify(parsedInfo)); // Save back to local storage
+      }
+    } catch (error) {
+      console.log("Error saving service type:", error);
+    }
+
     console.log("Dịch vụ đã chọn:", selectedService);
-    navigation.navigate("Info", {
-      email: route.params.email,
-      password: route.params.password,
-      firstName: route.params.firstName,
-      lastName: route.params.lastName,
-      phoneNumber: route.params.phoneNumber,
-      city: route.params.selectedCity,
-      serviceType: selectedService,
-    });
+    navigation.navigate("Info");
   };
 
   return (
@@ -40,12 +45,7 @@ const SubscriptionService = ({ navigation, route }) => {
       {/* Nút Back */}
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() =>
-            navigation.navigate("DriverTemp", {
-              email: route.params.email,
-              phoneNumber: route.params.phoneNumber,
-            })
-          }
+          onPress={() => navigation.navigate("DriverTemp")} // Navigate back without using route
           name="arrow-left"
           size={20}
           color="black"
