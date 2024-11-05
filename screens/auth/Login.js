@@ -47,7 +47,7 @@ export default function Login({ navigation }) {
       };
       try {
         const response = await axios.post(
-          "http://192.168.1.5:3000/auth/login",
+          "http://192.168.1.9:3000/auth/login",
           loginData
         );
         if (response.data.token) {
@@ -123,7 +123,9 @@ export default function Login({ navigation }) {
             <Text style={styles.errorText}>{errors.general}</Text>
           )}
           <View style={styles.forgotPasswordContainer}>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassworDriver")}
+            >
               <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
             </TouchableOpacity>
           </View>

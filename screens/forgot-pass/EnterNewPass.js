@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { updatePassword } from "../../service/DriverService"; // Import the updatePassword function
+import { updatePassword } from "../../service/AuthDriverService";
 
 const EnterNewPass = ({ navigation, route }) => {
   const [email, setEmail] = useState(route.params.email);
@@ -27,6 +27,11 @@ const EnterNewPass = ({ navigation, route }) => {
 
   const handleContinue = async () => {
     let newErrors = {};
+
+    // Email validation
+    if (!email) {
+      newErrors.email = "Vui lòng nhập email.";
+    }
 
     // Password validation
     if (!newPassword) {
@@ -50,7 +55,7 @@ const EnterNewPass = ({ navigation, route }) => {
         // Call updatePassword API
         await updatePassword(email, newPassword);
         Alert.alert("Thành công", "Mật khẩu đã được cập nhật.");
-        navigation.navigate(""); // Navigate to the appropriate screen
+        navigation.navigate("ChangePassSuccess");
       } catch (error) {
         Alert.alert("Lỗi", "Đã xảy ra lỗi khi cập nhật mật khẩu.");
       }
@@ -88,7 +93,6 @@ const EnterNewPass = ({ navigation, route }) => {
               placeholder="Mật khẩu mới *"
               secureTextEntry={true}
               placeholderTextColor="#6D6A6A"
-              // keyboardType="default" // You can specify this if needed, but default is already the case
             />
             {errors.newPassword && (
               <Text style={styles.errorMessage}>{errors.newPassword}</Text>
@@ -103,7 +107,6 @@ const EnterNewPass = ({ navigation, route }) => {
               placeholder="Nhập lại mật khẩu mới *"
               secureTextEntry={true}
               placeholderTextColor="#6D6A6A"
-              // keyboardType="default" // Same here
             />
             {errors.confirmPassword && (
               <Text style={styles.errorMessage}>{errors.confirmPassword}</Text>
@@ -119,7 +122,6 @@ const EnterNewPass = ({ navigation, route }) => {
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

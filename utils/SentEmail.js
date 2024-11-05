@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 
 const sendEmail = async (name, email, otpCode) => {
   try {
-    const response = await fetch("http://192.168.1.5:3000/driver/send-email", {
+    const response = await fetch("http://192.168.1.9:3000/driver/send-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
