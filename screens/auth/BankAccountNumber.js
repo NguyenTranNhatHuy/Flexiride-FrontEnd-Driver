@@ -169,7 +169,7 @@ const BankAccountNumber = ({ route, navigation }) => {
         {/* Non-editable TextInput for account holder's name */}
         <TextInput
           style={styles.input}
-          placeholder="Tên chủ tài khoản *"
+          placeholder="Tên chủ tài khoản"
           placeholderTextColor="#999"
           value={accountHolder}
           editable={false} // Set editable to false to make it read-only

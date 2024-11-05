@@ -75,10 +75,10 @@ const DriverSignUpScreen = ({ navigation }) => {
 
     if (valid) {
       const isEmailValid = await verifyEmail(email);
-      if (!isEmailValid) {
-        setEmailError("Email không khả dụng hoặc không tồn tại.");
-        return;
-      }
+      // if (!isEmailValid) {
+      //   setEmailError("Email không khả dụng hoặc không tồn tại.");
+      //   return;
+      // }
 
       try {
         const driverList = await getAllDrivers();
