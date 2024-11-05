@@ -5,19 +5,27 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  Dimensions,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
-import { updatePassword } from "../../service/DriverService"; // Import the updatePassword function
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import getAllDrivers from "../../service/DriverService";
+import axios from "axios";
+const { height } = Dimensions.get("window");
 
-const EnterNewPass = ({ navigation, route }) => {
-  const [email, setEmail] = useState(route.params.email);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState({});
+const DriverSignUpScreen = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const validateEmail = (input) => {
+    const emailRegex = /^[a-zA-Z][^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(input);
+  };
 
   const validatePassword = (input) => {
     const passwordRegex =
@@ -25,34 +33,77 @@ const EnterNewPass = ({ navigation, route }) => {
     return passwordRegex.test(input);
   };
 
+  const verifyEmail = async (email) => {
+    try {
+      const response = await axios.get(
+        `https://emailvalidation.abstractapi.com/v1/?api_key=20dde04ff65b4eeeaaad784643b8ff30&email=${email}`
+      );
+      const { deliverability } = response.data;
+      return deliverability === "DELIVERABLE";
+    } catch (error) {
+      // console.error("Error verifying email:", error);
+      return false;
+    }
+  };
+
   const handleContinue = async () => {
-    let newErrors = {};
+    let valid = true;
 
-    // Password validation
-    if (!newPassword) {
-      newErrors.newPassword = "Vui lòng nhập mật khẩu mới.";
-    } else if (!validatePassword(newPassword)) {
-      newErrors.newPassword =
-        "Mật khẩu phải có 8-12 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.";
+    // Validate email
+    if (!email) {
+      setEmailError("Email không được để trống.");
+      valid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError("Email không hợp lệ.");
+      valid = false;
+    } else {
+      setEmailError("");
     }
 
-    // Confirm Password validation
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
-    } else if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu không khớp.";
+    // Validate password
+    if (!password) {
+      setPasswordError("Mật khẩu không được để trống.");
+      valid = false;
+    } else if (!validatePassword(password)) {
+      setPasswordError(
+        "Mật khẩu phải có 8-12 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt."
+      );
+      valid = false;
+    } else {
+      setPasswordError("");
     }
 
-    setErrors(newErrors);
+    if (valid) {
+      // const isEmailValid = await verifyEmail(email);
+      // if (!isEmailValid) {
+      //   setEmailError("Email không khả dụng hoặc không tồn tại.");
+      //   return;
+      // }
 
-    if (Object.keys(newErrors).length === 0) {
       try {
-        // Call updatePassword API
-        await updatePassword(email, newPassword);
-        Alert.alert("Thành công", "Mật khẩu đã được cập nhật.");
-        navigation.navigate(""); // Navigate to the appropriate screen
-      } catch (error) {
-        Alert.alert("Lỗi", "Đã xảy ra lỗi khi cập nhật mật khẩu.");
+        const driverList = await getAllDrivers();
+        if (!Array.isArray(driverList)) {
+          setEmailError("Không thể kết nối đến dịch vụ. Vui lòng thử lại sau.");
+          return;
+        }
+
+        const emails = driverList.map((driver) => driver.personalInfo.email);
+        if (emails.includes(email)) {
+          setEmailError("Email đã được sử dụng trong ứng dụng.");
+          return;
+        }
+
+        const userInfo = {
+          email: email,
+          password: password,
+        };
+
+        await AsyncStorage.setItem("personalInfo", JSON.stringify(userInfo));
+        console.log("Email and password saved:", userInfo);
+
+        navigation.navigate("DriverTemp");
+      } catch (e) {
+        console.error("Lỗi khi kiểm tra hoặc lưu email:", e);
       }
     }
   };
@@ -62,85 +113,89 @@ const EnterNewPass = ({ navigation, route }) => {
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : null}
     >
-      <TouchableOpacity style={styles.backButton}>
-        <Icon
-          onPress={() => navigation.navigate("ForgotPasswordDriver")}
-          name="arrow-left"
-          size={20}
-          color="black"
-        />
-      </TouchableOpacity>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.headerText}>Cung cấp mật khẩu mới của bạn</Text>
+          <Text style={styles.headerText}>Trở thành đối tác của FRide</Text>
+          <Text style={styles.subHeaderText}>Mang lại niềm vui </Text>
           <Text style={styles.subHeaderText}>
-            Sắp lấy lại được tài khoản rồi.
+            sự thuận tiện cho khách hàng!
           </Text>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              onChangeText={setNewPassword}
-              value={newPassword}
-              placeholder="Mật khẩu mới *"
-              secureTextEntry={true}
-              placeholderTextColor="#6D6A6A"
-              // keyboardType="default" // You can specify this if needed, but default is already the case
-            />
-            {errors.newPassword && (
-              <Text style={styles.errorMessage}>{errors.newPassword}</Text>
-            )}
+          <View style={styles.googleSignUpContainer}>
+            <View style={styles.line} />
+            <Text style={styles.googleText}>Đăng ký tài khoản</Text>
+            <View style={styles.line} />
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              onChangeText={setConfirmPassword}
-              value={confirmPassword}
-              placeholder="Nhập lại mật khẩu mới *"
-              secureTextEntry={true}
-              placeholderTextColor="#6D6A6A"
-              // keyboardType="default" // Same here
-            />
-            {errors.confirmPassword && (
-              <Text style={styles.errorMessage}>{errors.confirmPassword}</Text>
-            )}
+          {/* Email Input */}
+          <TextInput
+            style={[styles.input, emailError ? styles.inputError : null]}
+            onChangeText={(text) => {
+              setEmail(text);
+              setEmailError(""); // Xóa lỗi khi người dùng bắt đầu nhập
+            }}
+            value={email}
+            placeholder="Email"
+            keyboardType="email-address"
+            placeholderTextColor="#6D6A6A"
+          />
+          {emailError ? (
+            <Text style={styles.errorText}>{emailError}</Text>
+          ) : null}
+
+          {/* Password Input */}
+          <TextInput
+            style={[styles.input, passwordError ? styles.inputError : null]}
+            onChangeText={(text) => {
+              setPassword(text);
+              setPasswordError(""); // Xóa lỗi khi người dùng bắt đầu nhập
+            }}
+            value={password}
+            placeholder="Mật khẩu"
+            secureTextEntry={true}
+            placeholderTextColor="#6D6A6A"
+          />
+          {passwordError ? (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          ) : null}
+          <View style={styles.loginContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+              <Text style={styles.forgotPassword}>Bạn đã có tài khoản?</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Continue Button */}
           <TouchableOpacity style={styles.button} onPress={handleContinue}>
             <Text style={styles.buttonText}>Tiếp tục</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Image Section */}
+        <View style={styles.imageContainer}>
+          <Image
+            style={styles.image}
+            source={require("../../assets/splash.png")}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFC323",
-    alignItems: "stretch",
-    justifyContent: "flex-start",
-    paddingTop: 30,
   },
   scrollContainer: {
     flexGrow: 1,
   },
-  inputContainer: {
-    width: "100%",
-  },
   content: {
-    width: "100%",
     flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
     paddingHorizontal: 20,
-    marginBottom: 300,
+    justifyContent: "center",
   },
   headerText: {
     fontSize: 20,
@@ -150,48 +205,70 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   subHeaderText: {
-    fontSize: 16,
+    fontSize: 24,
     textAlign: "left",
-    paddingHorizontal: 0,
-    fontWeight: "300",
-    marginBottom: 10,
+    fontWeight: "bold",
+  },
+  googleSignUpContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "black",
+  },
+  googleText: {
+    fontSize: 16,
+    paddingHorizontal: 10,
   },
   input: {
     height: 50,
-    marginHorizontal: 0,
     borderWidth: 1,
     padding: 10,
     width: "100%",
     backgroundColor: "#fff",
     borderRadius: 8,
+    marginTop: 20,
     borderColor: "#6C6A6A",
-    margin: 20,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    marginTop: 5,
   },
   button: {
     backgroundColor: "#270C6D",
     paddingHorizontal: 40,
     paddingVertical: 10,
     borderRadius: 20,
+    marginTop: 50,
     alignSelf: "flex-end",
   },
   buttonText: {
     color: "white",
     fontSize: 16,
   },
-  errorMessage: {
-    color: "red",
-    fontSize: 12,
-    marginTop: -10,
-    marginBottom: 10,
-  },
-  backButton: {
-    flexDirection: "row",
+  imageContainer: {
+    height: height * 0.25, // Set the height to 25% of the screen height
+    justifyContent: "center",
     alignItems: "center",
-    zIndex: 10,
-    padding: 10,
-    marginTop: -20,
-    width: 50,
+    marginTop: 20,
+  },
+  image: {
+    width: "100%",
+    height: "150%",
+    resizeMode: "stretch", // Ensure the image fits within the container
+  },
+  loginContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginBottom: 20,
+    marginTop: 10,
   },
 });
 
-export default EnterNewPass;
+export default DriverSignUpScreen;
