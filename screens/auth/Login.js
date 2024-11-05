@@ -124,7 +124,7 @@ export default function Login({ navigation }) {
           )}
           <View style={styles.forgotPasswordContainer}>
             <TouchableOpacity
-              onPress={() => navigation.navigate("ForgotPassworDriver")}
+              onPress={() => navigation.navigate("ForgotPasswordDriver")}
             >
               <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
             </TouchableOpacity>
