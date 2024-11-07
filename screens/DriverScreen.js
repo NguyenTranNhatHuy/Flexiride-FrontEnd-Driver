@@ -15,28 +15,32 @@ import LocationContext from "../provider/LocationCurrentProvider";
 import io from "socket.io-client";
 import { formatCurrency } from "../utils/FormatPrice";
 import axios from "axios";
+import { IP_ADDRESS } from "@env";
 
 const DriverScreen = ({ navigation }) => {
   const { location, loading, error } = useContext(LocationContext);
+
   const [isOnline, setIsOnline] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [requestTimeout, setRequestTimeout] = useState(null);
   const [distanceToPickup, setDistanceToPickup] = useState(null);
   const [serviceName, setServiceName] = useState(null);
+  const [request, setRequest] = useState(null);
+
   const [showMissedScreen, setShowMissedScreen] = useState(false);
   const socket = useRef(null);
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io("http://192.168.88.142:3000", {
+      socket.current = io(`http://${IP_ADDRESS}:3000`, {
         transports: ["websocket"],
       });
-
+      console.log("connected");
       socket.current.on("connect", () => {
         if (isOnline && location && location.latitude && location.longitude) {
           socket.current.emit("driverOnline", {
-            id: "670fd4722fb8c406a22fd11e",
+            id: "6720c996743774e812904a02",
             location: {
               lat: location.latitude,
               lng: location.longitude,
@@ -76,9 +80,9 @@ const DriverScreen = ({ navigation }) => {
           setDistanceToPickup("N/A");
         }
         fetchServiceName(request.serviceId);
+        // fetchRequestDetail(request.requestId);
 
         const timeout = setTimeout(() => {
-          console.log("Yêu cầu đã hết hạn");
           if (modalVisible) {
             handleMissedRequest();
             socket.current.emit("bookingRequestExpired", {
@@ -126,7 +130,7 @@ const DriverScreen = ({ navigation }) => {
   useEffect(() => {
     if (socket.current && isOnline && location) {
       socket.current.emit("driverOnline", {
-        id: "670fd4722fb8c406a22fd11e",
+        id: "6720c996743774e812904a02",
         location: {
           lat: location.latitude,
           lng: location.longitude,
@@ -134,7 +138,7 @@ const DriverScreen = ({ navigation }) => {
         serviceType: "6713ed463526cf13c53cb3bd",
       });
     } else if (socket.current && !isOnline) {
-      socket.current.emit("driverOffline", { id: "670fd4722fb8c406a22fd11e" });
+      socket.current.emit("driverOffline", { id: "6720c996743774e812904a02" });
     }
   }, [isOnline, location]);
 
@@ -152,7 +156,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOffline = () => {
     setIsOnline(false);
     if (socket.current) {
-      socket.current.emit("driverOffline", { id: "670fd4722fb8c406a22fd11e" });
+      socket.current.emit("driverOffline", { id: "6720c996743774e812904a02" });
     }
   };
 
@@ -160,7 +164,7 @@ const DriverScreen = ({ navigation }) => {
     if (socket.current && rideRequest) {
       socket.current.emit("acceptRide", {
         requestId: rideRequest.requestId,
-        driverId: "670fd4722fb8c406a22fd11e",
+        driverId: "6720c996743774e812904a02",
         customerId: rideRequest.customerId,
       });
 
@@ -177,6 +181,22 @@ const DriverScreen = ({ navigation }) => {
         "Đã chấp nhận yêu cầu!",
         "Bạn đã nhận chuyến của khách hàng."
       );
+
+      // Truyền bookingDetails sang BookingTraditional
+      navigation.navigate("BookingTraditional", {
+        bookingDetails: {
+          requestId: rideRequest.requestId,
+          customerId: rideRequest.customerId,
+          pickupLocation: rideRequest.pickupLocation,
+          destinationLocation: rideRequest.destinationLocation,
+          customerAddress: rideRequest.pickupLocation.address,
+          fare: rideRequest.price,
+          paymentMethod: rideRequest.paymentMethod,
+          serviceName: serviceName,
+          moment_book: rideRequest.moment_book,
+          status: rideRequest.status,
+        },
+      });
     }
   };
 
@@ -194,9 +214,20 @@ const DriverScreen = ({ navigation }) => {
   const fetchServiceName = async (serviceId) => {
     try {
       const response = await axios.get(
-        `http://192.168.88.142:3000/booking-traditional/vehicle/${serviceId}`
+        `http://${IP_ADDRESS}:3000/booking-traditional/vehicle/${serviceId}`
       );
       setServiceName(response.data.name);
+    } catch (error) {
+      console.error("Error fetching service name:", error);
+      setServiceName("Unknown Service");
+    }
+  };
+  const fetchRequestDetail = async (requestId) => {
+    try {
+      const response = await axios.get(
+        `http://${IP_ADDRESS}:3000/booking-traditional/request/${requestId}`
+      );
+      setRequest(response.data);
     } catch (error) {
       console.error("Error fetching service name:", error);
       setServiceName("Unknown Service");
@@ -228,7 +259,11 @@ const DriverScreen = ({ navigation }) => {
     <View style={styles.container}>
       {location ? (
         <MapView style={styles.map} initialRegion={location}>
-          <Marker coordinate={location} />
+          <Marker coordinate={location}>
+            <View style={{ width: 35, height: 35 }}>
+              <Ionicons name="navigate-circle" size={35} color="blue" />
+            </View>
+          </Marker>
         </MapView>
       ) : (
         <Text>Đang lấy vị trí...</Text>
@@ -301,6 +336,15 @@ const DriverScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalDistance}>{serviceName}</Text>
+            <Text style={styles.modalPaymentMethod}>
+              Phương thức thanh toán:{" "}
+              {rideRequest?.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
+            </Text>
+
+            {/* Giá cước */}
+            <Text style={styles.modalFare}>
+              Giá cước: {formatCurrency(rideRequest?.price)}
+            </Text>
             <Text style={styles.modalDistance}>
               Cách bạn {distanceToPickup} km
             </Text>
@@ -501,6 +545,18 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
+  modalPaymentMethod: {
+    fontSize: 16,
+    color: "#6c757d",
+    marginVertical: 5,
+  },
+  modalFare: {
+    fontSize: 16,
+    color: "#4CAF50",
+    fontWeight: "bold",
+    marginVertical: 5,
+  },
+
   modalDistance: {
     fontSize: 16,
     color: "#6c757d",

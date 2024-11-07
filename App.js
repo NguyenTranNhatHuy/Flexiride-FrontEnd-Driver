@@ -26,9 +26,11 @@ import ProfileApproval from "./screens/auth/ProfileApproval";
 import { AuthProvider } from "./provider/AuthProvider";
 import HomeScreen from "./screens/HomeScreen";
 import DriverScreen from "./screens/DriverScreen";
-import TestMap from "./screens/TestMap";
 import { SocketProvider } from "./provider/SocketProvider";
 import { LocationProvider } from "./provider/LocationCurrentProvider";
+import BookingTraditional from "./screens/BookingTraditional";
+import VietMapNavigationScreen from "./screens/VietMapNavigationScreen";
+import ChatScreenDriver from "./screens/ChatScreen";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -168,8 +170,18 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="TestMap"
-              component={TestMap}
+              name="BookingTraditional"
+              component={BookingTraditional}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VietMapNavigationScreen"
+              component={VietMapNavigationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ChatScreenDriver"
+              component={ChatScreenDriver}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

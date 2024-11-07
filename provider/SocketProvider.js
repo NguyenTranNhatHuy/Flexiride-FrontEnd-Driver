@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import io from "socket.io-client";
+import { IP_ADDRESS } from "@env";
 
 const SocketContext = createContext();
 
@@ -16,7 +17,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Kết nối socket khi component khởi tạo
-    socket.current = io("http://192.168.88.142:3000", {
+    socket.current = io(`http://${IP_ADDRESS}:3000`, {
       transports: ["websocket"],
     });
 
