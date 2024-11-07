@@ -12,7 +12,7 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import registerDriver from "../../service/AuthDriverService"; // Đảm bảo rằng đường dẫn đúng
+import { registerDriver } from "../../service/AuthDriverService"; // Đảm bảo rằng đường dẫn đúng
 const VehicleInformation = ({ navigation }) => {
   const [carImageCompleted, setCarImageCompleted] = useState(false);
   const [carInsuranceCompleted, setCarInsuranceCompleted] = useState(false);

@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_URL_IP_ADDRESS } from "@env";
 
-const DRIVER_API_URL = "http://192.168.1.9:3000/driver/";
-const AUTH_API_URL = "http://192.168.1.9:3000/auth/";
+const DRIVER_API_URL = `http://${API_URL_IP_ADDRESS}:3000/driver/`;
+const AUTH_API_URL = `http://${API_URL_IP_ADDRESS}:3000/auth/`;
 
 const registerDriver = async (driverData) => {
   try {

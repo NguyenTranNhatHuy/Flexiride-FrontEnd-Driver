@@ -34,6 +34,7 @@ import EnterOtp from "./screens/forgot-pass/EnterOtp";
 import EnterNewPass from "./screens/forgot-pass/EnterNewPass";
 import ChangePassSuccess from "./screens/forgot-pass/ChangePassSuccess";
 import ForgotPasswordDriver from "./screens/forgot-pass/ForgotPasswordDriver";
+import DriverProfile from "./screens/profile/DriverProfile";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -174,7 +175,13 @@ export default function App() {
               options={{ headerShown: false }}
             />
             {/* end forgot pass */}
-
+            {/* Start Profile */}
+            <Stack.Screen
+              name="DriverProfile"
+              component={DriverProfile}
+              options={{ headerShown: false }}
+            />
+            {/* end profile */}
             <Stack.Screen
               name="TestMap"
               component={TestMap}

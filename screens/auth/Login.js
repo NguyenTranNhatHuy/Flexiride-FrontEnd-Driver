@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import { useAuth } from "../../provider/AuthProvider"; // Import hook xác thực
+import { API_URL_IP_ADDRESS } from "@env";
 
 export default function Login({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -47,7 +48,7 @@ export default function Login({ navigation }) {
       };
       try {
         const response = await axios.post(
-          "http://192.168.1.9:3000/auth/login",
+          `http://${API_URL_IP_ADDRESS}:3000/auth/login`,
           loginData
         );
         if (response.data.token) {
@@ -56,7 +57,8 @@ export default function Login({ navigation }) {
               token: response.data.token,
               user: response.data.user,
             });
-            navigation.navigate("HomeScreen");
+            // navigation.navigate("HomeScreen");
+            navigation.navigate("DriverProfile");
           } else {
             setErrors({ general: "Tài khoản chưa được phê duyệt." });
           }
