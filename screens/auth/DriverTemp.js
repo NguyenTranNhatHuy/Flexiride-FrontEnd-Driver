@@ -13,7 +13,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
-import getAllDrivers from "../../service/DriverService";
+import { getAllDrivers } from "../../service/DriverService";
 import axios from "axios";
 import sendEmail from "../../utils/SentEmail";
 import { generateOtpCode } from "../../common/GenerateOtpCode";
@@ -23,6 +23,7 @@ const DriverTemp = ({ navigation }) => {
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
   const [isChecked, setIsChecked] = useState(false);
 
   // State to track error messages
@@ -141,15 +142,17 @@ const DriverTemp = ({ navigation }) => {
     // Validation checks
     if (!lastName) {
       newErrors.lastName = "Vui lòng nhập tên.";
-    } else if (/[^A-Za-z\s]/.test(lastName)) {
-      newErrors.lastName = "Tên không được chứa số hoặc ký tự đặc biệt.";
     }
+    // else if (/[^A-Za-z\s]/.test(lastName)) {
+    //   newErrors.lastName = "Tên không được chứa số hoặc ký tự đặc biệt.";
+    // }
 
     if (!firstName) {
       newErrors.firstName = "Vui lòng nhập họ.";
-    } else if (/[^A-Za-z\s]/.test(firstName)) {
-      newErrors.firstName = "Họ không được chứa số hoặc ký tự đặc biệt.";
     }
+    // else if (/[^A-Za-z\s]/.test(firstName)) {
+    //   newErrors.firstName = "Họ không được chứa số hoặc ký tự đặc biệt.";
+    // }
 
     if (!phoneNumber) {
       newErrors.phoneNumber = "Số điện thoại không được để trống.";
@@ -177,6 +180,9 @@ const DriverTemp = ({ navigation }) => {
     if (!selectedCity) {
       newErrors.city = "Vui lòng chọn thành phố.";
     }
+    if (!selectedGender) {
+      newErrors.gender = "Vui lòng chọn giới tính.";
+    }
 
     setErrors(newErrors);
 
@@ -202,6 +208,7 @@ const DriverTemp = ({ navigation }) => {
           lastName: lastName,
           phoneNumber: phoneNumber,
           city: selectedCity,
+          gender: selectedGender,
         };
 
         // Save the updated info to AsyncStorage
@@ -306,6 +313,20 @@ const DriverTemp = ({ navigation }) => {
             </Picker>
             {errors.city && (
               <Text style={styles.errorMessage}>{errors.city}</Text>
+            )}
+            <Text style={styles.label}>Giới tính *</Text>
+            <Picker
+              selectedValue={selectedGender}
+              style={styles.picker}
+              onValueChange={(itemValue) => setSelectedGender(itemValue)}
+            >
+              <Picker.Item label="Chọn giới tính" value="" />
+              <Picker.Item label="Nam" value="Nam" />
+              <Picker.Item label="Nữ" value="Nữ" />
+              <Picker.Item label="Khác" value="Khác" />
+            </Picker>
+            {errors.gender && (
+              <Text style={styles.errorMessage}>{errors.gender}</Text>
             )}
           </View>
 

@@ -49,6 +49,7 @@ export default function Login({ navigation }) {
       try {
         const response = await axios.post(
           `http://${API_URL_IP_ADDRESS}:3000/auth/login`,
+          // "http://192.168.1.9:3000/auth/login",
           loginData
         );
         if (response.data.token) {
