@@ -18,35 +18,41 @@ import { VIETMAP_API_KEY, IP_ADDRESS } from "@env";
 import LocationContext from "../provider/LocationCurrentProvider";
 // import Geolocation from "@react-native-community/geolocation";
 import * as Location from "expo-location";
+import SupportCenterModal from "./SupportCenterModal";
 
 const BookingTraditional = ({ navigation, route }) => {
   // const { currentLocation } = useContext(LocationContext);
   const [currentLocation, setCurrentLocation] = useState(null);
 
-  // const bookingDetails = route.params?.bookingDetails || {
-  //   pickupLocation: {
-  //     latitude: 15.863928919036544,
-  //     longitude: 108.38814055354507,
-  //     address: "Tạp hóa Tứ Vang",
-  //   },
-  //   destinationLocation: {
-  //     latitude: 16.0544,
-  //     longitude: 108.2022,
-  //     address: "Hội An",
-  //   },
-  //   customerName: "Nguyễn Văn A",
-  //   fare: 100000, // Giá giả định
-  //   paymentMethod: "cash",
-  //   serviceName: "Flexibike",
-  //   customerId: "670bdfc8b65786a7225f39a1",
-  // };
-  const bookingDetails = route.params?.bookingDetails;
+  const bookingDetails = route.params?.bookingDetails || {
+    requestId: "672cb454b77f15a602eb2eb6",
+    customerId: "670bdfc8b65786a7225f39a1",
+    moment_book: "2024-11-07T12:36:34.842+00:00",
+    pickupLocation: {
+      latitude: 15.863928919036544,
+      longitude: 108.38814055354507,
+      address: "Tạp hóa Tứ Vang",
+    },
+    destinationLocation: {
+      latitude: 16.0544,
+      longitude: 108.2022,
+      address: "Hội An",
+    },
+    customerName: "Nguyễn Văn A",
+    fare: 100000, // Giá giả định
+    paymentMethod: "cash",
+    serviceName: "Flexibike",
+    customerId: "670bdfc8b65786a7225f39a1",
+  };
+  // const bookingDetails = route.params?.bookingDetails;
   const momentBook = bookingDetails?.moment_book;
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
   const [routeData, setRouteData] = useState(null);
   const [request, setRequest] = useState(null);
   const [customer, setCustomer] = useState(null);
+  const [supportModalVisible, setSupportModalVisible] = useState(false);
+
   const pickupLocation = bookingDetails.pickupLocation;
   const destinationLocation = bookingDetails.destinationLocation;
 
@@ -55,9 +61,6 @@ const BookingTraditional = ({ navigation, route }) => {
     fetchCustomerDetails(bookingDetails.customerId);
     fetchRequestDetail(momentBook);
   }, []);
-  useEffect(() => {
-    console.log("Moment Book:", momentBook);
-  }, [momentBook]);
 
   useEffect(() => {}, []);
   const requestLocationPermission = async () => {
@@ -82,22 +85,6 @@ const BookingTraditional = ({ navigation, route }) => {
     }
   };
 
-  // const getCurrentLocation = () => {
-  //   Geolocation.getCurrentPosition(
-  //     (position) => {
-  //       setCurrentLocation({
-  //         latitude: position.coords.latitude,
-  //         longitude: position.coords.longitude,
-  //         latitudeDelta: 0.01,
-  //         longitudeDelta: 0.01,
-  //       });
-  //     },
-  //     (error) => {
-  //       Alert.alert("Lỗi khi lấy vị trí hiện tại", error.message);
-  //     },
-  //     { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-  //   );
-  // };
   const getCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -251,6 +238,9 @@ const BookingTraditional = ({ navigation, route }) => {
       case "picked up":
         nextStatus = "on trip";
         break;
+      case "on trip":
+        nextStatus = "confirmed";
+        break;
       default:
         Alert.alert("Thông báo", "Không thể cập nhật trạng thái");
         return;
@@ -283,14 +273,16 @@ const BookingTraditional = ({ navigation, route }) => {
       userId: "6720c996743774e812904a02",
       role: "customer",
       customerId: "670bdfc8b65786a7225f39a1",
-      roomId: "1245",
+      roomId: request._id,
       customerName: customer.name,
       customerAvatar: customer.avatar,
       customerPhone: customer.phone,
       customerGender: customer.gender,
     });
   };
-
+  const handleSupportCenterPress = () => {
+    setSupportModalVisible(true);
+  };
   return (
     <View style={styles.container}>
       <MapView
@@ -356,7 +348,7 @@ const BookingTraditional = ({ navigation, route }) => {
           </Text>
         </View>
 
-        <Text style={styles.fareText}>{momentBook}</Text>
+        {/* <Text style={styles.fareText}>{momentBook}</Text> */}
         <View style={styles.distanceContainer}>
           <Text style={styles.distanceText}>Khoảng cách: {distance} km</Text>
           <Text style={styles.durationText}>Thời gian: {duration} phút</Text>
@@ -371,7 +363,10 @@ const BookingTraditional = ({ navigation, route }) => {
             <Ionicons name="call-outline" size={20} color="black" />
             <Text>Gọi miễn phí</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSupportCenterPress}
+          >
             <Ionicons name="help-outline" size={20} color="black" />
             <Text>Trung tâm hỗ trợ</Text>
           </TouchableOpacity>
@@ -390,6 +385,10 @@ const BookingTraditional = ({ navigation, route }) => {
           )}
         </View>
       </View>
+      <SupportCenterModal
+        visible={supportModalVisible}
+        onClose={() => setSupportModalVisible(false)}
+      />
     </View>
   );
 };
