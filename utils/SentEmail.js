@@ -2,9 +2,11 @@ import { Alert } from "react-native";
 import { API_URL_IP_ADDRESS } from "@env";
 
 const sendEmail = async (name, email, otpCode) => {
+  console.log("API: " + API_URL_IP_ADDRESS);
   try {
     const response = await fetch(
       `http://${API_URL_IP_ADDRESS}:3000/driver/send-email`,
+      // "http://192.168.1.3:3000/driver/send-email",
       {
         method: "POST",
         headers: {

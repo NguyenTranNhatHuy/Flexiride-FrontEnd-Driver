@@ -19,6 +19,7 @@
     "@react-navigation/native-stack": "^6.11.0",
     "@rneui/themed": "^4.0.0-rc.8",
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "expo": "~51.0.28",
     "expo-image-picker": "^15.0.7",
     "expo-location": "^17.0.1",
@@ -27,6 +28,7 @@
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-check-box": "^2.1.7",
+    "react-native-dotenv": "^3.4.11",
     "react-native-elements": "^3.4.3",
     "react-native-image-picker": "^7.1.2",
     "react-native-maps": "^1.18.2",
@@ -36,9 +38,7 @@
     "socket.io-client": "^4.8.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "metro-react-native-babel-preset": "^0.77.0",
-    "react-native-dotenv": "^3.4.11"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }
