@@ -26,7 +26,6 @@ import ProfileApproval from "./screens/auth/ProfileApproval";
 import { AuthProvider } from "./provider/AuthProvider";
 import HomeScreen from "./screens/HomeScreen";
 import DriverScreen from "./screens/DriverScreen";
-import TestMap from "./screens/TestMap";
 import { SocketProvider } from "./provider/SocketProvider";
 import { LocationProvider } from "./provider/LocationCurrentProvider";
 import ForgotPassworDriver from "./screens/forgot-pass/ForgotPasswordDriver";
@@ -34,6 +33,9 @@ import EnterOtp from "./screens/forgot-pass/EnterOtp";
 import EnterNewPass from "./screens/forgot-pass/EnterNewPass";
 import ChangePassSuccess from "./screens/forgot-pass/ChangePassSuccess";
 import ForgotPasswordDriver from "./screens/forgot-pass/ForgotPasswordDriver";
+import BookingTraditional from "./screens/BookingTraditional";
+import VietMapNavigationScreen from "./screens/VietMapNavigationScreen";
+import ChatScreenDriver from "./screens/ChatScreen";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -176,8 +178,18 @@ export default function App() {
             {/* end forgot pass */}
 
             <Stack.Screen
-              name="TestMap"
-              component={TestMap}
+              name="BookingTraditional"
+              component={BookingTraditional}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VietMapNavigationScreen"
+              component={VietMapNavigationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ChatScreenDriver"
+              component={ChatScreenDriver}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

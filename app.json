@@ -12,12 +12,40 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "VietMapURL": "https://maps.vietmap.vn/api/maps/light/styles.json?apikey=7c3ab066a578a4f5fe4f40c67573f7e0a831f9b36adfdc48",
+        "VietMapAPIBaseURL": "https://maps.vietmap.vn/api/navigations/route/",
+        "VietMapAccessToken": "7c3ab066a578a4f5fe4f40c67573f7e0a831f9b36adfdc48",
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to provide navigation services.",
+        "NSLocationAlwaysUsageDescription": "This app needs access to your location to provide navigation services."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET",
+        "FOREGROUND_SERVICE"
+      ],
+      "config": {
+        "intentFilters": [
+          {
+            "action": "VIEW",
+            "data": [
+              {
+                "scheme": "https",
+                "host": "maps.vietmap.vn",
+                "pathPrefix": "/api/navigations/route"
+              }
+            ],
+            "category": ["BROWSABLE", "DEFAULT"]
+          }
+        ]
       }
     },
     "web": {
