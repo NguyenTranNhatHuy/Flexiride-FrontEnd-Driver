@@ -45,7 +45,7 @@ const ForgotPasswordDriver = ({ navigation }) => {
         }
       } catch (error) {
         // console.error("Failed to check existing email:", error);
-        Alert.alert("Lỗi", "Đã xảy ra lỗi khi kiểm tra email.");
+        // Alert.alert("Lỗi", "Đã xảy ra lỗi khi kiểm tra email.");
       }
     }
 

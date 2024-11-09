@@ -21,6 +21,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "@vietmap/vietmap-react-native-navigation": "^1.2.1",
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "expo": "~51.0.28",
     "expo-image-picker": "^15.0.7",
     "expo-location": "^17.0.1",

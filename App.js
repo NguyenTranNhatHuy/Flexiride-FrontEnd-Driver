@@ -36,6 +36,7 @@ import ForgotPasswordDriver from "./screens/forgot-pass/ForgotPasswordDriver";
 import BookingTraditional from "./screens/BookingTraditional";
 import VietMapNavigationScreen from "./screens/VietMapNavigationScreen";
 import ChatScreenDriver from "./screens/ChatScreen";
+import DriverProfile from "./screens/profile/DriverProfile";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -176,7 +177,13 @@ export default function App() {
               options={{ headerShown: false }}
             />
             {/* end forgot pass */}
-
+            {/* Start Profile */}
+            <Stack.Screen
+              name="DriverProfile"
+              component={DriverProfile}
+              options={{ headerShown: false }}
+            />
+            {/* end profile */}
             <Stack.Screen
               name="BookingTraditional"
               component={BookingTraditional}

@@ -23,6 +23,7 @@ const VehicleRegistration = ({ navigation }) => {
   const [uploading, setUploading] = useState(false);
   const [licensePlate, setLicensePlate] = useState("");
   const [fuelType, setFuelType] = useState("");
+  const [vehicleName, setVehicleName] = useState(""); // New state for vehicle name
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -30,11 +31,13 @@ const VehicleRegistration = ({ navigation }) => {
       try {
         const data = await AsyncStorage.getItem("vehicleRegistration");
         if (data) {
-          const { frontImage, backImage, licensePlate, fuelType } = JSON.parse(data);
+          const { frontImage, backImage, licensePlate, fuelType, carName } =
+            JSON.parse(data);
           setFrontImage(frontImage || null);
           setBackImage(backImage || null);
           setLicensePlate(licensePlate || "");
           setFuelType(fuelType || "");
+          setVehicleName(carName || ""); // Load vehicle name
         }
       } catch (error) {
         console.error("Error fetching vehicleRegistration data:", error);
@@ -47,7 +50,9 @@ const VehicleRegistration = ({ navigation }) => {
   const pickImage = async (setImage) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Bạn cần cho phép quyền truy cập thư viện ảnh để tải ảnh lên!");
+      Alert.alert(
+        "Bạn cần cho phép quyền truy cập thư viện ảnh để tải ảnh lên!"
+      );
       return;
     }
 
@@ -85,6 +90,11 @@ const VehicleRegistration = ({ navigation }) => {
     let valid = true;
     let newErrors = {};
 
+    if (!vehicleName) {
+      newErrors.vehicleName = "Tên xe không được để trống"; // Validation for vehicle name
+      valid = false;
+    }
+
     if (!licensePlate || !/^[a-zA-Z0-9]{1,10}$/.test(licensePlate)) {
       newErrors.licensePlate = "Biển số xe phải chứa chữ và số, dưới 10 ký tự";
       valid = false;
@@ -101,7 +111,10 @@ const VehicleRegistration = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!frontImage || !backImage) {
-      Alert.alert("Thông báo","Bạn cần tải lên cả hai mặt trước và sau của giấy đăng ký xe");
+      Alert.alert(
+        "Thông báo",
+        "Bạn cần tải lên cả hai mặt trước và sau của giấy đăng ký xe"
+      );
       return;
     }
 
@@ -119,9 +132,13 @@ const VehicleRegistration = ({ navigation }) => {
         backImage: backImageUrl,
         licensePlate,
         fuelType,
+        carName: vehicleName, // Save vehicle name data
       };
 
-      await AsyncStorage.setItem("vehicleRegistration", JSON.stringify(vehicleRegistrationData));
+      await AsyncStorage.setItem(
+        "vehicleRegistration",
+        JSON.stringify(vehicleRegistrationData)
+      );
       setUploading(false);
       navigation.navigate("VehicleInformation");
     } catch (error) {
@@ -132,42 +149,87 @@ const VehicleRegistration = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "android" ? "height" : null}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("VehicleInformation")}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "android" ? "height" : null}
+    >
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("VehicleInformation")}
+      >
         <Icon name="arrow-left" size={20} color="black" />
       </TouchableOpacity>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.headerText}>Tải lên giấy đăng ký xe</Text>
-
         <Text style={styles.labelText}>Mặt Trước (Bắt buộc)</Text>
-        <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setFrontImage)}>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => pickImage(setFrontImage)}
+        >
           {frontImage ? (
-            <Image source={{ uri: frontImage }} style={styles.fullImage} resizeMode="contain" />
+            <Image
+              source={{ uri: frontImage }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
           ) : (
             <>
-              <Image source={require("../../assets/camera.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/camera.png")}
+                style={styles.icon}
+              />
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cameraButton} onPress={() => takePhoto(setFrontImage)}>
+        <TouchableOpacity
+          style={styles.cameraButton}
+          onPress={() => takePhoto(setFrontImage)}
+        >
           <Text style={styles.cameraButtonText}>Chụp ảnh mặt trước</Text>
         </TouchableOpacity>
 
         <Text style={styles.labelText}>Mặt Sau (Bắt buộc)</Text>
-        <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setBackImage)}>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => pickImage(setBackImage)}
+        >
           {backImage ? (
-            <Image source={{ uri: backImage }} style={styles.fullImage} resizeMode="contain" />
+            <Image
+              source={{ uri: backImage }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
           ) : (
             <>
-              <Image source={require("../../assets/camera.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/camera.png")}
+                style={styles.icon}
+              />
               <Text style={styles.uploadText}>Tải ảnh lên</Text>
             </>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cameraButton} onPress={() => takePhoto(setBackImage)}>
+        <TouchableOpacity
+          style={styles.cameraButton}
+          onPress={() => takePhoto(setBackImage)}
+        >
           <Text style={styles.cameraButtonText}>Chụp ảnh mặt sau</Text>
         </TouchableOpacity>
+
+        <Text style={styles.labelText}>Tên xe *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nhập tên xe"
+          value={vehicleName} // Bind vehicleName to the input
+          onChangeText={setVehicleName} // Update vehicleName on change
+        />
+        {errors.vehicleName && (
+          <Text style={styles.errorText}>{errors.vehicleName}</Text>
+        )}
 
         <Text style={styles.labelText}>Biển số xe *</Text>
         <TextInput
@@ -176,7 +238,9 @@ const VehicleRegistration = ({ navigation }) => {
           value={licensePlate}
           onChangeText={setLicensePlate}
         />
-        {errors.licensePlate && <Text style={styles.errorText}>{errors.licensePlate}</Text>}
+        {errors.licensePlate && (
+          <Text style={styles.errorText}>{errors.licensePlate}</Text>
+        )}
 
         <Text style={styles.labelText}>Loại nhiên liệu *</Text>
         <TextInput
@@ -185,9 +249,15 @@ const VehicleRegistration = ({ navigation }) => {
           value={fuelType}
           onChangeText={setFuelType}
         />
-        {errors.fuelType && <Text style={styles.errorText}>{errors.fuelType}</Text>}
+        {errors.fuelType && (
+          <Text style={styles.errorText}>{errors.fuelType}</Text>
+        )}
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={uploading}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={uploading}
+        >
           <Text style={styles.saveButtonText}>
             {uploading ? <ActivityIndicator color="#FFF" /> : "Lưu"}
           </Text>
@@ -274,24 +344,14 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: "#270C6D",
-    paddingHorizontal: 40,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginLeft: 260,
-    alignSelf: "center",
-    marginTop: 20,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
     marginBottom: 20,
   },
   saveButtonText: {
-    color: "white",
+    color: "#FFF",
     fontSize: 16,
-  },
-  backButton: {
-    position: "absolute",
-    top: 20,
-    left: 10,
-    padding: 10,
-    zIndex: 1,
   },
 });
 

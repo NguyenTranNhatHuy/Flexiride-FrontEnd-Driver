@@ -1,14 +1,20 @@
 import { Alert } from "react-native";
+import { IP_ADDRESS } from "@env";
 
 const sendEmail = async (name, email, otpCode) => {
+  console.log("API: " + IP_ADDRESS);
   try {
-    const response = await fetch("http://192.168.1.9:3000/driver/send-email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, otpCode }),
-    });
+    const response = await fetch(
+      `http://${IP_ADDRESS}:3000/driver/send-email`,
+      // "http://192.168.1.3:3000/driver/send-email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, otpCode }),
+      }
+    );
 
     const result = await response.json();
     console.log(result.message);
@@ -17,10 +23,7 @@ const sendEmail = async (name, email, otpCode) => {
     } else {
       Alert.alert("Lỗi", result.message || "Không thể gửi email.");
     }
-  } catch (error) {
-    // console.error("Lỗi khi gửi email:", error);
-    // Alert.alert("Lỗi", "Có lỗi xảy ra khi gửi email.");
-  }
+  } catch (error) {}
 };
 
 export default sendEmail;
