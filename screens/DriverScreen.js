@@ -164,7 +164,7 @@ const DriverScreen = ({ navigation }) => {
     if (socket.current && rideRequest) {
       socket.current.emit("acceptRide", {
         requestId: rideRequest.requestId,
-        driverId: "6720c996743774e812904a02",
+        driverId: "670169a43bfb71739108b497",
         customerId: rideRequest.customerId,
       });
 

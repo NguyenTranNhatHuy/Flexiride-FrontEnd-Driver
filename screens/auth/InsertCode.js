@@ -1,15 +1,36 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { generateOtpCode } from '../../common/GenerateOtpCode';
+import sendEmail from "../../utils/SentEmail";
 
-// Insert Code Component
 const InsertCode = ({ navigation, route }) => {
-    const [code, setCode] = useState(['', '', '', '']);  // Array for each input field
+    const [code, setCode] = useState(['', '', '', '', '']);  // Array for each input field
     const [timer, setTimer] = useState(30);
-    const [dummyCode] = useState('1234'); // Dummy verification code
-    const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+    const [email, setEmail] = useState('');  // State to store email from local storage
+    const [dummyCode, setDummyCode] = useState(route.params.otpCode); // Dummy verification code
+    const [name] = useState(route.params.name); // User's name
+    const [otpExpiration, setOtpExpiration] = useState(Date.now() + 10 * 60 * 1000); // Set expiration to 10 minutes from now
 
-    React.useEffect(() => {
+    const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+
+    useEffect(() => {
+        // Fetch email from local storage on component mount
+        const fetchEmail = async () => {
+            try {
+                const storedPersonalInfo = await AsyncStorage.getItem('personalInfo');
+                if (storedPersonalInfo) {
+                    const parsedInfo = JSON.parse(storedPersonalInfo);
+                    setEmail(parsedInfo.email);  // Set the email in state
+                }
+            } catch (error) {
+                console.log('Error fetching email:', error);
+            }
+        };
+
+        fetchEmail();
+
         const countdown = setInterval(() => {
             setTimer((prevTimer) => (prevTimer > 0 ? prevTimer - 1 : 0));
         }, 1000);
@@ -23,7 +44,7 @@ const InsertCode = ({ navigation, route }) => {
         if (/^\d$/.test(text)) {
             newCode[index] = text;
             setCode(newCode);
-            if (index < 3) {
+            if (index < 4) {
                 inputRefs[index + 1].current.focus();
             }
         } else if (text === '') {
@@ -45,35 +66,26 @@ const InsertCode = ({ navigation, route }) => {
 
     const handleVerifyCode = () => {
         const enteredCode = code.join('');
-        if (enteredCode === dummyCode) {
-            // Navigate to SubscriptionService if code is correct
-            navigation.navigate('SubscriptionService', {
-                email: route.params.email,
-                password: route.params.password,
-                firstName:route.params.firstName,
-                lastName: route.params.lastName,
-                phoneNumber: route.params.phoneNumber,
-                city: route.params.city,
-            });
+        const currentTime = Date.now();
+        
+        if (currentTime > otpExpiration) {
+            Alert.alert('Thông báo', 'Mã xác thực đã hết hiệu lực. Vui lòng yêu cầu mã mới.');
+        } else if (enteredCode === dummyCode) {
+            navigation.navigate('SubscriptionService');
         } else {
             Alert.alert('Thông báo', 'Mã xác thực không đúng. Vui lòng thử lại.');
         }
     };
 
     const handleResendCode = () => {
-        // Reset timer and clear code
         setTimer(30);
-        setCode(['', '', '', '']);
+        setCode(['', '', '', '', '']);
+        const newOtpCode = generateOtpCode();
+        setDummyCode(newOtpCode);
+        setOtpExpiration(Date.now() + 10 * 60 * 1000); // Reset expiration time for the new OTP
+        sendEmail(name, email, newOtpCode);
         Alert.alert('Thông báo', 'Mã xác thực mới đã được gửi!');
     };
-
-        // Function to format the phone number
-        const formatPhoneNumber = (number) => {
-            if (number.length === 10 && number.startsWith('0')) {
-                return `+84${number.slice(1, 7)}***`; // +84 and show the first 7 digits
-            }
-            return number; // Return the original number if not 10 digits
-        };
 
     return (
         <KeyboardAvoidingView
@@ -81,15 +93,15 @@ const InsertCode = ({ navigation, route }) => {
             behavior={Platform.OS === "android" ? "height" : null}
         >
             <TouchableOpacity style={styles.backButton}>
-                <Icon onPress={() => navigation.navigate('DriverTemp', { email: route.params.email  })} name="arrow-left" size={20} color="black" />
+                <Icon onPress={() => navigation.navigate('DriverTemp')} name="arrow-left" size={20} color="black" />
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.container1}>
-                    <Text style={styles.title}>Kiểm tra tin nhắn SMS của bạn:</Text>
+                    <Text style={styles.title}>Kiểm tra tin nhắn được gửi đến email của bạn:</Text>
                     <Text style={styles.description}>
-                        Chúng tôi đã gửi một mã có 4 chữ số đến số điện thoại: 
+                        Chúng tôi đã gửi một mã OTP đến email: 
                     </Text>
-                    <Text style={styles.phone}>{formatPhoneNumber(route.params.phoneNumber)}</Text>
+                    <Text style={styles.phone}>{email}</Text>
                     <View style={styles.codeInputContainer}>
                         {code.map((digit, index) => (
                             <TextInput
@@ -141,14 +153,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 25,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 20,
         color: '#000',
         marginTop: 20,
     },
     description: {
         fontSize: 16,
         color: '#333',
-        textAlign: 'justify',
     },
     phone: {
         fontSize: 16,
@@ -203,8 +214,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 10,
         zIndex: 10,
-        width:50
-    },
+        width: 50,
+    },  
 });
 
 export default InsertCode;

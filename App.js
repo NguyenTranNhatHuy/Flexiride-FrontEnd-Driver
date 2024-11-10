@@ -28,32 +28,17 @@ import HomeScreen from "./screens/HomeScreen";
 import DriverScreen from "./screens/DriverScreen";
 import { SocketProvider } from "./provider/SocketProvider";
 import { LocationProvider } from "./provider/LocationCurrentProvider";
+import ForgotPassworDriver from "./screens/forgot-pass/ForgotPasswordDriver";
+import EnterOtp from "./screens/forgot-pass/EnterOtp";
+import EnterNewPass from "./screens/forgot-pass/EnterNewPass";
+import ChangePassSuccess from "./screens/forgot-pass/ChangePassSuccess";
+import ForgotPasswordDriver from "./screens/forgot-pass/ForgotPasswordDriver";
 import BookingTraditional from "./screens/BookingTraditional";
 import VietMapNavigationScreen from "./screens/VietMapNavigationScreen";
 import ChatScreenDriver from "./screens/ChatScreen";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
-    // <Login />
-    // <PartnerSignUpScreen />
-    // <DriverTemp />
-    // <InsertCode/>
-    // <SubscriptionService/>
-    // <Info/>
-    // <PersonalInformation/>
-    // <PortraitPhoto/>
-    // <Passport/>
-    // <License/>
-    // <JudicialBackground/>
-    // <EmergencyContact/>
-    // <BankAccountNumber/>
-    // <Commitment/>
-    // <VehicleInformation/>
-    // <CarImage/>
-    // <VehicleRegistration/>
-    // <CarInsurance/>
-    // <ProfileApproval/>
-    // <Splash/>
     // <SocketProvider>
     <LocationProvider>
       <AuthProvider>
@@ -62,6 +47,11 @@ export default function App() {
             <Stack.Screen
               name="Splash"
               component={Splash}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={Login}
               options={{ headerShown: false }}
             />
             <Stack.Screen
@@ -155,11 +145,6 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Login"
-              component={Login}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
               name="HomeScreen"
               component={HomeScreen}
               options={{ headerShown: false }}
@@ -169,6 +154,29 @@ export default function App() {
               component={DriverScreen}
               options={{ headerShown: false }}
             />
+            {/* start Forgot-pass */}
+            <Stack.Screen
+              name="ForgotPasswordDriver"
+              component={ForgotPasswordDriver}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="EnterOtp"
+              component={EnterOtp}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="EnterNewPass"
+              component={EnterNewPass}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ChangePassSuccess"
+              component={ChangePassSuccess}
+              options={{ headerShown: false }}
+            />
+            {/* end forgot pass */}
+
             <Stack.Screen
               name="BookingTraditional"
               component={BookingTraditional}

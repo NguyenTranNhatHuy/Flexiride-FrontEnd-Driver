@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,22 +7,97 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome"; // Thêm thư viện icon
+import Icon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
-const PersonalInformation = ({ route, navigation }) => {
-  const { PortraitCompleted } = route.params || {}; // Lấy trạng thái hoàn thành ảnh chân dung
+const PersonalInformation = ({ navigation }) => {
+  const [avatarCompleted, setAvatarCompleted] = useState(false);
+  const [passportCompleted, setPassportCompleted] = useState(false);
+  const [driverLicenseCompleted, setDriverLicenseCompleted] = useState(false);
+  const [criminalRecordCompleted, setCriminalRecordCompleted] = useState(false);
+  const [addressCompleted, setAddressCompleted] = useState(false);
+  const [emergencyContactCompleted, setEmergencyContactCompleted] =
+    useState(false);
+  const [bankAccountCompleted, setBankAccountCompleted] = useState(false);
+  const [commitCompleted, setCommitCompleted] = useState(false);
+
+  // Function to check avatar and other items status from local storage
+  const checkStatus = async () => {
+    try {
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      if (storedPersonalInfo) {
+        const parsedInfo = JSON.parse(storedPersonalInfo);
+        setAvatarCompleted(!!parsedInfo.avatar);
+      } else {
+        setAvatarCompleted(false);
+      }
+
+      const passport = await AsyncStorage.getItem("passport");
+      setPassportCompleted(!!passport);
+
+      const driverLicense = await AsyncStorage.getItem("driverLicense");
+      setDriverLicenseCompleted(!!driverLicense);
+
+      const criminalRecord = await AsyncStorage.getItem("criminalRecord");
+      setCriminalRecordCompleted(!!criminalRecord);
+
+      const addressRecord = await AsyncStorage.getItem("address");
+      setAddressCompleted(!!addressRecord);
+
+      const emergencyContactRecord = await AsyncStorage.getItem(
+        "emergencyContact"
+      );
+      setEmergencyContactCompleted(!!emergencyContactRecord);
+
+      const bankAccountRecord = await AsyncStorage.getItem("bankAccount");
+      setBankAccountCompleted(!!bankAccountRecord);
+
+      const commitedRecord = await AsyncStorage.getItem("committed");
+      setCommitCompleted(!!commitedRecord);
+    } catch (error) {
+      console.error("Error retrieving status:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      checkStatus();
+    }, [])
+  );
+
+  const handleContinue = async  () => {
+    if (
+      avatarCompleted &&
+      passportCompleted &&
+      driverLicenseCompleted &&
+      criminalRecordCompleted &&
+      addressCompleted &&
+      emergencyContactCompleted &&
+      bankAccountCompleted &&
+      commitCompleted
+    ) {
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      const parsedInfo = JSON.parse(storedPersonalInfo);
+      console.log("personal info", parsedInfo);
+      navigation.navigate("VehicleInformation");
+    } else {
+      Alert.alert(
+        "Thông báo",
+        "Bạn cần hoàn thành tất cả thông tin trước khi tiếp tục."
+      );
+    }
+  };
 
   const handleNavigation = (item) => {
     switch (item) {
       case "Ảnh Chân Dung":
-        // Nếu đã hoàn thành, vô hiệu hoá click
-        if (!PortraitCompleted) {
-          navigation.navigate("PortraitPhoto");
-        }
+        navigation.navigate("PortraitPhoto");
         break;
       case "CCCD/Hộ Chiếu":
-        navigation.navigate("Passport", { PortraitCompleted });
+        navigation.navigate("Passport");
         break;
       case "Bằng Lái Xe":
         navigation.navigate("License");
@@ -49,20 +124,16 @@ const PersonalInformation = ({ route, navigation }) => {
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : null}
     >
-      {/* Nút Back */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
         <Icon name="arrow-left" size={20} color="black" />
       </TouchableOpacity>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
+
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.headerText}>Thông tin cá nhân</Text>
 
-        {/* Các mục thông tin cá nhân */}
         {[
           "Ảnh Chân Dung",
           "CCCD/Hộ Chiếu",
@@ -79,17 +150,33 @@ const PersonalInformation = ({ route, navigation }) => {
             <TouchableOpacity
               style={styles.requiredButton}
               onPress={() => handleNavigation(item)}
-              disabled={item === "Ảnh Chân Dung" && PortraitCompleted} // Disable if portrait completed
             >
               <Text
                 style={[
                   styles.requiredButtonText,
-                  item === "Ảnh Chân Dung" && PortraitCompleted
-                    ? { color: "green" } // Change color to green if completed
+                  (item === "Ảnh Chân Dung" && avatarCompleted) ||
+                  (item === "CCCD/Hộ Chiếu" && passportCompleted) ||
+                  (item === "Bằng Lái Xe" && driverLicenseCompleted) ||
+                  (item === "Hồ Sơ Lý Lịch Tư Pháp" &&
+                    criminalRecordCompleted) ||
+                  (item === "Thông Tin Liên Hệ Khẩn Cấp Và Địa Chỉ Tạm Trú" &&
+                    emergencyContactCompleted) ||
+                  (item === "Địa Chỉ" && addressCompleted) ||
+                  (item === "Tài Khoản Ngân Hàng" && bankAccountCompleted) ||
+                  (item === "Cam Kết" && commitCompleted)
+                    ? { color: "green" }
                     : { color: "red" },
                 ]}
               >
-                {item === "Ảnh Chân Dung" && PortraitCompleted
+                {(item === "Ảnh Chân Dung" && avatarCompleted) ||
+                (item === "CCCD/Hộ Chiếu" && passportCompleted) ||
+                (item === "Bằng Lái Xe" && driverLicenseCompleted) ||
+                (item === "Hồ Sơ Lý Lịch Tư Pháp" && criminalRecordCompleted) ||
+                (item === "Thông Tin Liên Hệ Khẩn Cấp Và Địa Chỉ Tạm Trú" &&
+                  emergencyContactCompleted) ||
+                (item === "Địa Chỉ" && addressCompleted) ||
+                (item === "Tài Khoản Ngân Hàng" && bankAccountCompleted) ||
+                (item === "Cam Kết" && commitCompleted)
                   ? "Hoàn thành"
                   : "Bắt buộc"}
               </Text>
@@ -103,8 +190,8 @@ const PersonalInformation = ({ route, navigation }) => {
           </View>
         ))}
 
-        {/* Nút tiếp tục */}
-        <TouchableOpacity style={styles.button}>
+        {/* Continue button */}
+        <TouchableOpacity onPress={handleContinue} style={styles.button}>
           <Text style={styles.buttonText}>Tiếp tục</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -112,12 +199,11 @@ const PersonalInformation = ({ route, navigation }) => {
   );
 };
 
+// Style definitions remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFC323",
-    alignItems: "stretch",
-    justifyContent: "flex-start",
     paddingTop: 30,
     paddingHorizontal: 20,
   },
@@ -137,8 +223,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     padding: 5,
-    borderBottomWidth: 1, // Border bottom
-    borderBottomColor: "#000", // Màu của border bottom
+    borderBottomWidth: 1,
+    borderBottomColor: "#000",
   },
   itemText: {
     fontSize: 16,
@@ -147,14 +233,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   requiredButton: {
-    flexDirection: "row", // Đặt flexDirection để icon nằm cùng hàng với text
-    alignItems: "center", // Canh giữa các mục trong button
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
   requiredButtonText: {
     fontSize: 14,
-    marginRight: 5, // Tạo khoảng cách giữa text và icon
+    marginRight: 5,
   },
   button: {
     backgroundColor: "#270C6D",

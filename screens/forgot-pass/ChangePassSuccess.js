@@ -10,49 +10,40 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 
-const ProfileApproval = ({ navigation }) => {
+const ChangePassSuccess = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "android" ? "height" : null}
     >
-      {/* Nút Back */}
-      <TouchableOpacity style={styles.backButton}>
-        <Icon
-          onPress={() => navigation.navigate("DriverSignUpScreen")}
-          name="arrow-left"
-          size={20}
-          color="black"
-        />
-      </TouchableOpacity>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <Text style={styles.headerText}>
-          Chúng tôi đã nhận được đơn đăng ký của bạn!
+          Mật khẩu của bạn đã được cập nhật thành công!
         </Text>
 
-        {/* Bước kiểm tra trạng thái */}
+        {/* Steps for the user */}
         <View style={styles.stepContainer}>
           <View style={styles.stepItem}>
-            <Icon  name="check-circle" size={20} color="green" />
-            <Text style={styles.stepText}> Nộp hồ sơ đăng ký</Text>
+            <Icon name="check-circle" size={20} color="green" />
+            <Text style={styles.stepText}>Mật khẩu đã được thay đổi</Text>
           </View>
           <View style={styles.stepItem}>
-            <View style={styles.circle} />
-            <Text style={styles.stepText}>Hồ sơ đang được xét duyệt</Text>
-          </View>
-          <View style={styles.stepItem}>
-            <View style={styles.circle} />
-            <Text style={styles.stepText}>...</Text>
-          </View>
-          <View style={styles.stepItem}>
-            <View style={styles.circle} />
-            <Text style={styles.stepText}>Kích hoạt tài khoản</Text>
+            <Icon name="check-circle" size={20} color="green" />
+            <Text style={styles.stepText}>Bạn có thể sử dụng mật khẩu mới</Text>
           </View>
         </View>
+
+        {/* Button to navigate to Login */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Login")}
+        >
+          <Text style={styles.buttonText}>Đăng nhập ngay</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -99,13 +90,18 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: "#FFF", // Background for uncompleted steps
   },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
-    padding: 10,
-    marginTop: 10,
+  button: {
+    backgroundColor: "#270C6D",
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignSelf: "center",
+    marginLeft: 170,
+    paddingHorizontal: 40,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
   },
 });
 
-export default ProfileApproval;
+export default ChangePassSuccess;

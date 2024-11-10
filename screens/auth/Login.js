@@ -52,18 +52,22 @@ export default function Login({ navigation }) {
           loginData
         );
         if (response.data.token) {
-          await authenticate({
-            token: response.data.token,
-            user: response.data.user,
-          });
-          navigation.navigate("HomeScreen");
+          if (response.data.user.approve) {
+            await authenticate({
+              token: response.data.token,
+              user: response.data.user,
+            });
+            navigation.navigate("HomeScreen");
+          } else {
+            setErrors({ general: "Tài khoản chưa được phê duyệt." });
+          }
         } else {
-          setErrors({ general: "Số điện thoại hoặc mật khẩu không đúng" });
+          setErrors({ general: "Số điện thoại hoặc mật khẩu không đúng." });
         }
       } catch (error) {
-        console.error("Error during login:", error);
+        // console.error("Error during login:", error);
         setErrors({
-          general: "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.",
+          general: "Số điện thoại hoặc mật khẩu không đúng.",
         });
       } finally {
         setIsLoading(false);
@@ -116,8 +120,13 @@ export default function Login({ navigation }) {
             <Text style={styles.errorText}>{errors.password}</Text>
           )}
 
+          {errors.general && (
+            <Text style={styles.errorText}>{errors.general}</Text>
+          )}
           <View style={styles.forgotPasswordContainer}>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPasswordDriver")}
+            >
               <Text style={styles.forgotPassword}>Quên mật khẩu</Text>
             </TouchableOpacity>
           </View>
@@ -133,11 +142,9 @@ export default function Login({ navigation }) {
           </Text>
         </TouchableOpacity>
 
-        {errors.general && (
-          <Text style={styles.errorText}>{errors.general}</Text>
-        )}
-
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("DriverSignUpScreen")}
+        >
           <Text style={styles.signUpText}>Chưa có tài khoản? Đăng ký</Text>
         </TouchableOpacity>
       </ScrollView>
