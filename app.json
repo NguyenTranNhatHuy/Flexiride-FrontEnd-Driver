@@ -46,7 +46,8 @@
             "category": ["BROWSABLE", "DEFAULT"]
           }
         ]
-      }
+      },
+      "package": "com.trandtrieu.FlexirideFrontEndDriver"
     },
     "web": {
       "favicon": "./assets/favicon.png"

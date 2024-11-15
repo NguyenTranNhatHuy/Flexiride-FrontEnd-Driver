@@ -4,8 +4,8 @@
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -19,8 +19,11 @@
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
     "@rneui/themed": "^4.0.0-rc.8",
+    "@vietmap/vietmap-api": "^1.1.2",
+    "@vietmap/vietmap-gl-react-native": "^1.0.0-pre.2",
     "@vietmap/vietmap-react-native-navigation": "^1.2.1",
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "expo": "~51.0.28",
     "expo-image-picker": "^15.0.7",
     "expo-location": "^17.0.1",
@@ -32,9 +35,14 @@
     "react-native-check-box": "^2.1.7",
     "react-native-dotenv": "^3.4.11",
     "react-native-elements": "^3.4.3",
+    "react-native-gesture-handler": "^2.20.2",
+    "react-native-get-location": "^5.0.0",
     "react-native-image-picker": "^7.1.2",
     "react-native-maps": "^1.18.2",
+    "react-native-paper": "^5.12.5",
     "react-native-picker-select": "^9.3.1",
+    "react-native-safe-area-context": "^4.14.0",
+    "react-native-screens": "^4.0.0",
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "socket.io-client": "^4.8.0"

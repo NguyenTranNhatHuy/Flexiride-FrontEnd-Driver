@@ -8,90 +8,110 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import LocationContext from "../provider/LocationCurrentProvider";
+import LocationContext from "../../provider/LocationCurrentProvider";
 import io from "socket.io-client";
-import { formatCurrency } from "../utils/FormatPrice";
+import { formatCurrency } from "../../utils/FormatPrice";
 import axios from "axios";
-import { IP_ADDRESS } from "@env";
+import { IP_ADDRESS, VIETMAP_API_KEY } from "@env";
+import VietmapGL from "@vietmap/vietmap-gl-react-native"; // Import Vietmap
+import { vietmapStyle } from "../../vietmap_config";
+import Geolocation from "@react-native-community/geolocation";
 
 const DriverScreen = ({ navigation }) => {
-  const { location, loading, error } = useContext(LocationContext);
+  // const [location, setCurrentLocation] = useState(null);
+  const [location, setCurrentLocation] = useState(null);
 
   const [isOnline, setIsOnline] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [requestTimeout, setRequestTimeout] = useState(null);
   const [distanceToPickup, setDistanceToPickup] = useState(null);
   const [serviceName, setServiceName] = useState(null);
-  const [request, setRequest] = useState(null);
-
   const [showMissedScreen, setShowMissedScreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const socket = useRef(null);
+  const mapRef = useRef(null);
+
+  // const { location, setLocation } = useContext(LocationContext);
+  useEffect(() => {
+    // Yêu cầu quyền và lấy vị trí
+    const requestLocationPermission = async () => {
+      try {
+        if (Platform.OS === "android") {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: "Quyền truy cập vị trí",
+              message: "Ứng dụng cần quyền truy cập vị trí để hoạt động.",
+              buttonNeutral: "Hỏi sau",
+              buttonNegative: "Từ chối",
+              buttonPositive: "Đồng ý",
+            }
+          );
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            Alert.alert("Thông báo", "Bạn cần cấp quyền để sử dụng ứng dụng.");
+            return;
+          }
+        }
+        fetchCurrentLocation();
+      } catch (error) {
+        console.error("Lỗi yêu cầu quyền:", error);
+      }
+    };
+
+    requestLocationPermission();
+  }, []);
+
+  const fetchCurrentLocation = () => {
+    setIsLoading(true);
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({
+          latitude,
+          longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+        setIsLoading(false);
+        console.log("Vị trí hiện tại:", latitude, longitude);
+      },
+      (error) => {
+        setIsLoading(false);
+        let message = "Không thể lấy vị trí.";
+        if (error.code === 1) message = "Quyền truy cập vị trí bị từ chối.";
+        if (error.code === 2) message = "Không tìm thấy vị trí khả dụng.";
+        if (error.code === 3) message = "Hết thời gian chờ.";
+        Alert.alert("Lỗi GPS", message);
+        console.error("Lỗi lấy vị trí:", error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
 
   useEffect(() => {
+    console.log("isOnline changed to:", isOnline);
+    if (isOnline && location) {
+      handleSocketConnect();
+    }
+  }, [isOnline, location]);
+
+  useEffect(() => {
+    console.log("location: " + location);
+    console.log("IP_ADDRESS: " + IP_ADDRESS);
+
     if (!socket.current) {
       socket.current = io(`http://${IP_ADDRESS}:3000`, {
         transports: ["websocket"],
       });
-      console.log("connected");
-      socket.current.on("connect", () => {
-        if (isOnline && location && location.latitude && location.longitude) {
-          socket.current.emit("driverOnline", {
-            id: "670169a43bfb71739108b497",
-            location: {
-              lat: location.latitude,
-              lng: location.longitude,
-            },
-            serviceType: "6713ed463526cf13c53cb3bd",
-          });
-        }
-      });
-      // socket.current.on("requestExpired", (data) => {
-      //   // Kiểm tra để đảm bảo `rideRequest` và `data.requestId` khớp
-      //   if (!rideRequest || rideRequest.requestId !== data.requestId) return;
-      //   setModalVisible(false);
-      //   setRideRequest(null);
-      //   setDistanceToPickup(null);
-      //   Alert.alert("Yêu cầu đã hết hạn", "Yêu cầu này không còn khả dụng.");
-      // });
-
-      socket.current.on("disconnect", () => {
-        setIsOnline(false);
-        setModalVisible(false);
-      });
-
-      // Nhận yêu cầu đặt xe
-      socket.current.on("newRideRequest", (request) => {
-        setRideRequest(request);
-        setModalVisible(true);
-
-        if (location && location.latitude && location.longitude) {
-          const distance = calculateDistance(
-            location.latitude,
-            location.longitude,
-            request.pickupLocation.latitude,
-            request.pickupLocation.longitude
-          );
-          setDistanceToPickup(distance);
-        } else {
-          setDistanceToPickup("N/A");
-        }
-        fetchServiceName(request.serviceId);
-        // fetchRequestDetail(request.requestId);
-
-        const timeout = setTimeout(() => {
-          if (modalVisible) {
-            handleMissedRequest();
-            socket.current.emit("bookingRequestExpired", {
-              bookingRequestId: request.requestId,
-            });
-          }
-        }, 15000);
-        setRequestTimeout(timeout);
-      });
+      socket.current.on("connect", () => handleSocketConnect());
+      socket.current.on("disconnect", handleSocketDisconnect);
+      socket.current.on("newRideRequest", handleNewRideRequest);
     }
 
     return () => {
@@ -99,51 +119,59 @@ const DriverScreen = ({ navigation }) => {
         socket.current.disconnect();
         socket.current = null;
       }
-      if (requestTimeout) clearTimeout(requestTimeout);
     };
   }, []);
-  useEffect(() => {
-    socket.current.on("requestExpired", (data) => {
-      // Kiểm tra để đảm bảo `rideRequest` và `data.requestId` khớp
-      if (rideRequest && rideRequest.requestId === data.requestId) {
-        setModalVisible(false); // Ẩn modal yêu cầu
-        setRideRequest(null);
-        setDistanceToPickup(null);
-        setShowMissedScreen(true); // Hiển thị modal "Trôi Cuốc"
-      }
-    });
 
-    return () => {
-      socket.current.off("requestExpired");
-    };
-  }, [rideRequest]);
+  const handleSocketConnect = () => {
+    console.log("Checking location before sending:", location);
 
-  const handleMissedRequest = () => {
-    // Tắt trạng thái hoạt động của tài xế
+    if (isOnline && location) {
+      const driverData = {
+        id: "673170d4b61da1537e89b5af",
+        location: { lat: location.latitude, lng: location.longitude },
+        serviceType: "6713ed463526cf13c53cb3bd",
+      };
+      console.log("driverData being sent:", driverData);
+      socket.current.emit("driverOnline", driverData);
+    } else {
+      console.warn(
+        "Cannot send driver online data, missing location or isOnline is false."
+      );
+    }
+  };
+
+  const handleSocketDisconnect = () => {
+    console.log("Socket disconnected, setting isOnline to false");
     setIsOnline(false);
     setModalVisible(false);
-    setRideRequest(null);
-
-    // Hiển thị màn hình "Trôi Cuốc"
-    setShowMissedScreen(true);
   };
-  useEffect(() => {
-    if (socket.current && isOnline && location) {
-      socket.current.emit("driverOnline", {
-        id: "670169a43bfb71739108b497",
-        location: {
-          lat: location.latitude,
-          lng: location.longitude,
-        },
-        serviceType: "6713ed463526cf13c53cb3bd",
-      });
-    } else if (socket.current && !isOnline) {
-      socket.current.emit("driverOffline", { id: "670169a43bfb71739108b497" });
-    }
-  }, [isOnline, location]);
+
+  const handleNewRideRequest = (request) => {
+    setRideRequest(request);
+    setModalVisible(true);
+
+    const distance = calculateDistance(
+      location.latitude,
+      location.longitude,
+      request.pickupLocation.latitude,
+      request.pickupLocation.longitude
+    );
+    setDistanceToPickup(distance);
+    fetchServiceName(request.serviceId);
+
+    setTimeout(() => {
+      if (modalVisible) {
+        handleMissedRequest();
+        socket.current.emit("bookingRequestExpired", {
+          bookingRequestId: request.requestId,
+        });
+      }
+    }, 15000);
+  };
 
   const handleGoOnline = () => {
     if (location) {
+      console.log("Going online with location:", location);
       setIsOnline(true);
     } else {
       Alert.alert(
@@ -155,49 +183,7 @@ const DriverScreen = ({ navigation }) => {
 
   const handleGoOffline = () => {
     setIsOnline(false);
-    if (socket.current) {
-      socket.current.emit("driverOffline", { id: "670169a43bfb71739108b497" });
-    }
-  };
-
-  const handleAcceptRequest = () => {
-    if (socket.current && rideRequest) {
-      socket.current.emit("acceptRide", {
-        requestId: rideRequest.requestId,
-        driverId: "670169a43bfb71739108b497",
-        customerId: rideRequest.customerId,
-      });
-
-      // Ẩn modal và ngăn handleMissedRequest chạy
-      setModalVisible(false);
-
-      // Xóa thời gian chờ
-      clearTimeout(requestTimeout);
-      setRideRequest(null);
-      setDistanceToPickup(null);
-      setRequestTimeout(null);
-
-      Alert.alert(
-        "Đã chấp nhận yêu cầu!",
-        "Bạn đã nhận chuyến của khách hàng."
-      );
-
-      // Truyền bookingDetails sang BookingTraditional
-      navigation.navigate("BookingTraditional", {
-        bookingDetails: {
-          requestId: rideRequest.requestId,
-          customerId: rideRequest.customerId,
-          pickupLocation: rideRequest.pickupLocation,
-          destinationLocation: rideRequest.destinationLocation,
-          customerAddress: rideRequest.pickupLocation.address,
-          fare: rideRequest.price,
-          paymentMethod: rideRequest.paymentMethod,
-          serviceName: serviceName,
-          moment_book: rideRequest.moment_book,
-          status: rideRequest.status,
-        },
-      });
-    }
+    socket.current?.emit("driverOffline", { id: "673170d4b61da1537e89b5af" });
   };
 
   const backOnline = () => {
@@ -205,12 +191,38 @@ const DriverScreen = ({ navigation }) => {
     setShowMissedScreen(false);
   };
 
+  // 6. Xử lý yêu cầu đặt xe
+  const handleAcceptRequest = () => {
+    socket.current?.emit("acceptRide", {
+      requestId: rideRequest.requestId,
+      driverId: "673170d4b61da1537e89b5af",
+      customerId: rideRequest.customerId,
+    });
+    setModalVisible(false);
+    Alert.alert("Đã chấp nhận yêu cầu!", "Bạn đã nhận chuyến của khách hàng.");
+    navigation.navigate("BookingTraditional", {
+      bookingDetails: {
+        ...rideRequest,
+        serviceName,
+        moment_book: rideRequest.moment_book,
+        status: rideRequest.status,
+      },
+    });
+  };
+
   const handleDeclineRequest = () => {
     setModalVisible(false);
     setRideRequest(null);
-    setDistanceToPickup(null);
-    clearTimeout(requestTimeout);
   };
+
+  const handleMissedRequest = () => {
+    setIsOnline(false);
+    setModalVisible(false);
+    setRideRequest(null);
+    setShowMissedScreen(true);
+  };
+
+  // 7. Các hàm phụ trợ cho xử lý yêu cầu và tính toán khoảng cách
   const fetchServiceName = async (serviceId) => {
     try {
       const response = await axios.get(
@@ -222,49 +234,67 @@ const DriverScreen = ({ navigation }) => {
       setServiceName("Unknown Service");
     }
   };
-  const fetchRequestDetail = async (requestId) => {
-    try {
-      const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/booking-traditional/request/${requestId}`
-      );
-      setRequest(response.data);
-    } catch (error) {
-      console.error("Error fetching service name:", error);
-      setServiceName("Unknown Service");
-    }
-  };
-  function calculateDistance(lat1, lon1, lat2, lon2) {
-    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
-      return "N/A"; // Trả về "N/A" nếu thiếu dữ liệu
-    }
-    const R = 6371; // Radius of the earth in kilometers
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return "N/A";
+    const R = 6371;
     const dLat = toRadians(lat2 - lat1);
     const dLon = toRadians(lon2 - lon1);
     const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLat / 2) ** 2 +
       Math.cos(toRadians(lat1)) *
         Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+        Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
-    return distance.toFixed(1); // Round to 1 decimal place
-  }
+    return (R * c).toFixed(1);
+  };
 
-  function toRadians(degrees) {
-    return degrees * (Math.PI / 180);
-  }
-
+  const toRadians = (degrees) => degrees * (Math.PI / 180);
+  const currentLocationGeoJson = location
+    ? {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [location.longitude, location.latitude],
+            },
+            properties: {
+              name: "Current Location",
+            },
+          },
+        ],
+      }
+    : null;
   return (
     <View style={styles.container}>
       {location ? (
-        <MapView style={styles.map} initialRegion={location}>
-          <Marker coordinate={location}>
-            <View style={{ width: 35, height: 35 }}>
-              <Ionicons name="navigate-circle" size={35} color="blue" />
-            </View>
-          </Marker>
-        </MapView>
+        <VietmapGL.MapView
+          ref={mapRef}
+          style={{ flex: 1 }}
+          styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
+        >
+          <VietmapGL.Camera
+            centerCoordinate={[location.longitude, location.latitude]}
+            zoomLevel={13}
+          />
+          {currentLocationGeoJson && (
+            <VietmapGL.ShapeSource
+              id="currentLocation"
+              shape={currentLocationGeoJson}
+            >
+              <VietmapGL.SymbolLayer
+                id="currentLocationMarker"
+                style={{
+                  iconImage: require("../../assets/current-location.png"), // Đường dẫn biểu tượng tùy chỉnh
+                  iconSize: 0.05, // Điều chỉnh kích thước biểu tượng
+                  iconAllowOverlap: true, // Cho phép các biểu tượng chồng lên nhau
+                }}
+              />
+            </VietmapGL.ShapeSource>
+          )}
+        </VietmapGL.MapView>
       ) : (
         <Text>Đang lấy vị trí...</Text>
       )}
