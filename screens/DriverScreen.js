@@ -40,7 +40,7 @@ const DriverScreen = ({ navigation }) => {
       socket.current.on("connect", () => {
         if (isOnline && location && location.latitude && location.longitude) {
           socket.current.emit("driverOnline", {
-            id: "6720c996743774e812904a02",
+            id: "6731baa2347b48810e416904",
             location: {
               lat: location.latitude,
               lng: location.longitude,
@@ -130,7 +130,7 @@ const DriverScreen = ({ navigation }) => {
   useEffect(() => {
     if (socket.current && isOnline && location) {
       socket.current.emit("driverOnline", {
-        id: "6720c996743774e812904a02",
+        id: "6731baa2347b48810e416904",
         location: {
           lat: location.latitude,
           lng: location.longitude,
@@ -138,7 +138,7 @@ const DriverScreen = ({ navigation }) => {
         serviceType: "6713ed463526cf13c53cb3bd",
       });
     } else if (socket.current && !isOnline) {
-      socket.current.emit("driverOffline", { id: "6720c996743774e812904a02" });
+      socket.current.emit("driverOffline", { id: "6731baa2347b48810e416904" });
     }
   }, [isOnline, location]);
 
@@ -156,7 +156,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOffline = () => {
     setIsOnline(false);
     if (socket.current) {
-      socket.current.emit("driverOffline", { id: "6720c996743774e812904a02" });
+      socket.current.emit("driverOffline", { id: "6731baa2347b48810e416904" });
     }
   };
 
@@ -164,7 +164,7 @@ const DriverScreen = ({ navigation }) => {
     if (socket.current && rideRequest) {
       socket.current.emit("acceptRide", {
         requestId: rideRequest.requestId,
-        driverId: "6720c996743774e812904a02",
+        driverId: "6731baa2347b48810e416904",
         customerId: rideRequest.customerId,
       });
 
@@ -243,9 +243,9 @@ const DriverScreen = ({ navigation }) => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in km
     return distance.toFixed(1); // Round to 1 decimal place
