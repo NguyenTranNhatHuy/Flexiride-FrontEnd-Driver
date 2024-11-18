@@ -16,7 +16,6 @@ import React, { useEffect, useState } from "react";
 import { vietmapAPIKey } from "../../../vietmap_config";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import Images from "./img/index";
-// import translationGuide from "./trans/index";
 import { CheckBox } from "react-native-elements";
 import Geolocation from "@react-native-community/geolocation";
 import translationGuide from "./trans";
@@ -133,7 +132,7 @@ const VietMapNavigationScreen = ({ navigation, route }) => {
             console.error(error);
             setIsLoading(false);
           },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
         );
       } else {
         setIsLoading(false);
@@ -346,8 +345,8 @@ const VietMapNavigationScreen = ({ navigation, route }) => {
       <View style={styles.mapContainer}>
         <VietMapNavigation
           initialLatLngZoom={{
-            lat: 15.863928919036544,
-            long: 108.38814055354507,
+            lat: 15.899137913764912,
+            long: 108.33461314832243,
             zoom: 13,
           }}
           navigationPadding={{ left: 50, top: 50, right: 50, bottom: 50 }}
@@ -391,21 +390,6 @@ const VietMapNavigationScreen = ({ navigation, route }) => {
             setRouteProgressData(null);
           }}
           onRouteBuilt={(event) => setRouteData(event)}
-          // onMapLongClick={(event) => {
-          //   const selectedLatLng = {
-          //     lat: event.nativeEvent.data.latitude,
-          //     long: event.nativeEvent.data.longitude,
-          //   };
-          //   Geolocation.getCurrentPosition((info) => {
-          //     VietMapNavigationController.buildRoute(
-          //       [
-          //         { lat: info.coords.latitude, long: info.coords.longitude },
-          //         selectedLatLng,
-          //       ],
-          //       "driving-traffic"
-          //     );
-          //   });
-          // }}
           onCancelNavigation={() => setIsNavigationInprogress(false)}
         />
       </View>
@@ -531,11 +515,11 @@ const styles = StyleSheet.create({
   bannerContent: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 20,
+    paddingLeft: 5,
   },
   guideImage: {
-    height: 64,
-    width: 64,
+    height: 40,
+    width: 40,
   },
   guideTextContainer: {
     flexDirection: "column",
@@ -549,7 +533,7 @@ const styles = StyleSheet.create({
   },
   turnDistanceText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 13,
     fontWeight: "700",
   },
   coordinatesText: {

@@ -21,10 +21,10 @@ import { IP_ADDRESS, VIETMAP_API_KEY } from "@env";
 import VietmapGL from "@vietmap/vietmap-gl-react-native"; // Import Vietmap
 import { vietmapStyle } from "../../vietmap_config";
 import Geolocation from "@react-native-community/geolocation";
+import useLocation from "../../hook/useLocation";
 
 const DriverScreen = ({ navigation }) => {
-  // const [location, setCurrentLocation] = useState(null);
-  const [location, setCurrentLocation] = useState(null);
+  const { currentLocation } = useLocation();
 
   const [isOnline, setIsOnline] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
@@ -37,72 +37,13 @@ const DriverScreen = ({ navigation }) => {
   const socket = useRef(null);
   const mapRef = useRef(null);
 
-  // const { location, setLocation } = useContext(LocationContext);
   useEffect(() => {
-    // Yêu cầu quyền và lấy vị trí
-    const requestLocationPermission = async () => {
-      try {
-        if (Platform.OS === "android") {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-              title: "Quyền truy cập vị trí",
-              message: "Ứng dụng cần quyền truy cập vị trí để hoạt động.",
-              buttonNeutral: "Hỏi sau",
-              buttonNegative: "Từ chối",
-              buttonPositive: "Đồng ý",
-            }
-          );
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            Alert.alert("Thông báo", "Bạn cần cấp quyền để sử dụng ứng dụng.");
-            return;
-          }
-        }
-        fetchCurrentLocation();
-      } catch (error) {
-        console.error("Lỗi yêu cầu quyền:", error);
-      }
-    };
-
-    requestLocationPermission();
-  }, []);
-
-  const fetchCurrentLocation = () => {
-    setIsLoading(true);
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setCurrentLocation({
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-        setIsLoading(false);
-        console.log("Vị trí hiện tại:", latitude, longitude);
-      },
-      (error) => {
-        setIsLoading(false);
-        let message = "Không thể lấy vị trí.";
-        if (error.code === 1) message = "Quyền truy cập vị trí bị từ chối.";
-        if (error.code === 2) message = "Không tìm thấy vị trí khả dụng.";
-        if (error.code === 3) message = "Hết thời gian chờ.";
-        Alert.alert("Lỗi GPS", message);
-        console.error("Lỗi lấy vị trí:", error);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
-  };
-
-  useEffect(() => {
-    console.log("isOnline changed to:", isOnline);
-    if (isOnline && location) {
+    if (isOnline && currentLocation) {
       handleSocketConnect();
     }
-  }, [isOnline, location]);
+  }, [isOnline, currentLocation]);
 
   useEffect(() => {
-    console.log("location: " + location);
     console.log("IP_ADDRESS: " + IP_ADDRESS);
 
     if (!socket.current) {
@@ -123,20 +64,21 @@ const DriverScreen = ({ navigation }) => {
   }, []);
 
   const handleSocketConnect = () => {
-    console.log("Checking location before sending:", location);
-
-    if (isOnline && location) {
+    if (isOnline && currentLocation) {
       const driverData = {
         id: "673170d4b61da1537e89b5af",
-        location: { lat: location.latitude, lng: location.longitude },
+        currentLocation: {
+          lat: currentLocation.latitude,
+          lng: currentLocation.longitude,
+        },
         serviceType: "6713ed463526cf13c53cb3bd",
       };
       console.log("driverData being sent:", driverData);
       socket.current.emit("driverOnline", driverData);
     } else {
-      console.warn(
-        "Cannot send driver online data, missing location or isOnline is false."
-      );
+      // console.warn(
+      //   "Cannot send driver online data, missing currentLocation or isOnline is false."
+      // );
     }
   };
 
@@ -151,8 +93,8 @@ const DriverScreen = ({ navigation }) => {
     setModalVisible(true);
 
     const distance = calculateDistance(
-      location.latitude,
-      location.longitude,
+      currentLocation.latitude,
+      currentLocation.longitude,
       request.pickupLocation.latitude,
       request.pickupLocation.longitude
     );
@@ -170,8 +112,8 @@ const DriverScreen = ({ navigation }) => {
   };
 
   const handleGoOnline = () => {
-    if (location) {
-      console.log("Going online with location:", location);
+    if (currentLocation) {
+      console.log("Going online with currentLocation:", currentLocation);
       setIsOnline(true);
     } else {
       Alert.alert(
@@ -198,6 +140,7 @@ const DriverScreen = ({ navigation }) => {
       driverId: "673170d4b61da1537e89b5af",
       customerId: rideRequest.customerId,
     });
+    console.log("rideRequest.moment_book: ", rideRequest.moment_book);
     setModalVisible(false);
     Alert.alert("Đã chấp nhận yêu cầu!", "Bạn đã nhận chuyến của khách hàng.");
     navigation.navigate("BookingTraditional", {
@@ -250,7 +193,7 @@ const DriverScreen = ({ navigation }) => {
   };
 
   const toRadians = (degrees) => degrees * (Math.PI / 180);
-  const currentLocationGeoJson = location
+  const currentLocationGeoJson = currentLocation
     ? {
         type: "FeatureCollection",
         features: [
@@ -258,7 +201,10 @@ const DriverScreen = ({ navigation }) => {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [location.longitude, location.latitude],
+              coordinates: [
+                currentLocation.longitude,
+                currentLocation.latitude,
+              ],
             },
             properties: {
               name: "Current Location",
@@ -269,16 +215,20 @@ const DriverScreen = ({ navigation }) => {
     : null;
   return (
     <View style={styles.container}>
-      {location ? (
+      {currentLocation ? (
         <VietmapGL.MapView
           ref={mapRef}
           style={{ flex: 1 }}
           styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
         >
           <VietmapGL.Camera
-            centerCoordinate={[location.longitude, location.latitude]}
+            centerCoordinate={[
+              currentLocation.longitude,
+              currentLocation.latitude,
+            ]}
             zoomLevel={13}
           />
+
           {currentLocationGeoJson && (
             <VietmapGL.ShapeSource
               id="currentLocation"

@@ -5,35 +5,27 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  PermissionsAndroid,
-  Platform,
-  Image,
   ActivityIndicator,
 } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import polyline from "@mapbox/polyline";
 import { formatCurrency } from "../../utils/FormatPrice";
 import { VIETMAP_API_KEY, IP_ADDRESS } from "@env";
-import LocationContext from "../../provider/LocationCurrentProvider";
-// import Geolocation from "@react-native-community/geolocation";
-import * as Location from "expo-location";
 import SupportCenterModal from "./SupportCenterModal";
 import VietmapGL from "@vietmap/vietmap-gl-react-native";
-import Geolocation from "@react-native-community/geolocation";
+import useLocation from "../../hook/useLocation";
 
 const BookingTraditional = ({ navigation, route }) => {
-  // const { currentLocation } = useContext(LocationContext);
-  const [currentLocation, setCurrentLocation] = useState(null);
+  const { currentLocation } = useLocation();
 
   const bookingDetails = route.params?.bookingDetails || {
     requestId: "672cb454b77f15a602eb2eb6",
     customerId: "670bdfc8b65786a7225f39a1",
     moment_book: "2024-11-15T09:00:14.466+00:00",
     pickupLocation: {
-      latitude: 16.00921457301096,
-      longitude: 108.2544115207258,
+      latitude: 15.860867278876274,
+      longitude: 108.38900110617931,
       address: "Tạp hóa Tứ Vang",
     },
     destinationLocation: {
@@ -42,7 +34,7 @@ const BookingTraditional = ({ navigation, route }) => {
       address: "Sân bay Quốc Tế",
     },
     customerName: "Nguyễn Văn A",
-    fare: 100000, // Giá giả định
+    price: 100000, // Giá giả định
     paymentMethod: "cash",
     serviceName: "Flexibike",
     customerId: "670bdfc8b65786a7225f39a1",
@@ -55,139 +47,24 @@ const BookingTraditional = ({ navigation, route }) => {
   const [request, setRequest] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Hiển thị trạng thái tải
 
   const pickupLocation = bookingDetails.pickupLocation;
   const destinationLocation = bookingDetails.destinationLocation;
   const mapRef = useRef(null);
+  const watchID = useRef(null);
+
   useEffect(() => {
-    if (request) {
-      // Chỉ chạy khi request đã có dữ liệu
-      if (request.status === "confirmed" && currentLocation) {
-        // calculateRouteDriverToCustomer();
-      } else if (request.status === "on trip") {
-        // calculateRoute();
-      }
-    }
-  }, [request, currentLocation]);
-  useEffect(() => {
-    requestLocationPermission();
+    console.table("booking detail data: ", bookingDetails);
     fetchCustomerDetails(bookingDetails.customerId);
     fetchRequestDetail(momentBook);
   }, []);
-  const requestLocationPermission = async () => {
-    try {
-      if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: "Quyền truy cập vị trí",
-            message: "Ứng dụng cần quyền để xác định vị trí của bạn.",
-            buttonNeutral: "Hỏi sau",
-            buttonNegative: "Từ chối",
-            buttonPositive: "Đồng ý",
-          }
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert("Thông báo", "Quyền truy cập vị trí bị từ chối");
-          return false;
-        }
-      }
-      return true;
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
 
   useEffect(() => {
-    const fetchLocation = async () => {
-      const permissionGranted = await requestLocationPermission();
-      if (permissionGranted) {
-        setIsLoading(true);
-        Geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setCurrentLocation({
-              latitude,
-              longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-            setIsLoading(false);
-          },
-          (error) => {
-            let message = "Không thể xác định vị trí của bạn.";
-            if (error.code === 1) message = "Quyền truy cập vị trí bị từ chối.";
-            if (error.code === 2) message = "Không tìm thấy vị trí khả dụng.";
-            if (error.code === 3) message = "Hết thời gian chờ GPS.";
-            Alert.alert("Lỗi GPS", message);
-            setIsLoading(false);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
-      }
-    };
-    fetchLocation();
-  }, []);
-
-  const calculateRoute = async () => {
-    try {
-      const response = await axios.get(
-        `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${pickupLocation.latitude},${pickupLocation.longitude}&point=${destinationLocation.latitude},${destinationLocation.longitude}&vehicle=car&points_encoded=true`
-      );
-
-      const { paths } = response.data;
-
-      if (paths && paths.length > 0) {
-        const routePath = paths[0];
-        const decodedCoordinates = polyline
-          .decode(routePath.points)
-          .map((point) => ({
-            latitude: point[0],
-            longitude: point[1],
-          }));
-
-        setRouteData(decodedCoordinates);
-        setDistance((routePath.distance / 1000).toFixed(1));
-        setDuration(Math.round(routePath.time / 60000));
-      } else {
-        Alert.alert("Lỗi", "Không tìm thấy tuyến đường.");
-      }
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể lấy dữ liệu điều hướng.");
-      console.error(error);
+    if (currentLocation) {
+      console.log("Vị trí hiện tại:", currentLocation);
     }
-  };
+  }, [currentLocation]);
 
-  const calculateRouteDriverToCustomer = async () => {
-    try {
-      const response = await axios.get(
-        `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${currentLocation.latitude},${currentLocation.longitude}&point=${pickupLocation.latitude},${pickupLocation.longitude}&vehicle=car&points_encoded=true`
-      );
-
-      const { paths } = response.data;
-      console.log("running api");
-      if (paths && paths.length > 0) {
-        const routePath = paths[0];
-        const decodedCoordinates = polyline
-          .decode(routePath.points)
-          .map((point) => ({
-            latitude: point[0],
-            longitude: point[1],
-          }));
-
-        setRouteData(decodedCoordinates);
-        setDistance((routePath.distance / 1000).toFixed(1));
-        setDuration(Math.round(routePath.time / 60000));
-      } else {
-        Alert.alert("Lỗi", "Không tìm thấy tuyến đường.");
-      }
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể lấy dữ liệu điều hướng.");
-      console.error(error);
-    }
-  };
   const fetchCustomerDetails = async (customerId) => {
     try {
       const response = await axios.get(
@@ -195,7 +72,7 @@ const BookingTraditional = ({ navigation, route }) => {
       );
       if (response.data) {
         setCustomer(response.data);
-        console.log("custoerdata : ", response.data);
+        // console.warn("customer data : ", response.data);
       } else {
         console.log("No customer data found");
       }
@@ -206,6 +83,8 @@ const BookingTraditional = ({ navigation, route }) => {
   };
 
   const fetchRequestDetail = async (momentBook) => {
+    console.log("🚀 ~ fetchRequestDetail ~ momentBook:", momentBook);
+
     try {
       const response = await axios.get(
         `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
@@ -227,12 +106,50 @@ const BookingTraditional = ({ navigation, route }) => {
   };
   useEffect(() => {
     const initializeRequest = async () => {
-      await fetchRequestDetail(momentBook); // Đảm bảo dữ liệu đã được lấy về
+      await fetchRequestDetail(momentBook);
     };
     initializeRequest();
   }, [momentBook]);
+  useEffect(() => {
+    if (currentLocation && request?.status) {
+      if (request.status === "confirmed") {
+        calculateRoute(currentLocation, pickupLocation);
+      } else if (request.status === "on trip") {
+        calculateRoute(pickupLocation, destinationLocation);
+      }
+    }
+  }, [currentLocation, request]);
+
+  const calculateRoute = async (start, end) => {
+    try {
+      const response = await axios.get(
+        `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${start.latitude},${start.longitude}&point=${end.latitude},${end.longitude}&vehicle=car&points_encoded=true`
+      );
+
+      const { paths } = response.data;
+      if (paths && paths.length > 0) {
+        const routePath = paths[0];
+        const decodedCoordinates = polyline
+          .decode(routePath.points)
+          .map(([latitude, longitude]) => ({ latitude, longitude }));
+
+        setRouteData(decodedCoordinates);
+        setDistance((routePath.distance / 1000).toFixed(1));
+        setDuration(Math.round(routePath.time / 60000));
+      } else {
+        Alert.alert("Lỗi", "Không tìm thấy tuyến đường.");
+      }
+    } catch (error) {
+      console.error("Error calculating route:", error);
+    }
+  };
 
   const updateStatus = async (newStatus) => {
+    if (!request?._id) {
+      Alert.alert("Lỗi", "Không thể tìm thấy yêu cầu để cập nhật trạng thái.");
+      return;
+    }
+
     try {
       await axios.put(
         `http://${IP_ADDRESS}:3000/booking-traditional/update-status/${request._id}`,
@@ -245,30 +162,6 @@ const BookingTraditional = ({ navigation, route }) => {
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái");
     }
   };
-  // const handleStatusUpdate = () => {
-  //   let nextStatus;
-  //   switch (request.status) {
-  //     case "confirmed":
-  //       nextStatus = "on the way";
-  //       break;
-  //     case "on the way":
-  //       nextStatus = "arrived";
-  //       break;
-  //     case "arrived":
-  //       nextStatus = "picked up";
-  //       break;
-  //     case "picked up":
-  //       nextStatus = "on trip";
-  //       break;
-  //     case "on trip":
-  //       nextStatus = "confirmed";
-  //       break;
-  //     default:
-  //       Alert.alert("Thông báo", "Không thể cập nhật trạng thái");
-  //       return;
-  //   }
-  //   updateStatus(nextStatus);
-  // };
 
   const handleStatusUpdate = () => {
     const statusFlow = [
@@ -278,17 +171,27 @@ const BookingTraditional = ({ navigation, route }) => {
       "picked up",
       "on trip",
     ];
-    const currentIndex = statusFlow.indexOf(request.status);
-    const nextStatus =
-      currentIndex >= 0 && currentIndex < statusFlow.length - 1
-        ? statusFlow[currentIndex + 1]
-        : null;
-
-    if (nextStatus) {
-      updateStatus(nextStatus);
-    } else {
-      Alert.alert("Thông báo", "Không thể cập nhật trạng thái");
+    if (!request || !request.status) {
+      Alert.alert("Lỗi", "Trạng thái yêu cầu không hợp lệ.");
+      return;
     }
+
+    const currentIndex = statusFlow.indexOf(request.status);
+    if (currentIndex === -1) {
+      Alert.alert(
+        "Lỗi",
+        "Trạng thái hiện tại không nằm trong danh sách hợp lệ."
+      );
+      return;
+    }
+
+    const nextStatus = statusFlow[currentIndex + 1];
+    if (!nextStatus) {
+      Alert.alert("Thông báo", "Không thể cập nhật trạng thái tiếp theo.");
+      return;
+    }
+
+    updateStatus(nextStatus);
   };
 
   const getButtonLabel = () => {
@@ -306,6 +209,11 @@ const BookingTraditional = ({ navigation, route }) => {
     }
   };
   const handleNavigate = () => {
+    if (!currentLocation || !pickupLocation || !destinationLocation) {
+      Alert.alert("Lỗi", "Không đủ thông tin để điều hướng.");
+      return;
+    }
+
     if (request?.status === "confirmed" && currentLocation) {
       navigation.navigate("VietMapNavigationScreen", {
         currentLocation,
@@ -320,7 +228,6 @@ const BookingTraditional = ({ navigation, route }) => {
         status: request.status,
       });
     } else if (request?.status === "on trip") {
-      // Điều hướng từ điểm đón khách hàng đến điểm đến
       navigation.navigate("VietMapNavigationScreen", {
         currentLocation,
         pickupLocation: {
@@ -368,15 +275,37 @@ const BookingTraditional = ({ navigation, route }) => {
             ]}
             zoomLevel={12}
           />
-
+          {routeData && (
+            <VietmapGL.ShapeSource
+              id="routeSource"
+              shape={{
+                type: "Feature",
+                geometry: {
+                  type: "LineString",
+                  coordinates: routeData.map(({ longitude, latitude }) => [
+                    longitude,
+                    latitude,
+                  ]),
+                },
+              }}
+            >
+              <VietmapGL.LineLayer
+                id="routeLayer"
+                style={{
+                  lineColor: "blue",
+                  lineWidth: 5,
+                  lineOpacity: 0.8,
+                }}
+              />
+            </VietmapGL.ShapeSource>
+          )}
           {/* ShapeSource với các điểm */}
           <VietmapGL.ShapeSource
             id="locationSource"
             shape={{
               type: "FeatureCollection",
               features: [
-                // Vị trí tài xế
-                currentLocation && {
+                {
                   type: "Feature",
                   geometry: {
                     type: "Point",
@@ -387,10 +316,9 @@ const BookingTraditional = ({ navigation, route }) => {
                   },
                   properties: {
                     title: "Tài xế",
-                    icon: "marker",
+                    icon: require("../../assets/current-location.png"),
                   },
                 },
-                // Điểm đón
                 {
                   type: "Feature",
                   geometry: {
@@ -402,10 +330,9 @@ const BookingTraditional = ({ navigation, route }) => {
                   },
                   properties: {
                     title: "Điểm đón",
-                    icon: "https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcQ9aLbvGR6NvEb4cLQyALxUbHJEuaoGOyeIhRA_fAmRfRNMMJP4ZkDBKxK_iCExUb0wlVVZB8m93yddGy4", // Đường dẫn hình ảnh
+                    icon: require("../../assets/pickup-icon.png"),
                   },
                 },
-                // Điểm đến
                 {
                   type: "Feature",
                   geometry: {
@@ -417,21 +344,21 @@ const BookingTraditional = ({ navigation, route }) => {
                   },
                   properties: {
                     title: "Điểm đến",
-                    icon: require("../../assets/destination-icon.png"), // Đường dẫn hình ảnh
+                    icon: require("../../assets/destination-icon.png"),
                   },
                 },
-              ].filter(Boolean), // Loại bỏ giá trị null
+              ].filter(Boolean),
             }}
           >
             <VietmapGL.SymbolLayer
               id="locationLayer"
               style={{
-                iconImage: ["get", "icon"], // Lấy biểu tượng từ `properties.icon`
-                iconSize: 0.5, // Kích thước biểu tượng
-                textField: ["get", "title"], // Hiển thị tiêu đề
-                textSize: 12, // Kích thước văn bản
-                textAnchor: "top", // Đặt văn bản phía trên biểu tượng
-                textOffset: [0, 1.5], // Văn bản cách biểu tượng một khoảng
+                iconImage: ["get", "icon"],
+                iconSize: 1,
+                textField: ["get", "title"],
+                textSize: 12,
+                textAnchor: "top",
+                textOffset: [0, 1.5],
               }}
             />
           </VietmapGL.ShapeSource>
@@ -460,10 +387,10 @@ const BookingTraditional = ({ navigation, route }) => {
         <Text style={styles.customerName}>
           {customer ? customer.name : "Loading..."}
         </Text>
-        <Text style={styles.locationText}>{pickupLocation.address}</Text>
+        {/* <Text style={styles.locationText}>{pickupLocation.address}</Text> */}
         <View style={styles.fareContainer}>
           <Text style={styles.fareText}>
-            {formatCurrency(bookingDetails.fare)}
+            {formatCurrency(bookingDetails.price)}
           </Text>
           <Text style={styles.paymentMethodText}>
             {bookingDetails.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
@@ -581,7 +508,7 @@ const styles = StyleSheet.create({
     paddingLeft: 35,
   },
   statusTime: {
-    fontSize: 20,
+    fontSize: 15,
     paddingBottom: 5,
     fontWeight: "bold",
     color: "green",

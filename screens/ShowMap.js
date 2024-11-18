@@ -1,68 +1,191 @@
-import { ReactElement, useEffect, useRef, useState } from "react";
-import VietmapGL from "@vietmap/vietmap-gl-react-native";
-const SimpleMap = (ReactElement, { navigation }) => {
-  const [styleUrl, setStyleURL] = useState({
-    styleUrl:
-      "https://maps.vietmap.vn/api/maps/light/styles.json?apikey=7c3ab066a578a4f5fe4f40c67573f7e0a831f9b36adfdc48",
-  });
+// React Native Geolocation
+// https://aboutreact.com/react-native-geolocation/
 
-  const mapRef = useRef(null);
+// import React in our code
+import React, { useState, useEffect } from "react";
 
-  const [markerCoordinates, setMarkerCoordinates] = useState(null);
-  const [selectedFeatures, setSelectedFeatures] = useState([]);
-  const handleMapClick = async (feature) => {
-    // Handle the map click event
-    if (mapRef.current) {
-      console.log(feature);
-      const { geometry, properties } = feature;
+// import all the components we are going to use
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  PermissionsAndroid,
+  Platform,
+  Button,
+} from "react-native";
 
-      setMarkerCoordinates(geometry.coordinates);
-      console.log("Clicked at coordinates:", geometry.coordinates);
-      console.log("Feature properties:", properties);
+//import all the components we are going to use.
+import Geolocation from "@react-native-community/geolocation";
 
-      /// Query data from rendered map, like point, admin,...
-      const selectedFeatures =
-        await mapRef.current.queryRenderedFeaturesAtPoint(
-          [properties.screenPointX, properties.screenPointX],
-          null
-        );
+const SimpleMap = () => {
+  const [currentLongitude, setCurrentLongitude] = useState("...");
+  const [currentLatitude, setCurrentLatitude] = useState("...");
+  const [locationStatus, setLocationStatus] = useState("");
 
-      console.log("Rendered Features:", selectedFeatures);
-      setSelectedFeatures(selectedFeatures);
-    } else {
-      console.error("Feature failed");
-    }
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      if (Platform.OS === "ios") {
+        getOneTimeLocation();
+        subscribeLocationLocation();
+      } else {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: "Location Access Required",
+              message: "This App needs to Access your location",
+            }
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            //To Check, If Permission is granted
+            getOneTimeLocation();
+            subscribeLocationLocation();
+          } else {
+            setLocationStatus("Permission Denied");
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    };
+    requestLocationPermission();
+    return () => {
+      Geolocation.clearWatch(watchID);
+    };
+  }, []);
+
+  const getOneTimeLocation = () => {
+    setLocationStatus("Getting Location ...");
+    Geolocation.getCurrentPosition(
+      //Will give you the current location
+      (position) => {
+        setLocationStatus("You are Here");
+
+        //getting the Longitude from the location json
+        const currentLongitude = JSON.stringify(position.coords.longitude);
+
+        //getting the Latitude from the location json
+        const currentLatitude = JSON.stringify(position.coords.latitude);
+
+        //Setting Longitude state
+        setCurrentLongitude(currentLongitude);
+
+        //Setting Longitude state
+        setCurrentLatitude(currentLatitude);
+      },
+      (error) => {
+        setLocationStatus(error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 30000,
+        maximumAge: 1000,
+      }
+    );
   };
-  const centerCoordinates = [106.632, 10.7545]; // Replace with your desired coordinates
-  const lineCoordinates = [
-    [106.432502, 10.253619], // Starting point (longitude, latitude)
-    [106.732502, 10.653619], // Ending point (longitude, latitude)
-  ];
-  return (
-    <VietmapGL.MapView
-      ref={mapRef}
-      styleURL={styleUrl.styleUrl}
-      style={{ flex: 1 }}
-      logoEnabled={false}
-      onPress={handleMapClick}
-    >
-      <VietmapGL.Camera
-        zoomLevel={13}
-        followZoomLevel={13}
-        followUserLocation={false}
-        centerCoordinate={centerCoordinates}
-      />
 
-      <VietmapGL.ShapeSource
-        id="lineSource"
-        shape={{ type: "LineString", coordinates: lineCoordinates }}
-      >
-        <VietmapGL.LineLayer
-          id="lineLayer"
-          style={{ lineColor: "red", lineWidth: 20 }}
-        />
-      </VietmapGL.ShapeSource>
-    </VietmapGL.MapView>
+  const subscribeLocationLocation = () => {
+    watchID = Geolocation.watchPosition(
+      (position) => {
+        //Will give you the location on location change
+
+        setLocationStatus("You are Here");
+        console.log(position);
+
+        //getting the Longitude from the location json
+        const currentLongitude = JSON.stringify(position.coords.longitude);
+
+        //getting the Latitude from the location json
+        const currentLatitude = JSON.stringify(position.coords.latitude);
+
+        //Setting Longitude state
+        setCurrentLongitude(currentLongitude);
+
+        //Setting Latitude state
+        setCurrentLatitude(currentLatitude);
+      },
+      (error) => {
+        setLocationStatus(error.message);
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 1000,
+      }
+    );
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.container}>
+          <Image
+            source={{
+              uri: "https://raw.githubusercontent.com/AboutReact/sampleresource/master/location.png",
+            }}
+            style={{ width: 100, height: 100 }}
+          />
+          <Text style={styles.boldText}>{locationStatus}</Text>
+          <Text
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 16,
+            }}
+          >
+            Longitude: {currentLongitude}
+          </Text>
+          <Text
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 16,
+            }}
+          >
+            Latitude: {currentLatitude}
+          </Text>
+          <View style={{ marginTop: 20 }}>
+            <Button title="Refresh" onPress={getOneTimeLocation} />
+          </View>
+        </View>
+        <Text
+          style={{
+            fontSize: 18,
+            textAlign: "center",
+            color: "grey",
+          }}
+        >
+          React Native Geolocation
+        </Text>
+        <Text
+          style={{
+            fontSize: 16,
+            textAlign: "center",
+            color: "grey",
+          }}
+        >
+          www.aboutreact.com
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "white",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  boldText: {
+    fontSize: 25,
+    color: "red",
+    marginVertical: 16,
+    textAlign: "center",
+  },
+});
+
 export default SimpleMap;
