@@ -19,7 +19,7 @@ const getAllDrivers = async () => {
 
 const getDriverById = async (driverId) => {
   try {
-    const response = await axios.get(`${DRIVER_API_URL}${driverId}`);
+    const response = await axios.get(`${DRIVER_API_URL}drivers/${driverId}`);
     if (response.status === 200) {
       return response.data.data; // Return the driver data
     } else {
@@ -31,4 +31,28 @@ const getDriverById = async (driverId) => {
   }
 };
 
-export { getAllDrivers, getDriverById };
+const updateDriver = async (driverId, updateData, token) => {
+  try {
+    const response = await axios.put(
+      `${DRIVER_API_URL}update-driver/${driverId}`,
+      updateData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Attach Bearer Token
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return response.data; // Return the updated driver data
+    } else {
+      throw new Error("Failed to update driver");
+    }
+  } catch (error) {
+    console.error("Error updating driver:", error.message);
+    throw error;
+  }
+};
+
+export { getAllDrivers, getDriverById, updateDriver };

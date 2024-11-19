@@ -37,4 +37,26 @@ const updatePassword = async (email, newPassword) => {
   }
 };
 
-export { registerDriver, updatePassword };
+const changeDriverPassword = async (driverId, newPassword, token) => {
+  try {
+    const response = await axios.post(
+      `${DRIVER_API_URL}change-password/${driverId}`,
+      { newPassword },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Pass the Bearer token here
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error changing password:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+export { registerDriver, updatePassword, changeDriverPassword };

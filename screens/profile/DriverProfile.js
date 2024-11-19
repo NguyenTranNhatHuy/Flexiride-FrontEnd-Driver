@@ -8,21 +8,43 @@ import {
   Platform,
   Image,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAuth } from "../../provider/AuthProvider";
+import { useNavigation } from "@react-navigation/native";
 
-const DriverProfile = () => {
+const DriverProfile = ({ route }) => {
   const { authState } = useAuth();
   const [personalInfo, setPersonalInfo] = useState({});
   const [address, setAddress] = useState({});
   const [bank, setBank] = useState({});
+  const token = authState.token;
+  const driverId = authState.userId;
+  const navigation = useNavigation();
 
-  useEffect(() => {
+  // Function to refresh data
+  const refreshData = () => {
+    // Here, you should fetch the latest data from the backend or state.
     setPersonalInfo(authState.user.personalInfo);
     setAddress(authState.user.personalInfo.address);
     setBank(authState.user.bankAccount);
+  };
+
+  // Reload data when screen is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      refreshData(); // Refresh data when screen is focused
+    });
+
+    // Clean up the listener
+    return unsubscribe;
+  }, [navigation]);
+
+  // Initial data load
+  useEffect(() => {
+    refreshData();
   }, []);
 
   return (
@@ -59,9 +81,20 @@ const DriverProfile = () => {
         </View>
 
         <View style={styles.personalInfoSection}>
-          <Text style={styles.sectionTitle}>Personal Info</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit</Text>
+          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("UpdateDriverInfo", {
+                token,
+                driverId,
+                personalInfo,
+                address,
+                bank,
+              })
+            }
+            style={styles.editButton}
+          >
+            <Text style={styles.editButtonText}>Cập nhập</Text>
           </TouchableOpacity>
 
           <View style={styles.infoItem}>
@@ -78,7 +111,7 @@ const DriverProfile = () => {
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="transgender-outline" size={20} color="#333" />
-            <Text style={styles.infoText}>Gender</Text>
+            <Text style={styles.infoText}>{personalInfo.gender}</Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="card-outline" size={20} color="#333" />
@@ -90,9 +123,14 @@ const DriverProfile = () => {
         </View>
 
         <View style={styles.utilitiesSection}>
-          <TouchableOpacity style={styles.utilityItem}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("ChangePassword", { token, driverId })
+            }
+            style={styles.utilityItem}
+          >
             <Ionicons name="lock-closed-outline" size={20} color="#007BFF" />
-            <Text style={styles.utilityText}>Change Password</Text>
+            <Text style={styles.utilityText}>Đổi mật khẩu</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.utilityItem}>
             <Ionicons name="download-outline" size={20} color="#007BFF" />
@@ -100,11 +138,11 @@ const DriverProfile = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.utilityItem}>
             <Ionicons name="help-circle-outline" size={20} color="#007BFF" />
-            <Text style={styles.utilityText}>Help</Text>
+            <Text style={styles.utilityText}>Trợ giúp</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.lastUtilityItem}>
             <Ionicons name="log-out-outline" size={20} color="#007BFF" />
-            <Text style={styles.utilityText}>Log Out</Text>
+            <Text style={styles.utilityText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -218,22 +256,21 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   utilityText: {
+    marginLeft: 16,
     fontSize: 16,
     color: "#007BFF",
-    marginLeft: 10,
   },
   lastUtilityItem: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 16,
-    backgroundColor: "#fff",
     padding: 12,
+    backgroundColor: "#fff",
     borderRadius: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    marginBottom: 30,
   },
 });
 
