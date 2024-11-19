@@ -344,13 +344,16 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: "#270C6D",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
+    paddingHorizontal: 40,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginLeft: 260,
+    alignSelf: "center",
+    marginTop: 20,
     marginBottom: 20,
   },
   saveButtonText: {
-    color: "#FFF",
+    color: "white",
     fontSize: 16,
   },
 });

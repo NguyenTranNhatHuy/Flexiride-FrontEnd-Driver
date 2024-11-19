@@ -29,13 +29,19 @@
     "ionicons": "^7.4.0",
     "moment-timezone": "^0.5.46",
     "react": "18.3.1",
+<<<<<<< HEAD
     "react-native": "0.76.2",
+=======
+    "react-native": "^0.76.2",
+>>>>>>> main
     "react-native-check-box": "^2.1.7",
     "react-native-dotenv": "^3.4.11",
     "react-native-elements": "^3.4.3",
     "react-native-image-picker": "^7.1.2",
     "react-native-maps": "1.18.0",
     "react-native-picker-select": "^9.3.1",
+    "react-native-reanimated": "^3.16.1",
+    "react-native-screens": "~4.1.0",
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
     "socket.io-client": "^4.8.0"
