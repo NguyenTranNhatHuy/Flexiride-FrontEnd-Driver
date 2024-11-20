@@ -12,3 +12,19 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+
+# Mapbox
+-dontwarn com.mapbox.**
+-keep class com.mapbox.** { *; }
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+
+# AutoValue
+-keepnames class com.ryanharter.auto.value.gson.** { *; }
+-keepnames class com.google.auto.value.AutoValue { *; }
+-keep class com.google.auto.value.** { *; }
+
+# Fix for missing AutoValue_MapboxDirections
+-keep class com.mapbox.api.directions.v5.AutoValue_MapboxDirections$Builder { *; }
+-keep class com.mapbox.api.directions.v5.AutoValue_MapboxDirections$1 { *; }

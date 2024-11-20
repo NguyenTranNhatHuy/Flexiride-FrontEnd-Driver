@@ -7,20 +7,14 @@ import {
   ScrollView,
   Alert,
   Modal,
-  ActivityIndicator,
-  Platform,
-  PermissionsAndroid,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import LocationContext from "../../provider/LocationCurrentProvider";
 import io from "socket.io-client";
 import { formatCurrency } from "../../utils/FormatPrice";
 import axios from "axios";
 import { IP_ADDRESS, VIETMAP_API_KEY } from "@env";
 import VietmapGL from "@vietmap/vietmap-gl-react-native"; // Import Vietmap
-import { vietmapStyle } from "../../vietmap_config";
-import Geolocation from "@react-native-community/geolocation";
+
 import useLocation from "../../hook/useLocation";
 
 const DriverScreen = ({ navigation }) => {

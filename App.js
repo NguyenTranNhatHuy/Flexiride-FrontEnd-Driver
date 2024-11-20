@@ -41,6 +41,8 @@ import Vietmap from "@vietmap/vietmap-gl-react-native";
 import VietMapNavigationScreen from "./screens/booking-traditional/navigation/VietMapNavigation";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DriverScreen from "./screens/booking-traditional/DriverScreen";
+import EmergencyContactsScreen from "./screens/booking-traditional/EmergencyContact";
+import PaymentScreen from "./screens/booking-traditional/PaymentScreen";
 
 export default function App() {
   enableScreens();
@@ -211,6 +213,16 @@ export default function App() {
               <Stack.Screen
                 name="SimpleMap"
                 component={SimpleMap}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="EmergencyContactSupport"
+                component={EmergencyContactsScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PaymentScreen"
+                component={PaymentScreen}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

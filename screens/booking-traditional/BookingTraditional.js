@@ -20,18 +20,18 @@ const BookingTraditional = ({ navigation, route }) => {
   const { currentLocation } = useLocation();
 
   const bookingDetails = route.params?.bookingDetails || {
-    requestId: "672cb454b77f15a602eb2eb6",
+    requestId: "6739b0001c24fd4a5690f0b7",
     customerId: "670bdfc8b65786a7225f39a1",
-    moment_book: "2024-11-15T09:00:14.466+00:00",
+    moment_book: "2024-11-17T08:57:35.252+00:00",
     pickupLocation: {
-      latitude: 15.860867278876274,
-      longitude: 108.38900110617931,
-      address: "Tạp hóa Tứ Vang",
+      latitude: 16.012117311109478,
+      longitude: 108.2564244400793,
+      address: "Quán Mỹ Liên, 30 Lê Văn Hiến",
     },
     destinationLocation: {
-      latitude: 15.978132,
-      longitude: 108.262098,
-      address: "Sân bay Quốc Tế",
+      latitude: 16.036281734248348,
+      longitude: 108.21906585095698,
+      address: "Khu trưng bày sản phẩm, 20 Hồ Biểu Chánh",
     },
     customerName: "Nguyễn Văn A",
     price: 100000, // Giá giả định
@@ -50,8 +50,9 @@ const BookingTraditional = ({ navigation, route }) => {
 
   const pickupLocation = bookingDetails.pickupLocation;
   const destinationLocation = bookingDetails.destinationLocation;
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const mapRef = useRef(null);
-  const watchID = useRef(null);
+  const routeCache = {};
 
   useEffect(() => {
     console.table("booking detail data: ", bookingDetails);
@@ -110,18 +111,44 @@ const BookingTraditional = ({ navigation, route }) => {
     };
     initializeRequest();
   }, [momentBook]);
+  // useEffect(() => {
+  //   if (currentLocation && request?.status) {
+  //     if (request.status === "confirmed") {
+  //       calculateRoute(currentLocation, pickupLocation);
+  //     } else if (request.status === "on trip") {
+  //       calculateRoute(pickupLocation, destinationLocation);
+  //     }
+  //   }
+  // }, [currentLocation, request]);
+
   useEffect(() => {
     if (currentLocation && request?.status) {
-      if (request.status === "confirmed") {
+      // Define the status groups for better readability
+      const toPickupStatuses = ["confirmed", "on the way", "arrived"];
+      const toDestinationStatuses = ["picked up", "on trip", "completed"];
+
+      if (toPickupStatuses.includes(request.status)) {
         calculateRoute(currentLocation, pickupLocation);
-      } else if (request.status === "on trip") {
+      } else if (toDestinationStatuses.includes(request.status)) {
         calculateRoute(pickupLocation, destinationLocation);
       }
     }
   }, [currentLocation, request]);
 
   const calculateRoute = async (start, end) => {
+    const routeKey = `${start.latitude},${start.longitude}-${end.latitude},${end.longitude}`;
+
+    // Check if route data is already cached
+    if (routeCache[routeKey]) {
+      const cachedRoute = routeCache[routeKey];
+      setRouteData(cachedRoute.decodedCoordinates);
+      setDistance(cachedRoute.distance);
+      setDuration(cachedRoute.duration);
+      return;
+    }
+
     try {
+      // Make API call for route calculation
       const response = await axios.get(
         `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${start.latitude},${start.longitude}&point=${end.latitude},${end.longitude}&vehicle=car&points_encoded=true`
       );
@@ -133,14 +160,32 @@ const BookingTraditional = ({ navigation, route }) => {
           .decode(routePath.points)
           .map(([latitude, longitude]) => ({ latitude, longitude }));
 
+        // Calculate distance and duration
+        const calculatedDistance = (routePath.distance / 1000).toFixed(1); // Convert to km
+        const calculatedDuration = Math.max(
+          1,
+          Math.round(routePath.time / 60000)
+        ); // Ensure minimum of 1 minute
+
+        // Cache the route data
+        routeCache[routeKey] = {
+          decodedCoordinates,
+          distance: calculatedDistance,
+          duration: calculatedDuration,
+        };
+
+        // Update state
         setRouteData(decodedCoordinates);
-        setDistance((routePath.distance / 1000).toFixed(1));
-        setDuration(Math.round(routePath.time / 60000));
+        setDistance(calculatedDistance);
+        setDuration(calculatedDuration);
       } else {
         Alert.alert("Lỗi", "Không tìm thấy tuyến đường.");
       }
     } catch (error) {
       console.error("Error calculating route:", error);
+      if (error.response?.status === 429) {
+        Alert.alert("Thông báo", "Quá nhiều yêu cầu, vui lòng thử lại sau.");
+      }
     }
   };
 
@@ -165,12 +210,15 @@ const BookingTraditional = ({ navigation, route }) => {
 
   const handleStatusUpdate = () => {
     const statusFlow = [
-      "confirmed",
-      "on the way",
-      "arrived",
-      "picked up",
-      "on trip",
+      "confirmed", // tài xế đã xác nhận request
+      "on the way", // đang trên đường đến điểm đón
+      "arrived", // đã đến điểm đón
+      "picked up", // đã đón khách
+      "on trip", // đang trên chuyến hành trình
+      "dropped off", // đã trả khách
+      "completed", // đã hoàn thành
     ];
+
     if (!request || !request.status) {
       Alert.alert("Lỗi", "Trạng thái yêu cầu không hợp lệ.");
       return;
@@ -192,6 +240,15 @@ const BookingTraditional = ({ navigation, route }) => {
     }
 
     updateStatus(nextStatus);
+
+    // Điều hướng đến màn hình thanh toán khi trạng thái là 'dropped off'
+    if (nextStatus === "dropped off") {
+      navigation.navigate("PaymentScreen", {
+        bookingDetails,
+        distance,
+        duration,
+      });
+    }
   };
 
   const getButtonLabel = () => {
@@ -204,10 +261,17 @@ const BookingTraditional = ({ navigation, route }) => {
         return "Đã đón";
       case "picked up":
         return "Bắt đầu hành trình";
+      case "on trip":
+        return "Đã trả khách";
+      case "dropped off":
+        return "Hoàn thành chuyến";
+      case "completed":
+        return "Đã hoàn thành";
       default:
         return "Cập nhật";
     }
   };
+
   const handleNavigate = () => {
     if (!currentLocation || !pickupLocation || !destinationLocation) {
       Alert.alert("Lỗi", "Không đủ thông tin để điều hướng.");
@@ -259,6 +323,18 @@ const BookingTraditional = ({ navigation, route }) => {
   };
   const handleSupportCenterPress = () => {
     setSupportModalVisible(true);
+  };
+
+  const getAddressToDisplay = () => {
+    if (!request?.status) {
+      return "Trạng thái không khả dụng"; // Default message when status is undefined
+    }
+    if (["confirmed", "on the way", "arrived"].includes(request.status)) {
+      return `Điểm đón: ${pickupLocation.address}`;
+    } else if (["picked up", "on trip", "completed"].includes(request.status)) {
+      return `Điểm đến: ${destinationLocation.address}`;
+    }
+    return "Không có thông tin địa chỉ";
   };
   return (
     <View style={styles.container}>
@@ -367,9 +443,12 @@ const BookingTraditional = ({ navigation, route }) => {
         <ActivityIndicator size="large" color="blue" />
       )}
       <View style={styles.serviceContainer}>
-        <TouchableOpacity style={styles.locationButton}>
-          <Ionicons name="chatbox-outline" size={25} color="black" />
-          <Text>Chat</Text>
+        <TouchableOpacity
+          style={styles.navigateButton}
+          onPress={handleNavigate}
+        >
+          <Ionicons name="navigate-circle" size={25} color="blue" />
+          <Text style={styles.navigateText}>Điều hướng</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.serviceButton}>
           <Text style={styles.statusTime}> 1 . Đón khách</Text>
@@ -387,7 +466,7 @@ const BookingTraditional = ({ navigation, route }) => {
         <Text style={styles.customerName}>
           {customer ? customer.name : "Loading..."}
         </Text>
-        {/* <Text style={styles.locationText}>{pickupLocation.address}</Text> */}
+        <Text style={styles.selectedLocationText}>{getAddressToDisplay()}</Text>
         <View style={styles.fareContainer}>
           <Text style={styles.fareText}>
             {formatCurrency(bookingDetails.price)}
@@ -396,13 +475,11 @@ const BookingTraditional = ({ navigation, route }) => {
             {bookingDetails.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
           </Text>
         </View>
-
         {/* <Text style={styles.fareText}>{momentBook}</Text> */}
         <View style={styles.distanceContainer}>
           <Text style={styles.distanceText}>Khoảng cách: {distance} km</Text>
           <Text style={styles.durationText}>Thời gian: {duration} phút</Text>
         </View>
-
         <View style={styles.controlButtons}>
           <TouchableOpacity style={styles.button} onPress={() => handleChat()}>
             <Ionicons name="chatbox-outline" size={20} color="black" />
@@ -437,6 +514,9 @@ const BookingTraditional = ({ navigation, route }) => {
       <SupportCenterModal
         visible={supportModalVisible}
         onClose={() => setSupportModalVisible(false)}
+        bookingDetails={bookingDetails}
+        currentLocation={currentLocation}
+        navigation={navigation}
       />
     </View>
   );
@@ -514,7 +594,7 @@ const styles = StyleSheet.create({
     color: "green",
   },
 
-  serviceText: { fontSize: 14, fontWeight: "bold" },
+  serviceText: { fontSize: 15, fontWeight: "bold" },
   navigateButton: {
     padding: 10,
     alignItems: "center",
