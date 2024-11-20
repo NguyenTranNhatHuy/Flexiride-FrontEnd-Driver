@@ -29,11 +29,7 @@
     "ionicons": "^7.4.0",
     "moment-timezone": "^0.5.46",
     "react": "18.3.1",
-<<<<<<< HEAD
     "react-native": "0.76.2",
-=======
-    "react-native": "^0.76.2",
->>>>>>> main
     "react-native-check-box": "^2.1.7",
     "react-native-dotenv": "^3.4.11",
     "react-native-elements": "^3.4.3",
