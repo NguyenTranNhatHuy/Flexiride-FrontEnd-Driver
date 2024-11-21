@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   },
   goOnlineButton: {
     position: "absolute",
-    bottom: 130,
+    bottom: 150,
     alignSelf: "center",
     backgroundColor: "#fff",
     padding: 10,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   statusNoti: {
     position: "absolute",
-    bottom: 75,
+    bottom: 85,
     alignSelf: "center",
     backgroundColor: "#fff",
     padding: 15,

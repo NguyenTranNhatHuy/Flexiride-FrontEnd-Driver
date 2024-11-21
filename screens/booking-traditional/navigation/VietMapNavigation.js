@@ -391,6 +391,7 @@ const VietMapNavigationScreen = ({ navigation, route }) => {
           }}
           onRouteBuilt={(event) => setRouteData(event)}
           onCancelNavigation={() => setIsNavigationInprogress(false)}
+          onMapReady={() => {}}
         />
       </View>
 
