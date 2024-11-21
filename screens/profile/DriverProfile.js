@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -9,43 +9,137 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useAuth } from "../../provider/AuthProvider";
-import { useNavigation } from "@react-navigation/native";
-
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker"; // Import ImagePicker from expo
+import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
+import { updateDriver } from "../../service/DriverService";
 const DriverProfile = ({ route }) => {
-  const { authState } = useAuth();
+  const { authState, logout } = useAuth();
   const [personalInfo, setPersonalInfo] = useState({});
   const [address, setAddress] = useState({});
   const [bank, setBank] = useState({});
-  const token = authState.token;
-  const driverId = authState.userId;
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false); // Manage modal visibility
   const navigation = useNavigation();
 
-  // Function to refresh data
   const refreshData = () => {
-    // Here, you should fetch the latest data from the backend or state.
     setPersonalInfo(authState.user.personalInfo);
     setAddress(authState.user.personalInfo.address);
     setBank(authState.user.bankAccount);
   };
 
-  // Reload data when screen is focused
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      refreshData(); // Refresh data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      refreshData();
+    }, [])
+  );
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đồng ý",
+          onPress: async () => {
+            await logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }],
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // Function to request permission to access the media library
+  const requestLibraryPermission = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.granted) {
+      pickImage();
+    } else {
+      alert("Permission to access media library is required.");
+    }
+  };
+
+  // Function to request permission to access the camera
+  const requestCameraPermission = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.granted) {
+      takePhoto();
+    } else {
+      alert("Permission to access camera is required.");
+    }
+  };
+
+  // Function to open image picker
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Quyền truy cập", "Quyền truy cập thư viện ảnh bị từ chối.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
     });
 
-    // Clean up the listener
-    return unsubscribe;
-  }, [navigation]);
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+      setModalVisible(false);
+      const uploadedAvatarUrl = await uploadImageToCloudinary(
+        result.assets[0].uri
+      ); // Using the image from the result
+      const updatedInfo = {
+        avatar: uploadedAvatarUrl,
+      };
+      await updateDriver(authState.userId, updatedInfo, authState.token);
+      console.log("url ảnh", uploadedAvatarUrl);
+    }
+  };
 
-  // Initial data load
-  useEffect(() => {
-    refreshData();
-  }, []);
+  // Function to open the camera
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Quyền truy cập", "Quyền truy cập camera bị từ chối.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+      setModalVisible(false);
+      const uploadedAvatarUrl = await uploadImageToCloudinary(
+        result.assets[0].uri
+      ); // Using the image from the result
+      const updatedInfo = {
+        avatar: uploadedAvatarUrl,
+      };
+      await updateDriver(authState.userId, updatedInfo, authState.token);
+      console.log("url ảnh", uploadedAvatarUrl);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -65,13 +159,17 @@ const DriverProfile = ({ route }) => {
           <View style={styles.profileImageContainer}>
             <Image
               source={{
-                uri: personalInfo.avatar
-                  ? personalInfo.avatar
-                  : "https://via.placeholder.com/150",
+                uri:
+                  selectedImage ||
+                  personalInfo.avatar ||
+                  "https://via.placeholder.com/150",
               }}
               style={styles.profileImage}
             />
-            <TouchableOpacity style={styles.cameraIcon}>
+            <TouchableOpacity
+              style={styles.cameraIcon}
+              onPress={() => setModalVisible(true)} // Show modal when clicked
+            >
               <Ionicons name="camera" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -85,8 +183,8 @@ const DriverProfile = ({ route }) => {
           <TouchableOpacity
             onPress={() =>
               navigation.navigate("UpdateDriverInfo", {
-                token,
-                driverId,
+                token: authState.token,
+                driverId: authState.userId,
                 personalInfo,
                 address,
                 bank,
@@ -125,7 +223,10 @@ const DriverProfile = ({ route }) => {
         <View style={styles.utilitiesSection}>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("ChangePassword", { token, driverId })
+              navigation.navigate("ChangePassword", {
+                token: authState.token,
+                driverId: authState.userId,
+              })
             }
             style={styles.utilityItem}
           >
@@ -140,12 +241,51 @@ const DriverProfile = ({ route }) => {
             <Ionicons name="help-circle-outline" size={20} color="#007BFF" />
             <Text style={styles.utilityText}>Trợ giúp</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.lastUtilityItem}>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.lastUtilityItem}
+          >
             <Ionicons name="log-out-outline" size={20} color="#007BFF" />
             <Text style={styles.utilityText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal for image selection */}
+      <Modal
+        visible={modalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContainer}>
+              <TouchableOpacity
+                style={styles.closeIcon}
+                onPress={() => setModalVisible(false)}
+              >
+                <Ionicons name="close" size={30} color="#000" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Chọn ảnh</Text>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.leftButton]}
+                  onPress={requestCameraPermission} // Request camera permission
+                >
+                  <Text style={styles.buttonText}>Mở Camera</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.rightButton]}
+                  onPress={requestLibraryPermission} // Request library permission
+                >
+                  <Text style={styles.buttonText}>Chọn ảnh từ Thư viện</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -271,6 +411,68 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+
+  //modal
+  modalContainer: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative", // Allows absolute positioning for the close icon
+    marginTop: 80,
+    marginBottom: 80,
+  },
+
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+
+  closeIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+
+  button: {
+    backgroundColor: "#FFC323",
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+    marginHorizontal: 8,
+  },
+
+  buttonText: {
+    color: "#000",
+    fontSize: 16,
+    textAlign: "center",
+  },
+
+  leftButton: {
+    marginRight: 4, // Space between the buttons
+  },
+
+  rightButton: {
+    marginLeft: 4, // Space between the buttons
   },
 });
 

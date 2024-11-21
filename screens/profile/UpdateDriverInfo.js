@@ -22,7 +22,6 @@ import axios from "axios";
 const UpdateDriverInfo = ({ navigation, route }) => {
   const { token, driverId } = route.params;
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [isChecked, setIsChecked] = useState(false);
@@ -102,7 +101,6 @@ const UpdateDriverInfo = ({ navigation, route }) => {
       try {
         const driverData = await getDriverById(driverId);
         setEmail(driverData.personalInfo.email || "");
-        setPhoneNumber(driverData.personalInfo.phoneNumber || "");
         setSelectedCity(driverData.personalInfo.city || "");
         setSelectedGender(driverData.personalInfo.gender || "");
       } catch (error) {
@@ -114,29 +112,8 @@ const UpdateDriverInfo = ({ navigation, route }) => {
     fetchDriverDetails();
   }, [driverId]);
 
-  const formatPhoneNumber = (number) => {
-    if (number.startsWith("0") && number.length === 10) {
-      return `84${number.slice(1)}`;
-    }
-    return number;
-  };
-
-  const validatePhone = async (phone) => {
-    try {
-      const phoneNumber = formatPhoneNumber(phone);
-      const response = await axios.get(
-        `https://phonevalidation.abstractapi.com/v1/?api_key=d70746d2ef17484893193d81af4e39c6&phone=${phoneNumber}`
-      );
-      return response.data.valid;
-    } catch (error) {
-      // console.error("Error verifying phone:", error);
-      return false;
-    }
-  };
-
   const handleContinue = async () => {
     let newErrors = {};
-    const phoneNumberRegex = /^0[0-9]{9}$/; // Phone number must start with 0 and have 10 digits
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email regex validation
 
     // Validate email
@@ -144,36 +121,6 @@ const UpdateDriverInfo = ({ navigation, route }) => {
       newErrors.email = "Email không được để trống.";
     } else if (!emailRegex.test(email)) {
       newErrors.email = "Vui lòng nhập email hợp lệ.";
-    }
-
-    // Validate phone number
-    if (!phoneNumber) {
-      newErrors.phoneNumber = "Số điện thoại không được để trống.";
-    } else if (!phoneNumberRegex.test(phoneNumber)) {
-      newErrors.phoneNumber =
-        "Vui lòng nhập số điện thoại bắt đầu bằng 0 và gồm 10 chữ số.";
-    } else if (!(await validatePhone(phoneNumber))) {
-      newErrors.phoneNumber = "Số điện thoại không hợp lệ.";
-    } else {
-      // Check if phone number already exists using getAllDriver method
-      try {
-        const existingDrivers = await getAllDrivers();
-        const phoneExists = existingDrivers.some(
-          (driver) =>
-            driver.personalInfo.phoneNumber === phoneNumber &&
-            driver._id !== driverId
-        );
-
-        if (phoneExists) {
-          newErrors.phoneNumber = "Số điện thoại này đã tồn tại.";
-        }
-      } catch (e) {
-        Alert.alert(
-          "Lỗi",
-          "Không thể kiểm tra số điện thoại đã tồn tại. Vui lòng thử lại."
-        );
-        console.error("Failed to check existing phone number:", e);
-      }
     }
 
     // Validate city
@@ -193,7 +140,6 @@ const UpdateDriverInfo = ({ navigation, route }) => {
       try {
         const updatedInfo = {
           email,
-          phoneNumber,
           city: selectedCity,
           gender: selectedGender,
         };
@@ -254,20 +200,6 @@ const UpdateDriverInfo = ({ navigation, route }) => {
             />
             {errors.email && (
               <Text style={styles.errorMessage}>{errors.email}</Text>
-            )}
-
-            {/* Số điện thoại Input */}
-            <TextInput
-              placeholder="Số điện thoại *"
-              style={styles.input}
-              onChangeText={setPhoneNumber}
-              value={phoneNumber}
-              keyboardType="phone-pad"
-              autoCapitalize="none"
-              placeholderTextColor="#6D6A6A"
-            />
-            {errors.phoneNumber && (
-              <Text style={styles.errorMessage}>{errors.phoneNumber}</Text>
             )}
 
             {/* Thành phố Picker */}
