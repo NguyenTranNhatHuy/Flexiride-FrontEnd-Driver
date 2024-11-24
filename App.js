@@ -44,6 +44,10 @@ import DriverScreen from "./screens/booking-traditional/DriverScreen";
 import EmergencyContactsScreen from "./screens/booking-traditional/EmergencyContact";
 import PaymentScreen from "./screens/booking-traditional/PaymentScreen";
 
+import { DriverAvailableRidesScreen } from "./screens/bookingCarpoolDriver/DriverAvailableRidesScreen";
+import { ManageDriverRidesScreen } from "./screens/bookingCarpoolDriver/ManageDriverRidesScreen";
+import { PickupProgressScreen } from "./screens/bookingCarpoolDriver/PickupProgressScreen";
+
 export default function App() {
   enableScreens();
   Vietmap.setApiKey(null);
@@ -225,6 +229,11 @@ export default function App() {
                 component={PaymentScreen}
                 options={{ headerShown: false }}
               />
+
+              {/* Screens for booking carpool driver */}
+              <Stack.Screen name="DriverAvailableRides" component={DriverAvailableRidesScreen} />
+              <Stack.Screen name="ManageDriverRides" component={ManageDriverRidesScreen} />
+              <Stack.Screen name="PickupProgress" component={PickupProgressScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>
