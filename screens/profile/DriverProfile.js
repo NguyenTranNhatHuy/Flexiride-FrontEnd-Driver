@@ -152,7 +152,7 @@ const DriverProfile = ({ route }) => {
       >
         <View style={styles.header}>
           <Icon name="arrow-left" size={24} color="#fff" />
-          <Text style={styles.headerText}>Your Profile</Text>
+          <Text style={styles.headerText}>Thông tin cá nhân</Text>
         </View>
 
         <View style={styles.profileSection}>
