@@ -257,6 +257,10 @@ const DriverScreen = ({ navigation }) => {
   const goToDriverProfile = () => {
     navigation.navigate('DriverProfile');
   };
+  const handleNavigate = () => {
+    navigation.navigate('ServiceSelection');
+  };
+  
   return (
     <View style={styles.container}>
       {location ? (
@@ -313,9 +317,9 @@ const DriverScreen = ({ navigation }) => {
             <Text style={styles.serviceText}>Loại dịch vụ</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.serviceButton}>
+          <TouchableOpacity style={styles.serviceButton}  onPress={() => handleNavigate()}>
             <Ionicons name="location-outline" size={24} color="black" />
-            <Text style={styles.serviceText}>Điểm đến yêu thích</Text>
+            <Text style={styles.serviceText}>Xe ghép</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.serviceButton}>

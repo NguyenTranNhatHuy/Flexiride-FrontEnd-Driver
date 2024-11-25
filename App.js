@@ -43,6 +43,8 @@ import { PickupProgressScreen } from "./screens/bookingCarpoolDriver/PickupProgr
 import { ServiceSelectionScreen } from "./screens/bookingCarpoolDriver/ServiceSelectionScreen";
 import ChangePassword from "./screens/auth/ChangePassword";
 import UpdateDriverInfo from "./screens/profile/UpdateDriverInfo";
+import OptimalRouteScreen from "./screens/bookingCarpoolDriver/OptimalRouteScreen"
+import SingleRouteScreen from "./screens/bookingCarpoolDriver/SingleRouteScreen";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -223,6 +225,8 @@ export default function App() {
             <Stack.Screen name="ManageDriverRides" component={ManageDriverRidesScreen} />
             <Stack.Screen name="PickupProgress" component={PickupProgressScreen} />
             <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
+            <Stack.Screen name="OptimalRoute" component={OptimalRouteScreen} />
+            <Stack.Screen name="SingleRoute" component={SingleRouteScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>

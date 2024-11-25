@@ -136,7 +136,7 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
                 <Text style={styles.rideInfo}>Đi từ: {item.start_location}</Text>
                 <Text style={styles.rideInfo}>Đến: {item.end_location}</Text>
                 <Text style={styles.rideInfo}>Ngày Xuất phát: {formatDate(item.date)}</Text>
-                <Text style={styles.rideInfo}>Thời gian xuất phát: {formatTime(item.time_start)}</Text>
+                <Text style={styles.rideInfo}>Thời gian xuất phát: {item.time_start}</Text>
                 <Text style={styles.rideInfo}>Giá: {formatPrice(item.price)} VNĐ</Text>
                 <TouchableOpacity
                   style={styles.acceptButton}
