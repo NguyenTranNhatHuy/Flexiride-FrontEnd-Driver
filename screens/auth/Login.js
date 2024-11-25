@@ -57,7 +57,7 @@ export default function Login({ navigation }) {
               token: response.data.token,
               user: response.data.user,
             });
-            navigation.navigate("DriverScreen");
+            // navigation.navigate("DriverScreen");
             // navigation.navigate("DriverProfile");
           } else {
             setErrors({ general: "Tài khoản chưa được phê duyệt." });

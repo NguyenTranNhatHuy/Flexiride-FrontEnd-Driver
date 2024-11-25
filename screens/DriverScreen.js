@@ -254,7 +254,9 @@ const DriverScreen = ({ navigation }) => {
   function toRadians(degrees) {
     return degrees * (Math.PI / 180);
   }
-
+  const goToDriverProfile = () => {
+    navigation.navigate('DriverProfile');
+  };
   return (
     <View style={styles.container}>
       {location ? (
@@ -272,7 +274,7 @@ const DriverScreen = ({ navigation }) => {
         <Ionicons name="stats-chart" size={24} color="black" />
         <Text style={styles.earningsText}>Thu nhập</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.profileButton}>
+      <TouchableOpacity style={styles.profileButton} onPress={goToDriverProfile}>
         <Ionicons name="person-circle-outline" size={50} color="black" />
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>5.0</Text>
