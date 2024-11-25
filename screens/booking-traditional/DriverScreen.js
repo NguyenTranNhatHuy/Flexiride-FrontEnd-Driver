@@ -16,20 +16,33 @@ import { IP_ADDRESS, VIETMAP_API_KEY } from "@env";
 import VietmapGL from "@vietmap/vietmap-gl-react-native"; // Import Vietmap
 
 import useLocation from "../../hook/useLocation";
+import { useAuth } from "../../provider/AuthProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DriverScreen = ({ navigation }) => {
-  const { currentLocation } = useLocation();
+  const { currentLocation, getOneTimeLocation } = useLocation();
 
   const [isOnline, setIsOnline] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [distanceToPickup, setDistanceToPickup] = useState(null);
   const [serviceName, setServiceName] = useState(null);
   const [showMissedScreen, setShowMissedScreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEarningsVisible, setIsEarningsVisible] = useState(false);
+  const [driverEarnings, setDriverEarnings] = useState(0);
+  const [activeBooking, setActiveBooking] = useState(null);
+  const [request, setRequest] = useState(null);
 
+  const toggleEarningsPopup = () => {
+    setIsEarningsVisible(!isEarningsVisible);
+  };
+
+  const [isLoading, setIsLoading] = useState(false);
+  const { authState } = useAuth();
   const socket = useRef(null);
   const mapRef = useRef(null);
+  useEffect(() => {
+    fetchEarnings();
+  }, [isOnline]);
 
   useEffect(() => {
     if (isOnline && currentLocation) {
@@ -38,8 +51,6 @@ const DriverScreen = ({ navigation }) => {
   }, [isOnline, currentLocation]);
 
   useEffect(() => {
-    console.log("IP_ADDRESS: " + IP_ADDRESS);
-
     if (!socket.current) {
       socket.current = io(`http://${IP_ADDRESS}:3000`, {
         transports: ["websocket"],
@@ -56,19 +67,110 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, []);
+  // useEffect(() => {
+  //   const clearAllStorage = async () => {
+  //     try {
+  //       await AsyncStorage.clear();
+  //       console.log("All storage cleared successfully!");
+  //     } catch (error) {
+  //       console.error("Failed to clear storage:", error);
+  //     }
+  //   };
 
+  //   clearAllStorage();
+  // }, []);
+
+  // useEffect(() => {
+  //   const clearActiveBooking = async () => {
+  //     try {
+  //       await AsyncStorage.removeItem("activeBooking");
+  //       console.log("Active booking cleared successfully!");
+  //     } catch (error) {
+  //       console.error("Failed to clear active booking:", error);
+  //     }
+  //   };
+
+  //   // Gọi hàm để xóa
+  //   clearActiveBooking();
+  // }, []);
+  useEffect(() => {
+    const loadActiveBooking = async () => {
+      try {
+        const booking = await AsyncStorage.getItem("activeBooking");
+        if (booking) {
+          console.log("🚀 ~ loadActiveBooking ~ booking:", booking);
+          const parsedBooking = JSON.parse(booking);
+          setActiveBooking(parsedBooking);
+          console.log("🚀 ~ request id :", parsedBooking.moment_book);
+        }
+      } catch (error) {
+        console.error("Error loading active booking:", error);
+      }
+    };
+
+    loadActiveBooking();
+  }, []); // Chỉ chạy khi component được mount
+
+  useEffect(() => {
+    const fetchRequestDetail = async (momentBook) => {
+      console.log("🚀 ~ fetchRequestDetail ~ momentBook:", momentBook);
+
+      try {
+        const response = await axios.get(
+          `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
+        );
+
+        if (response.data) {
+          setRequest(response.data);
+          console.log(
+            "🚀 ~ fetchRequestDetail ~ response.data:",
+            response.data
+          );
+
+          // Kiểm tra trạng thái và xóa activeBooking nếu cần
+          if (response.data.status === "completed") {
+            console.log("Booking completed. Clearing activeBooking...");
+            await AsyncStorage.removeItem("activeBooking");
+            setActiveBooking(null); // Cập nhật state
+          }
+        } else {
+          console.log("No request found for the given moment");
+          Alert.alert(
+            "Lỗi",
+            "Không tìm thấy yêu cầu nào khớp với thời gian đã chọn."
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching request details:", error);
+        Alert.alert("Lỗi", "Không thể lấy thông tin yêu cầu");
+      }
+    };
+
+    if (activeBooking?.moment_book) {
+      fetchRequestDetail(activeBooking.moment_book);
+    }
+  }, [activeBooking]);
+
+  const navigateToBooking = () => {
+    if (activeBooking) {
+      navigation.navigate("BookingTraditional", {
+        bookingDetails: activeBooking,
+      });
+    }
+  };
   const handleSocketConnect = () => {
     if (isOnline && currentLocation) {
       const driverData = {
-        id: "673170d4b61da1537e89b5af",
+        id: authState.userId,
         currentLocation: {
           lat: currentLocation.latitude,
           lng: currentLocation.longitude,
         },
-        serviceType: "6713ed463526cf13c53cb3bd",
       };
       console.log("driverData being sent:", driverData);
-      socket.current.emit("driverOnline", driverData);
+      if (socket.current) {
+        socket.current.emit("driverOnline", driverData);
+      }
     } else {
       // console.warn(
       //   "Cannot send driver online data, missing currentLocation or isOnline is false."
@@ -86,13 +188,6 @@ const DriverScreen = ({ navigation }) => {
     setRideRequest(request);
     setModalVisible(true);
 
-    const distance = calculateDistance(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      request.pickupLocation.latitude,
-      request.pickupLocation.longitude
-    );
-    setDistanceToPickup(distance);
     fetchServiceName(request.serviceId);
 
     setTimeout(() => {
@@ -103,23 +198,38 @@ const DriverScreen = ({ navigation }) => {
         });
       }
     }, 15000);
+    return () => clearTimeout(timer); // Cleanup nếu modal bị đóng trước 15 giây
   };
 
-  const handleGoOnline = () => {
-    if (currentLocation) {
-      console.log("Going online with currentLocation:", currentLocation);
-      setIsOnline(true);
-    } else {
-      Alert.alert(
-        "Vị trí không khả dụng",
-        "Không thể bật kết nối nếu không có vị trí."
+  const handleGoOnline = async () => {
+    try {
+      const response = await axios.get(
+        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/services`
       );
+
+      if (!response.data.data || response.data.data.length === 0) {
+        Alert.alert(
+          "Lỗi",
+          "Bạn phải chọn ít nhất một dịch vụ trước khi online."
+        );
+        return;
+      }
+
+      if (currentLocation) {
+        setIsOnline(true);
+        console.log("Going online with currentLocation:", currentLocation);
+      } else {
+        Alert.alert("Lỗi", "Không thể bật kết nối nếu không có vị trí.");
+      }
+    } catch (error) {
+      console.error("Error checking services:", error);
+      Alert.alert("Lỗi", "Không thể kiểm tra danh sách dịch vụ.");
     }
   };
 
   const handleGoOffline = () => {
     setIsOnline(false);
-    socket.current?.emit("driverOffline", { id: "673170d4b61da1537e89b5af" });
+    socket.current?.emit("driverOffline", { id: authState.userId });
   };
 
   const backOnline = () => {
@@ -131,7 +241,7 @@ const DriverScreen = ({ navigation }) => {
   const handleAcceptRequest = () => {
     socket.current?.emit("acceptRide", {
       requestId: rideRequest.requestId,
-      driverId: "673170d4b61da1537e89b5af",
+      driverId: authState.userId,
       customerId: rideRequest.customerId,
     });
     console.log("rideRequest.moment_book: ", rideRequest.moment_book);
@@ -171,6 +281,22 @@ const DriverScreen = ({ navigation }) => {
       setServiceName("Unknown Service");
     }
   };
+  const fetchEarnings = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `http://${IP_ADDRESS}:3000/payment-history/income/today/${authState.userId}`
+      );
+      const { driverIncome } = response.data; // Thu nhập sau khi tính 70%
+      setDriverEarnings(driverIncome);
+      console.log("🚀 ~ fetchEarnings ~ driverIncome :", driverIncome);
+    } catch (error) {
+      console.error("Error fetching driver earnings:", error);
+      Alert.alert("Lỗi", "Không thể lấy thông tin thu nhập.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return "N/A";
@@ -207,6 +333,14 @@ const DriverScreen = ({ navigation }) => {
         ],
       }
     : null;
+
+  const handleRelocate = () => {
+    if (getOneTimeLocation) {
+      getOneTimeLocation();
+    } else {
+      Alert.alert("Lỗi", "Không thể làm mới vị trí hiện tại.");
+    }
+  };
   return (
     <View style={styles.container}>
       {currentLocation ? (
@@ -242,7 +376,10 @@ const DriverScreen = ({ navigation }) => {
       ) : (
         <Text>Đang lấy vị trí...</Text>
       )}
-      <TouchableOpacity style={styles.earningsButton}>
+      <TouchableOpacity
+        style={styles.earningsButton}
+        onPress={toggleEarningsPopup}
+      >
         <Ionicons name="stats-chart" size={24} color="black" />
         <Text style={styles.earningsText}>Thu nhập</Text>
       </TouchableOpacity>
@@ -252,6 +389,25 @@ const DriverScreen = ({ navigation }) => {
           <Text style={styles.ratingText}>5.0</Text>
         </View>
       </TouchableOpacity>
+      <View style={styles.bottomLeftControls}>
+        {activeBooking && (
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={navigateToBooking}
+          >
+            <Ionicons name="car-sport-outline" size={24} color="white" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => navigation.replace("DriverScreen")}
+        >
+          <Ionicons name="reload-outline" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={handleRelocate}>
+          <Ionicons name="locate-outline" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
       {!isOnline ? (
         <TouchableOpacity
           style={styles.goOnlineButton}
@@ -280,26 +436,25 @@ const DriverScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.bottomButtons}
         >
-          <TouchableOpacity style={styles.serviceButton}>
+          <TouchableOpacity
+            style={styles.serviceButton}
+            onPress={() => navigation.navigate("ServiceScreen")}
+          >
             <Ionicons name="car-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Loại dịch vụ</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.serviceButton}>
             <Ionicons name="location-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Điểm đến yêu thích</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.serviceButton}>
             <Ionicons name="briefcase-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Tiền vốn hoạt động</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.serviceButton}>
             <Ionicons name="flash-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Tự động nhận</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.serviceButton}>
             <MaterialIcons name="more-horiz" size={24} color="black" />
             <Text style={styles.serviceText}>Xem thêm</Text>
@@ -318,9 +473,6 @@ const DriverScreen = ({ navigation }) => {
             {/* Giá cước */}
             <Text style={styles.modalFare}>
               Giá cước: {formatCurrency(rideRequest?.price)}
-            </Text>
-            <Text style={styles.modalDistance}>
-              Cách bạn {distanceToPickup} km
             </Text>
 
             <View style={styles.locationContainer}>
@@ -393,6 +545,31 @@ const DriverScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      {isEarningsVisible && (
+        <View style={styles.earningsPopup}>
+          <View
+            style={styles.earningsDetail}
+            onPress={() => navigation.navigate("Earnings")}
+          >
+            <View>
+              <Text style={styles.detailLabel}>Thu nhập</Text>
+              <Text style={styles.detailValue}>
+                {formatCurrency(driverEarnings)}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate("Earnings")}>
+              <Ionicons name="chevron-forward" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.earningsDetail}>
+            <View>
+              <Text style={styles.detailLabel}>Ví tài khoản:</Text>
+              <Text style={styles.detailValue}>{formatCurrency(632428)}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="black" />
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -404,6 +581,31 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  bottomLeftControls: {
+    position: "absolute",
+    bottom: 200,
+    right: 20,
+    flexDirection: "column",
+  },
+  controlButton: {
+    backgroundColor: "#000",
+    padding: 15,
+    borderRadius: 30,
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  loadingText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+    color: "#555",
   },
   earningsButton: {
     position: "absolute",
@@ -634,6 +836,66 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  earningsButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "white",
+    padding: 10,
+    borderRadius: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  earningsText: {
+    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  earningsPopup: {
+    position: "absolute",
+    top: 110,
+    left: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+
+    width: 250,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  closePopup: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    zIndex: 10,
+  },
+  earningsDetail: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  detailLabel: {
+    fontSize: 10,
+    color: "black",
+  },
+  detailValue: {
+    fontSize: 19,
+    color: "#4CAF50",
+  },
+  rewardRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
 

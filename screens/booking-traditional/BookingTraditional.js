@@ -15,31 +15,13 @@ import { VIETMAP_API_KEY, IP_ADDRESS } from "@env";
 import SupportCenterModal from "./SupportCenterModal";
 import VietmapGL from "@vietmap/vietmap-gl-react-native";
 import useLocation from "../../hook/useLocation";
+import { useAuth } from "../../provider/AuthProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BookingTraditional = ({ navigation, route }) => {
   const { currentLocation } = useLocation();
 
-  const bookingDetails = route.params?.bookingDetails || {
-    requestId: "6739b0001c24fd4a5690f0b7",
-    customerId: "670bdfc8b65786a7225f39a1",
-    moment_book: "2024-11-17T08:57:35.252+00:00",
-    pickupLocation: {
-      latitude: 16.012117311109478,
-      longitude: 108.2564244400793,
-      address: "Quán Mỹ Liên, 30 Lê Văn Hiến",
-    },
-    destinationLocation: {
-      latitude: 16.036281734248348,
-      longitude: 108.21906585095698,
-      address: "Khu trưng bày sản phẩm, 20 Hồ Biểu Chánh",
-    },
-    customerName: "Nguyễn Văn A",
-    price: 100000, // Giá giả định
-    paymentMethod: "cash",
-    serviceName: "Flexibike",
-    customerId: "670bdfc8b65786a7225f39a1",
-  };
-  // const bookingDetails = route.params?.bookingDetails;
+  const bookingDetails = route.params?.bookingDetails;
   const momentBook = bookingDetails?.moment_book;
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
@@ -50,12 +32,12 @@ const BookingTraditional = ({ navigation, route }) => {
 
   const pickupLocation = bookingDetails.pickupLocation;
   const destinationLocation = bookingDetails.destinationLocation;
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const mapRef = useRef(null);
   const routeCache = {};
+  const { authState } = useAuth();
 
   useEffect(() => {
-    console.table("booking detail data: ", bookingDetails);
+    console.table("booking detail data:     ", bookingDetails);
     fetchCustomerDetails(bookingDetails.customerId);
     fetchRequestDetail(momentBook);
   }, []);
@@ -65,7 +47,29 @@ const BookingTraditional = ({ navigation, route }) => {
       console.log("Vị trí hiện tại:", currentLocation);
     }
   }, [currentLocation]);
+  useEffect(() => {
+    const saveBookingToStorage = async () => {
+      try {
+        if (bookingDetails) {
+          await AsyncStorage.setItem(
+            "activeBooking",
+            JSON.stringify(bookingDetails)
+          );
+        }
+      } catch (error) {
+        console.error("Error saving booking to storage:", error);
+      }
+    };
 
+    saveBookingToStorage();
+
+    return () => {
+      // Clear active booking if trip is completed
+      if (request?.status === "dropped off") {
+        AsyncStorage.removeItem("activeBooking");
+      }
+    };
+  }, [bookingDetails, request?.status]);
   const fetchCustomerDetails = async (customerId) => {
     try {
       const response = await axios.get(
@@ -93,6 +97,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
       if (response.data) {
         setRequest(response.data);
+        console.log("🚀 ~ fetchRequestDetail ~ response.data:", response.data);
       } else {
         console.log("No request found for the given moment");
         Alert.alert(
@@ -111,15 +116,6 @@ const BookingTraditional = ({ navigation, route }) => {
     };
     initializeRequest();
   }, [momentBook]);
-  // useEffect(() => {
-  //   if (currentLocation && request?.status) {
-  //     if (request.status === "confirmed") {
-  //       calculateRoute(currentLocation, pickupLocation);
-  //     } else if (request.status === "on trip") {
-  //       calculateRoute(pickupLocation, destinationLocation);
-  //     }
-  //   }
-  // }, [currentLocation, request]);
 
   useEffect(() => {
     if (currentLocation && request?.status) {
@@ -216,7 +212,6 @@ const BookingTraditional = ({ navigation, route }) => {
       "picked up", // đã đón khách
       "on trip", // đang trên chuyến hành trình
       "dropped off", // đã trả khách
-      "completed", // đã hoàn thành
     ];
 
     if (!request || !request.status) {
@@ -241,12 +236,10 @@ const BookingTraditional = ({ navigation, route }) => {
 
     updateStatus(nextStatus);
 
-    // Điều hướng đến màn hình thanh toán khi trạng thái là 'dropped off'
     if (nextStatus === "dropped off") {
       navigation.navigate("PaymentScreen", {
         bookingDetails,
-        distance,
-        duration,
+        requestId: request._id,
       });
     }
   };
@@ -265,8 +258,7 @@ const BookingTraditional = ({ navigation, route }) => {
         return "Đã trả khách";
       case "dropped off":
         return "Hoàn thành chuyến";
-      case "completed":
-        return "Đã hoàn thành";
+
       default:
         return "Cập nhật";
     }
@@ -311,9 +303,9 @@ const BookingTraditional = ({ navigation, route }) => {
 
   const handleChat = () => {
     navigation.navigate("ChatScreenDriver", {
-      userId: "6720c996743774e812904a02",
+      userId: authState.userId,
       role: "customer",
-      customerId: "670bdfc8b65786a7225f39a1",
+      customerId: request.account_id,
       roomId: request._id,
       customerName: customer.name,
       customerAvatar: customer.avatar,

@@ -43,6 +43,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DriverScreen from "./screens/booking-traditional/DriverScreen";
 import EmergencyContactsScreen from "./screens/booking-traditional/EmergencyContact";
 import PaymentScreen from "./screens/booking-traditional/PaymentScreen";
+import Earnings from "./screens/booking-traditional/Earnings";
+import EarningsDetailScreen from "./screens/booking-traditional/EarningDetails";
+import EarningsHistoryScreen from "./screens/booking-traditional/EarningsHistoryScreen";
+import ServiceScreen from "./screens/ServiceScreen";
 
 export default function App() {
   enableScreens();
@@ -224,6 +228,26 @@ export default function App() {
                 name="PaymentScreen"
                 component={PaymentScreen}
                 options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Earnings"
+                component={Earnings}
+                options={{ title: "Thu nhập" }}
+              />
+              <Stack.Screen
+                name="EarningsDetailScreen"
+                component={EarningsDetailScreen}
+                options={{ title: "Chi tiết thu nhập" }}
+              />
+              <Stack.Screen
+                name="EarningsHistoryScreen"
+                component={EarningsHistoryScreen}
+                options={{ title: "Lịch sử thu nhập" }}
+              />
+              <Stack.Screen
+                name="ServiceScreen"
+                component={ServiceScreen}
+                options={{ title: "Chọn dịch vụ" }}
               />
             </Stack.Navigator>
           </NavigationContainer>

@@ -1,13 +1,21 @@
 import React, { useEffect } from "react";
 import { View, Image, StyleSheet, StatusBar, Dimensions } from "react-native";
+import { useAuth } from "../provider/AuthProvider";
 
 const Splash = ({ navigation }) => {
+  const { authState } = useAuth(); // Destructure to get the auth state directly
+
   useEffect(() => {
     const timeout = setTimeout(() => {
-      navigation.replace("BookingTraditional");
+      if (authState.isAuthenticated && authState.token) {
+        navigation.replace("DriverScreen");
+      } else {
+        navigation.replace("Login");
+      }
     }, 1000);
+
     return () => clearTimeout(timeout);
-  }, [navigation]);
+  }, [navigation, authState.isAuthenticated, authState.token]);
 
   return (
     <View style={styles.container}>

@@ -1,5 +1,5 @@
 export const formatCurrency = (amount) => {
-  if (!amount) return "Không có giá";
+  if (!amount) return "0 đ";
 
   // Đảm bảo amount là kiểu số
   const numericAmount = parseInt(amount, 10);

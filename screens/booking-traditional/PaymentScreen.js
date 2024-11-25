@@ -13,13 +13,12 @@ import axios from "axios";
 import { formatCurrency } from "../../utils/FormatPrice";
 import { IP_ADDRESS } from "@env";
 import { useFocusEffect } from "@react-navigation/native"; // Import hook
+import moment from "moment-timezone";
+import { useAuth } from "../../provider/AuthProvider";
 
 const PaymentScreen = ({ route, navigation }) => {
-  const bookingDetails = route.params?.bookingDetails || {
-    requestId: "6739b0001c24fd4a5690f0b7",
-    customerName: "Nguyễn Văn A",
-    price: 100000,
-  };
+  const bookingDetails = route.params?.bookingDetails;
+  const requestId = route.params?.requestId;
 
   const [tollFee, setTollFee] = useState(0);
   const [extraFee, setExtraFee] = useState(0);
@@ -27,41 +26,46 @@ const PaymentScreen = ({ route, navigation }) => {
 
   const [request, setRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { authState } = useAuth();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const checkStatus = async () => {
-        try {
-          const response = await axios.get(
-            `http://${IP_ADDRESS}:3000/booking-traditional/request/${bookingDetails.requestId}`
-          );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     const checkStatus = async () => {
+  //       try {
+  //         const response = await axios.get(
+  //           `http://${IP_ADDRESS}:3000/booking-traditional/request/${bookingDetails.requestId}`
+  //         );
 
-          if (response.data?.status === "completed") {
-            Alert.alert("Thông báo", "Chuyến đi đã hoàn thành!");
-            navigation.navigate("DriverScreen");
-          } else {
-            setIsLoading(false);
-          }
-        } catch (error) {
-          console.error("Error checking request status:", error);
-          Alert.alert("Lỗi", "Không thể kiểm tra trạng thái yêu cầu.");
-          setIsLoading(false);
-        }
-      };
+  //         if (response.data?.status === "completed") {
+  //           Alert.alert("Thông báo", "Chuyến đi đã hoàn thành!");
+  //           navigation.navigate("DriverScreen"); // Điều hướng đến Home nếu đã hoàn thành
+  //         } else {
+  //           setIsLoading(false); // Cho phép tiếp tục nếu chưa hoàn thành
+  //         }
+  //       } catch (error) {
+  //         console.error("Error checking request status:", error);
+  //         Alert.alert("Lỗi", "Không thể kiểm tra trạng thái yêu cầu.");
+  //         setIsLoading(false);
+  //       }
+  //     };
 
-      checkStatus();
-    }, [bookingDetails.requestId, navigation]) // Dependency array
-  );
+  //     checkStatus();
+  //   }, [bookingDetails.requestId, navigation]) // Dependency array
+  // );
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Đang kiểm tra trạng thái...</Text>
-      </View>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text style={styles.loadingText}>Đang kiểm tra trạng thái...</Text>
+  //     </View>
+  //   );
+  // }
   useEffect(() => {
-    fetchRequestDetail(bookingDetails.requestId);
+    console.log("bookingDetails: ", bookingDetails);
+    console.log("ip address: ", IP_ADDRESS);
+
+    console.log("requestId: ", requestId);
+    fetchRequestDetail(requestId);
   }, []);
 
   const fetchRequestDetail = async (requestId) => {
@@ -72,10 +76,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
       if (response.data) {
         setRequest(response.data);
-        if (response.data.status === "completed") {
-          Alert.alert("Thông báo", "Chuyến đi đã hoàn thành!");
-          navigation.navigate("DriverScreen");
-        }
+
         console.log("Request data: ", response.data);
       } else {
         console.log("No request found for the given moment");
@@ -91,20 +92,52 @@ const PaymentScreen = ({ route, navigation }) => {
   };
   const updateRequestStatus = async (requestId) => {
     try {
+      console.log("🚀 ~ updateRequestStatus ~ requestId:", requestId);
+
       await axios.put(
         `http://${IP_ADDRESS}:3000/booking-traditional/update-status/${requestId}`,
         { status: "completed" }
       );
-      Alert.alert("Thông báo", "Chuyến đi đã được hoàn thành!");
-      navigation.navigate("DriverScreen");
+
+      const paymentData = {
+        requestId,
+        userId: request?.account_id,
+        driverId: authState.userId,
+        payment_method: request?.payment_method,
+        amount: calculateTotal(),
+        pickup:
+          bookingDetails.pickupLocation.name +
+          ", " +
+          bookingDetails.pickupLocation.address,
+        destination:
+          bookingDetails.destinationLocation.name +
+          ", " +
+          bookingDetails.destinationLocation.address,
+        serviceId: request?.service_option_id,
+      };
+      console.log("🚀 ~ updateRequestStatus ~ paymentData:", paymentData);
+
+      await axios.post(
+        `http://${IP_ADDRESS}:3000/payment-history/create`,
+        paymentData
+      );
+
+      Alert.alert(
+        "Thông báo",
+        "Chuyến đi đã hoàn thành và lịch sử thanh toán đã được lưu!"
+      );
+      navigation.replace("DriverScreen");
     } catch (error) {
-      console.error("Error updating status:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật trạng thái chuyến đi.");
+      console.error("Error updating status or saving payment history:", error);
+      Alert.alert(
+        "Lỗi",
+        "Không thể cập nhật trạng thái chuyến đi hoặc lưu lịch sử thanh toán."
+      );
     }
   };
 
   const calculateTotal = () => {
-    return bookingDetails.price + Number(tollFee) + Number(extraFee);
+    return request?.price + Number(tollFee) + Number(extraFee);
   };
 
   const handleConfirmPayment = () => {
@@ -113,7 +146,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
   const confirmPaymentFinal = () => {
     setIsModalVisible(false);
-    updateRequestStatus(bookingDetails.requestId);
+    updateRequestStatus(requestId);
   };
 
   return (

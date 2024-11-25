@@ -32,7 +32,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
 
   // Mảng tin nhắn mẫu
   const quickTexts = [
-    "Xin chào, tôi đang trên đường đến!",
+    "Xin chào, tôi đang trên đường đến!!",
     "Tôi sẽ đến trong 5 phút nữa.",
     "Hãy đứng tại vị trí đón, tôi sắp tới rồi.",
     "Vui lòng đợi tôi một chút nhé!",
