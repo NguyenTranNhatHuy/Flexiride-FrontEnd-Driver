@@ -57,6 +57,7 @@ export default function Login({ navigation }) {
               token: response.data.token,
               user: response.data.user,
             });
+            console.log("token:", response.data.token);
             navigation.navigate("DriverScreen");
             // navigation.navigate("DriverProfile");
           } else {

@@ -1,4 +1,3 @@
-// src/context/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -15,6 +14,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     loadStoredData();
   }, []);
+
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      console.log("Authentication success:", authState);
+    }
+  }, [authState]); // Log when authState changes
 
   const loadStoredData = async () => {
     try {
@@ -47,7 +52,6 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: true,
         user,
       });
-      console.log("Authentication success:", authState);
     } catch (error) {
       console.error("Failed to store user data", error);
     }

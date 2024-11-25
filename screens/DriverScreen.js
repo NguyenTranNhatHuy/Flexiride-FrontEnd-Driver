@@ -103,20 +103,26 @@ const DriverScreen = ({ navigation }) => {
     };
   }, []);
   useEffect(() => {
-    socket.current.on("requestExpired", (data) => {
-      // Kiểm tra để đảm bảo `rideRequest` và `data.requestId` khớp
-      if (rideRequest && rideRequest.requestId === data.requestId) {
-        setModalVisible(false); // Ẩn modal yêu cầu
-        setRideRequest(null);
-        setDistanceToPickup(null);
-        setShowMissedScreen(true); // Hiển thị modal "Trôi Cuốc"
-      }
-    });
+    if (socket.current) {
+      // Add the event listener
+      socket.current.on("requestExpired", (data) => {
+        // Kiểm tra để đảm bảo `rideRequest` và `data.requestId` khớp
+        if (rideRequest && rideRequest.requestId === data.requestId) {
+          setModalVisible(false); // Ẩn modal yêu cầu
+          setRideRequest(null);
+          setDistanceToPickup(null);
+          setShowMissedScreen(true); // Hiển thị modal "Trôi Cuốc"
+        }
+      });
+    }
 
+    // Cleanup function: Ensure the listener is removed properly
     return () => {
-      socket.current.off("requestExpired");
+      if (socket.current) {
+        socket.current.off("requestExpired");
+      }
     };
-  }, [rideRequest]);
+  }, [rideRequest]); // Effect depends on `rideRequest`
 
   const handleMissedRequest = () => {
     // Tắt trạng thái hoạt động của tài xế
@@ -243,9 +249,9 @@ const DriverScreen = ({ navigation }) => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in km
     return distance.toFixed(1); // Round to 1 decimal place
@@ -255,7 +261,7 @@ const DriverScreen = ({ navigation }) => {
     return degrees * (Math.PI / 180);
   }
   const goToDriverProfile = () => {
-    navigation.navigate('DriverProfile');
+    navigation.navigate("DriverProfile");
   };
   return (
     <View style={styles.container}>
@@ -274,7 +280,10 @@ const DriverScreen = ({ navigation }) => {
         <Ionicons name="stats-chart" size={24} color="black" />
         <Text style={styles.earningsText}>Thu nhập</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.profileButton} onPress={goToDriverProfile}>
+      <TouchableOpacity
+        style={styles.profileButton}
+        onPress={goToDriverProfile}
+      >
         <Ionicons name="person-circle-outline" size={50} color="black" />
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>5.0</Text>

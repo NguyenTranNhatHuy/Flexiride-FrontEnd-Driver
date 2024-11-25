@@ -18,7 +18,7 @@ import { useAuth } from "../../provider/AuthProvider";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker"; // Import ImagePicker from expo
 import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
-import { updateDriver } from "../../service/DriverService";
+import { updateDriver, getDriverById } from "../../service/DriverService";
 const DriverProfile = ({ route }) => {
   const { authState, logout } = useAuth();
   const [personalInfo, setPersonalInfo] = useState({});
@@ -28,15 +28,27 @@ const DriverProfile = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false); // Manage modal visibility
   const navigation = useNavigation();
 
-  const refreshData = () => {
-    setPersonalInfo(authState.user.personalInfo);
-    setAddress(authState.user.personalInfo.address);
-    setBank(authState.user.bankAccount);
+  const refreshData = async () => {
+    try {
+      // Get the driver ID from the authState or other source
+      const driverId = authState.user.id;
+
+      // Call getDriverById API
+      const driverData = await getDriverById(authState.userId);
+
+      // Update state with the driver data
+      setPersonalInfo(driverData.personalInfo);
+      setAddress(driverData.personalInfo.address);
+      setBank(driverData.bankAccount);
+    } catch (error) {
+      console.error("Error fetching driver data:", error);
+      // Handle error appropriately (e.g., show an alert or set an error state)
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      refreshData();
+      refreshData(); // Call the refreshData function when the screen is focused
     }, [])
   );
 
@@ -151,7 +163,12 @@ const DriverProfile = ({ route }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Icon name="arrow-left" size={24} color="#fff" />
+          <Icon
+            onPress={() => navigation.navigate("DriverScreen")}
+            name="arrow-left"
+            size={24}
+            color="#fff"
+          />
           <Text style={styles.headerText}>Thông tin cá nhân</Text>
         </View>
 
