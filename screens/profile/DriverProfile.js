@@ -30,9 +30,6 @@ const DriverProfile = ({ route }) => {
 
   const refreshData = async () => {
     try {
-      // Get the driver ID from the authState or other source
-      const driverId = authState.user.id;
-
       // Call getDriverById API
       const driverData = await getDriverById(authState.userId);
 
