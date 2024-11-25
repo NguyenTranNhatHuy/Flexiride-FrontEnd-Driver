@@ -23,6 +23,7 @@
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "expo": "^52.0.7",
+    "expo-checkbox": "^4.0.0",
     "expo-image-picker": "~16.0.2",
     "expo-location": "~18.0.1",
     "expo-status-bar": "~2.0.0",

@@ -37,6 +37,12 @@ import BookingTraditional from "./screens/BookingTraditional";
 import VietMapNavigationScreen from "./screens/VietMapNavigationScreen";
 import ChatScreenDriver from "./screens/ChatScreen";
 import DriverProfile from "./screens/profile/DriverProfile";
+import { DriverAvailableRidesScreen } from "./screens/bookingCarpoolDriver/DriverAvailableRidesScreen";
+import { ManageDriverRidesScreen } from "./screens/bookingCarpoolDriver/ManageDriverRidesScreen";
+import { PickupProgressScreen } from "./screens/bookingCarpoolDriver/PickupProgressScreen";
+import { ServiceSelectionScreen } from "./screens/bookingCarpoolDriver/ServiceSelectionScreen";
+import ChangePassword from "./screens/auth/ChangePassword";
+import UpdateDriverInfo from "./screens/profile/UpdateDriverInfo";
 export default function App() {
   const Stack = createNativeStackNavigator();
   return (
@@ -177,6 +183,19 @@ export default function App() {
               options={{ headerShown: false }}
             />
             {/* end forgot pass */}
+            {/* Change password */}
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePassword}
+              options={{ headerShown: false }}
+            />
+            {/* updateDriverInfo */}
+            <Stack.Screen
+              name="UpdateDriverInfo"
+              component={UpdateDriverInfo}
+              options={{ headerShown: false }}
+            />
+
             {/* Start Profile */}
             <Stack.Screen
               name="DriverProfile"
@@ -199,6 +218,11 @@ export default function App() {
               component={ChatScreenDriver}
               options={{ headerShown: false }}
             />
+            {/* Screens for booking carpool driver */}
+            <Stack.Screen name="DriverAvailableRides" component={DriverAvailableRidesScreen} />
+            <Stack.Screen name="ManageDriverRides" component={ManageDriverRidesScreen} />
+            <Stack.Screen name="PickupProgress" component={PickupProgressScreen} />
+            <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>
