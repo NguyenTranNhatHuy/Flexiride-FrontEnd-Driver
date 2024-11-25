@@ -4,7 +4,8 @@ import { View, Image, StyleSheet, StatusBar, Dimensions } from "react-native";
 const Splash = ({ navigation }) => {
   useEffect(() => {
     const timeout = setTimeout(() => {
-      navigation.replace("Login");
+      // navigation.replace("Login");
+      navigation.replace("DriverScreen");
     }, 1000);
     return () => clearTimeout(timeout);
   }, [navigation]);

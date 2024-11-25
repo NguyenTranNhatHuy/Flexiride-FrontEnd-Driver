@@ -40,7 +40,7 @@ const DriverScreen = ({ navigation }) => {
       socket.current.on("connect", () => {
         if (isOnline && location && location.latitude && location.longitude) {
           socket.current.emit("driverOnline", {
-            id: "6731baa2347b48810e416904",
+            id: "673d6d13bb1637c5e099e488",
             location: {
               lat: location.latitude,
               lng: location.longitude,
@@ -130,7 +130,7 @@ const DriverScreen = ({ navigation }) => {
   useEffect(() => {
     if (socket.current && isOnline && location) {
       socket.current.emit("driverOnline", {
-        id: "6731baa2347b48810e416904",
+        id: "673d6d13bb1637c5e099e488",
         location: {
           lat: location.latitude,
           lng: location.longitude,
@@ -138,7 +138,7 @@ const DriverScreen = ({ navigation }) => {
         serviceType: "6713ed463526cf13c53cb3bd",
       });
     } else if (socket.current && !isOnline) {
-      socket.current.emit("driverOffline", { id: "6731baa2347b48810e416904" });
+      socket.current.emit("driverOffline", { id: "673d6d13bb1637c5e099e488" });
     }
   }, [isOnline, location]);
 
@@ -156,7 +156,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOffline = () => {
     setIsOnline(false);
     if (socket.current) {
-      socket.current.emit("driverOffline", { id: "6731baa2347b48810e416904" });
+      socket.current.emit("driverOffline", { id: "673d6d13bb1637c5e099e488" });
     }
   };
 
@@ -164,7 +164,7 @@ const DriverScreen = ({ navigation }) => {
     if (socket.current && rideRequest) {
       socket.current.emit("acceptRide", {
         requestId: rideRequest.requestId,
-        driverId: "6731baa2347b48810e416904",
+        driverId: "673d6d13bb1637c5e099e488",
         customerId: rideRequest.customerId,
       });
 

@@ -37,7 +37,7 @@ export default function Login({ navigation }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // console.log("API: " + IP_ADDRESS);
   const handleSubmit = async () => {
     if (validateForm()) {
       setIsLoading(true);

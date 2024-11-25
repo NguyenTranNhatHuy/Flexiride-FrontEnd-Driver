@@ -270,7 +270,7 @@ const BookingTraditional = ({ navigation, route }) => {
   };
   const handleChat = () => {
     navigation.navigate("ChatScreenDriver", {
-      userId: "6731baa2347b48810e416904",
+      userId: "673d6d13bb1637c5e099e488",
       role: "customer",
       customerId: "670bdfc8b65786a7225f39a1",
       roomId: request._id,

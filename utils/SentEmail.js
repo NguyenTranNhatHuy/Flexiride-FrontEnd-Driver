@@ -6,7 +6,7 @@ const sendEmail = async (name, email, otpCode) => {
   try {
     const response = await fetch(
       `http://${IP_ADDRESS}:3000/driver/send-email`,
-      // "http://192.168.1.3:3000/driver/send-email",
+
       {
         method: "POST",
         headers: {
@@ -23,7 +23,7 @@ const sendEmail = async (name, email, otpCode) => {
     } else {
       Alert.alert("Lỗi", result.message || "Không thể gửi email.");
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 export default sendEmail;
