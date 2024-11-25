@@ -148,7 +148,7 @@ const UpdateDriverInfo = ({ navigation, route }) => {
 
         // Lưu thông tin thành công
         Alert.alert("Thành công", "Cập nhật thông tin cá nhân thành công!");
-        navigation.navigate("DriverProfile");
+        navigation.replace("DriverProfile");
       } catch (e) {
         Alert.alert(
           "Lỗi",
