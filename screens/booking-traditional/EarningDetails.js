@@ -15,7 +15,6 @@ const EarningsDetails = () => {
   const [earningsDetail, setEarningsDetail] = useState(null);
 
   useEffect(() => {
-    console.log("", IP_ADDRESS);
     fetchEarningsDetail();
   }, []);
 
