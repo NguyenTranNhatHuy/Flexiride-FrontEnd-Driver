@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, FlatList, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import { updatePickupProgress, getCustomerStatusPickup, updateStartStatusRequest, updateCompleteStatusRequest } from '../../service/BookingCarpoolApi';
 import { VIETMAP_API_KEY } from '@env';
@@ -187,6 +187,25 @@ export const PickupProgressScreen = ({ route, navigation }) => {
     });
   };
 
+  // Hàm gọi điện thoại
+  const handleCallCustomer = (phoneNumber) => {
+    // Loại bỏ tất cả ký tự không phải số (bao gồm dấu cách, dấu -)
+    const cleanedPhoneNumber = phoneNumber.replace(/[^0-9+]/g, '');
+
+    console.log("Số điện thoại sau khi làm sạch: ", cleanedPhoneNumber);
+
+    // Kiểm tra nếu số điện thoại bắt đầu bằng "+" (mã quốc gia), nếu không thì thêm "+84" (mã quốc gia Việt Nam)
+    const phoneUrl = `tel:+840123456789`;
+
+    Linking.openURL(phoneUrl)
+      .then(() => console.log("Đang gọi điện"))
+      .catch((err) => {
+        console.error('Lỗi khi gọi điện:', err);
+        alert('Không thể gọi điện tới số này');
+      });
+
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.rideDetails}>
@@ -242,6 +261,9 @@ export const PickupProgressScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.navigateButton} onPress={() => handleNavigate(item)}>
                   <Text style={styles.buttonText}>Chỉ đường</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navigateButton} onPress={() => handleCallCustomer(item.account_id.phone)}>
+                  <Text style={styles.buttonText}>Gọi</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -334,23 +356,31 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'row', // Đảm bảo các nút nằm trên 1 hàng ngang
+    justifyContent: 'space-between', // Tùy chọn: sắp xếp các nút đều nhau, hoặc 'center' để căn giữa
+    alignItems: 'center', // Căn chỉnh các nút theo chiều dọc
   },
   pickupButton: {
     backgroundColor: '#4CAF50',
     paddingVertical: 10,
     borderRadius: 5,
-    flex: 1,
-    marginRight: 5,
+    flex: 1, // Mỗi nút chiếm một phần không gian bằng nhau
+    marginRight: 5, // Khoảng cách giữa các nút
     alignItems: 'center',
   },
   navigateButton: {
     backgroundColor: '#2196F3',
     paddingVertical: 10,
     borderRadius: 5,
-    flex: 1,
+    flex: 1, // Mỗi nút chiếm một phần không gian bằng nhau
+    marginRight: 5, // Khoảng cách giữa các nút
+    alignItems: 'center',
+  },
+  callButton: {
+    backgroundColor: '#FF5722', // Màu cho nút "Gọi"
+    paddingVertical: 10,
+    borderRadius: 5,
+    flex: 1, // Mỗi nút chiếm một phần không gian bằng nhau
     alignItems: 'center',
   },
   buttonText: {
