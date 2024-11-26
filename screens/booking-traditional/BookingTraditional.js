@@ -57,7 +57,7 @@ const BookingTraditional = ({ navigation, route }) => {
           );
         }
       } catch (error) {
-        console.error("Error saving booking to storage:", error);
+        console.error("Error saving booking to storage: ", error);
       }
     };
 

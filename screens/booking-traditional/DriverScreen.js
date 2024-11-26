@@ -54,14 +54,26 @@ const DriverScreen = ({ navigation }) => {
     if (!socket.current) {
       socket.current = io(`http://${IP_ADDRESS}:3000`, {
         transports: ["websocket"],
+        query: { driverId: authState.userId },
       });
       socket.current.on("connect", () => handleSocketConnect());
       socket.current.on("disconnect", handleSocketDisconnect);
       socket.current.on("newRideRequest", handleNewRideRequest);
+      socket.current.on("rideCanceled", ({ requestId, reason }) => {
+        setActiveBooking(null);
+        AsyncStorage.removeItem("activeBooking");
+
+        // Hiển thị thông báo
+        Alert.alert("Thông báo", `Khách hàng đã hủy chuyến đi: ${reason}.`, [
+          { text: "Đã hiểu" },
+        ]);
+      });
     }
 
     return () => {
       if (socket.current) {
+        socket.current.off("rideCanceled");
+
         socket.current.disconnect();
         socket.current = null;
       }
@@ -112,9 +124,14 @@ const DriverScreen = ({ navigation }) => {
   }, []); // Chỉ chạy khi component được mount
 
   useEffect(() => {
-    const fetchRequestDetail = async (momentBook) => {
-      console.log("🚀 ~ fetchRequestDetail ~ momentBook:", momentBook);
+    if (
+      !activeBooking?.moment_book ||
+      request?.moment_book === activeBooking.moment_book
+    ) {
+      return; // Không gọi API nếu không có thay đổi
+    }
 
+    const fetchRequestDetail = async (momentBook) => {
       try {
         const response = await axios.get(
           `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
@@ -122,19 +139,15 @@ const DriverScreen = ({ navigation }) => {
 
         if (response.data) {
           setRequest(response.data);
-          console.log(
-            "🚀 ~ fetchRequestDetail ~ response.data:",
-            response.data
-          );
 
-          // Kiểm tra trạng thái và xóa activeBooking nếu cần
           if (response.data.status === "completed") {
-            console.log("Booking completed. Clearing activeBooking...");
             await AsyncStorage.removeItem("activeBooking");
-            setActiveBooking(null); // Cập nhật state
+            setActiveBooking(null);
+          } else if (response.data.status === "canceled") {
+            setActiveBooking(null);
+            await AsyncStorage.removeItem("activeBooking");
           }
         } else {
-          console.log("No request found for the given moment");
           Alert.alert(
             "Lỗi",
             "Không tìm thấy yêu cầu nào khớp với thời gian đã chọn."
@@ -146,10 +159,8 @@ const DriverScreen = ({ navigation }) => {
       }
     };
 
-    if (activeBooking?.moment_book) {
-      fetchRequestDetail(activeBooking.moment_book);
-    }
-  }, [activeBooking]);
+    fetchRequestDetail(activeBooking.moment_book);
+  }, [activeBooking, request]);
 
   const navigateToBooking = () => {
     if (activeBooking) {

@@ -22,7 +22,7 @@ const Earnings = ({ navigation }) => {
   });
 
   useEffect(() => {
-    console.log("", IP_ADDRESS);
+    console.log(" ", IP_ADDRESS);
 
     fetchAllEarnings();
     fetchSummary();
