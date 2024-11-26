@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    flex: 3,
+    flex: 2,
   },
   infoContainer: {
     flex: 2,

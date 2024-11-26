@@ -62,8 +62,6 @@ const DriverScreen = ({ navigation }) => {
       socket.current.on("rideCanceled", ({ requestId, reason }) => {
         setActiveBooking(null);
         AsyncStorage.removeItem("activeBooking");
-
-        // Hiển thị thông báo
         Alert.alert("Thông báo", `Khách hàng đã hủy chuyến đi: ${reason}.`, [
           { text: "Đã hiểu" },
         ]);
@@ -73,7 +71,6 @@ const DriverScreen = ({ navigation }) => {
     return () => {
       if (socket.current) {
         socket.current.off("rideCanceled");
-
         socket.current.disconnect();
         socket.current = null;
       }
@@ -572,13 +569,16 @@ const DriverScreen = ({ navigation }) => {
               <Ionicons name="chevron-forward" size={20} color="black" />
             </TouchableOpacity>
           </View>
-          <View style={styles.earningsDetail}>
+          <TouchableOpacity
+            style={styles.earningsDetail}
+            onPress={() => navigation.navigate("WalletScreen")}
+          >
             <View>
-              <Text style={styles.detailLabel}>Ví tài khoản:</Text>
-              <Text style={styles.detailValue}>{formatCurrency(632428)}</Text>
+              <Text style={styles.detailLabel}>Ví tài khoản</Text>
+              {/* <Text style={styles.detailValue}>{formatCurrency(632428)}</Text> */}
             </View>
             <Ionicons name="chevron-forward" size={20} color="black" />
-          </View>
+          </TouchableOpacity>
         </View>
       )}
     </View>

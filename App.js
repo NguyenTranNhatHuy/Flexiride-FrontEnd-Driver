@@ -47,6 +47,7 @@ import Earnings from "./screens/booking-traditional/Earnings";
 import EarningsDetailScreen from "./screens/booking-traditional/EarningDetails";
 import EarningsHistoryScreen from "./screens/booking-traditional/EarningsHistoryScreen";
 import ServiceScreen from "./screens/ServiceScreen";
+import WalletScreen from "./screens/WalletScreen";
 
 export default function App() {
   enableScreens();
@@ -248,6 +249,11 @@ export default function App() {
                 name="ServiceScreen"
                 component={ServiceScreen}
                 options={{ title: "Chọn dịch vụ" }}
+              />
+              <Stack.Screen
+                name="WalletScreen"
+                component={WalletScreen}
+                options={{ title: "Ví cá nhân" }}
               />
             </Stack.Navigator>
           </NavigationContainer>
