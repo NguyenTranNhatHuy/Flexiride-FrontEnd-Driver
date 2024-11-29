@@ -25,7 +25,12 @@ const WithdrawalScreen = ({ navigation }) => {
   const fetchBankAccountInfo = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/bank-account`
+        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/bank-account`,
+        {
+          headers: {
+            Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+          },
+        }
       );
 
       if (response.data.success) {
@@ -38,23 +43,31 @@ const WithdrawalScreen = ({ navigation }) => {
       Alert.alert("Lỗi", "Không thể kết nối tới máy chủ.");
     }
   };
+
   const fetchWalletBalance = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/wallet`
+        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/wallet`,
+        {
+          headers: {
+            Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+          },
+        }
       );
+
       console.log("Wallet Balance Response:", response.data);
 
       if (response.data && response.data.walletBalance !== undefined) {
         setWalletBalance(response.data.walletBalance);
       } else {
-        setError("Không thể tải thông tin ví. Vui lòng thử lại. ");
+        setError("Không thể tải thông tin ví. Vui lòng thử lại.");
       }
     } catch (error) {
-      console.error("Error fetching wallet info:", error);
+      console.error("Error fetching wallet info:", error.message);
       setError("Lỗi kết nối tới máy chủ. Vui lòng thử lại sau.");
     }
   };
+
   // Gọi API lấy thông tin ngân hàng khi màn hình được tải
   useEffect(() => {
     fetchWalletBalance();

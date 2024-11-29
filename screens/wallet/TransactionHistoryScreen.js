@@ -21,7 +21,12 @@ const TransactionHistoryScreen = () => {
   const fetchTransactions = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/transactions`
+        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/transactions`,
+        {
+          headers: {
+            Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+          },
+        }
       );
       if (response.data.success) {
         setTransactions(response.data.transactions);

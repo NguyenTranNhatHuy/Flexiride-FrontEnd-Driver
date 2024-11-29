@@ -14,8 +14,14 @@ const ReturnScreen = ({ route, navigation }) => {
       try {
         const response = await axios.post(
           `http://${IP_ADDRESS}:3000/driver/wallet/return-topup`,
-          { paymentId, status, orderCode, driverId, amount }
+          { paymentId, status, orderCode, driverId, amount },
+          {
+            headers: {
+              Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+            },
+          }
         );
+
         Alert.alert("Thành công", response.data.message, [
           {
             text: "OK",
@@ -34,7 +40,15 @@ const ReturnScreen = ({ route, navigation }) => {
       Alert.alert("Lỗi", "Giao dịch không thành công.");
       navigation.navigate("WalletScreen");
     }
-  }, [paymentId, status, orderCode, navigation]);
+  }, [
+    paymentId,
+    status,
+    orderCode,
+    driverId,
+    amount,
+    navigation,
+    authState.token,
+  ]);
 
   return (
     <View style={styles.container}>

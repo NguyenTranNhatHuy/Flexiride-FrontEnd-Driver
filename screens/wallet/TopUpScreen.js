@@ -33,6 +33,11 @@ const TopUpScreen = ({ navigation }) => {
         {
           driverId: authState.userId,
           amount: parseFloat(amount),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+          },
         }
       );
 
