@@ -2,7 +2,7 @@ import axios from 'axios';
 import { IP_ADDRESS } from "@env";
 
 // const DOMAIN = 'http://192.168.111.52:3000/booking-carpool'; // Add /booking-carpool to the base URL
-const DOMAIN = `http://${IP_ADDRESS}:3000/booking-carpool`;
+const DOMAIN = `https://flexiride.onrender.com/booking-carpool`;
 
 // Create Axios instances with tokens passed as arguments
 const createApiInstance = (token) => {

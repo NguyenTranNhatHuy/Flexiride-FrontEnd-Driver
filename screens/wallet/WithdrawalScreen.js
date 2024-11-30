@@ -25,7 +25,7 @@ const WithdrawalScreen = ({ navigation }) => {
   const fetchBankAccountInfo = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/bank-account`,
+        `https://flexiride.onrender.com/driver/${authState.userId}/bank-account`,
         {
           headers: {
             Authorization: `Bearer ${authState.token}`, // Truyền token vào header
@@ -47,7 +47,7 @@ const WithdrawalScreen = ({ navigation }) => {
   const fetchWalletBalance = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/wallet`,
+        `https://flexiride.onrender.com/driver/wallet/${authState.userId}/wallet`,
         {
           headers: {
             Authorization: `Bearer ${authState.token}`, // Truyền token vào header
@@ -83,7 +83,7 @@ const WithdrawalScreen = ({ navigation }) => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `http://${IP_ADDRESS}:3000/driver/wallet/withdraw-request`,
+        `https://flexiride.onrender.com/driver/wallet/withdraw-request`,
         {
           driverId: authState.userId,
           amount: parseFloat(amount),

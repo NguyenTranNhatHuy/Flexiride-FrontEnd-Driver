@@ -54,7 +54,7 @@ const DriverScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io(`http://${IP_ADDRESS}:3000`, {
+      socket.current = io(`https://flexiride.onrender.com`, {
         transports: ["websocket"],
         query: { driverId: authState.userId },
       });
@@ -78,32 +78,32 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, []);
-  // useEffect(() => {
-  //   const clearAllStorage = async () => {
-  //     try {
-  //       await AsyncStorage.clear();
-  //       console.log("All storage cleared successfully!");
-  //     } catch (error) {
-  //       console.error("Failed to clear storage:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const clearAllStorage = async () => {
+      try {
+        await AsyncStorage.clear();
+        console.log("All storage cleared successfully!");
+      } catch (error) {
+        console.error("Failed to clear storage:", error);
+      }
+    };
 
-  //   clearAllStorage();
-  // }, []);
+    clearAllStorage();
+  }, []);
 
-  // useEffect(() => {
-  //   const clearActiveBooking = async () => {
-  //     try {
-  //       await AsyncStorage.removeItem("activeBooking");
-  //       console.log("Active booking cleared successfully!");
-  //     } catch (error) {
-  //       console.error("Failed to clear active booking:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const clearActiveBooking = async () => {
+      try {
+        await AsyncStorage.removeItem("activeBooking");
+        console.log("Active booking cleared successfully!");
+      } catch (error) {
+        console.error("Failed to clear active booking:", error);
+      }
+    };
 
-  //   // Gọi hàm để xóa
-  //   clearActiveBooking();
-  // }, []);
+    // Gọi hàm để xóa
+    clearActiveBooking();
+  }, []);
   useEffect(() => {
     const loadActiveBooking = async () => {
       try {
@@ -133,7 +133,7 @@ const DriverScreen = ({ navigation }) => {
     const fetchRequestDetail = async (momentBook) => {
       try {
         const response = await axios.get(
-          `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
+          `https://flexiride.onrender.com/booking-traditional/request-by-moment/${momentBook}`
         );
 
         if (response.data) {
@@ -214,7 +214,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOnline = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/services`
+        `https://flexiride.onrender.com/driver/${authState.userId}/services`
       );
 
       if (!response.data.data || response.data.data.length === 0) {
@@ -283,7 +283,7 @@ const DriverScreen = ({ navigation }) => {
   const fetchServiceName = async (serviceId) => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/booking-traditional/vehicle/${serviceId}`
+        `https://flexiride.onrender.com/booking-traditional/vehicle/${serviceId}`
       );
       setServiceName(response.data.name);
     } catch (error) {
@@ -295,7 +295,7 @@ const DriverScreen = ({ navigation }) => {
     try {
       setIsLoading(true);
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/today/${authState.userId}`
+        `https://flexiride.onrender.com/payment-history/income/today/${authState.userId}`
       );
       const { driverIncome } = response.data; // Thu nhập sau khi tính 70%
       setDriverEarnings(driverIncome);

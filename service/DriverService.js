@@ -1,7 +1,7 @@
 import axios from "axios";
 import { IP_ADDRESS } from "@env";
 
-const DRIVER_API_URL = `http://${IP_ADDRESS}:3000/driver/`;
+const DRIVER_API_URL = `https://flexiride.onrender.com/driver/`;
 
 const getAllDrivers = async () => {
   console.log(IP_ADDRESS)

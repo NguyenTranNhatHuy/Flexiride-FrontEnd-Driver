@@ -21,7 +21,7 @@ const EarningsDetails = () => {
   const fetchEarningsDetail = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/detail/${timeframe}/${driverId}`
+        `https://flexiride.onrender.com/payment-history/income/detail/${timeframe}/${driverId}`
       );
       setEarningsDetail(response.data);
     } catch (error) {
@@ -43,10 +43,10 @@ const EarningsDetails = () => {
         {timeframe === "today"
           ? "Hôm nay"
           : timeframe === "yesterday"
-          ? "Hôm qua"
-          : timeframe === "week"
-          ? "Tuần này"
-          : "Tháng này"}
+            ? "Hôm qua"
+            : timeframe === "week"
+              ? "Tuần này"
+              : "Tháng này"}
       </Text>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>Tổng thu nhập</Text>

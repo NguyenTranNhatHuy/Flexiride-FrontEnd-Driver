@@ -29,7 +29,7 @@ const EarningsHistoryScreen = ({ navigation }) => {
   const fetchEarningsDetail = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/detail/date/${selectedDate}/${authState.userId}`
+        `https://flexiride.onrender.com/payment-history/income/detail/date/${selectedDate}/${authState.userId}`
       );
       setEarningsDetail(response.data);
     } catch (error) {
