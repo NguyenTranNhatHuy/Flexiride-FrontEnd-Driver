@@ -39,7 +39,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
   ];
 
   useEffect(() => {
-    socket.current = io(`https://flexiride-backend.onrender.com`, {
+    socket.current = io(`https://flexiride.onrender.com`, {
       transports: ["websocket"],
       query: { userId },
     });
@@ -62,7 +62,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
     const fetchMessages = async () => {
       try {
         const response = await axios.get(
-          `https://flexiride-backend.onrender.com/booking-traditional/messages/${roomId}`
+          `https://flexiride.onrender.com/booking-traditional/messages/${roomId}`
         );
         setMessages(response.data);
       } catch (error) {

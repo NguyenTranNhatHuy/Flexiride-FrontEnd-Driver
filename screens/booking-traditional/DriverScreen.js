@@ -35,7 +35,9 @@ const DriverScreen = ({ navigation }) => {
   const toggleEarningsPopup = () => {
     setIsEarningsVisible(!isEarningsVisible);
   };
-
+  const handleNavigate = () => {
+    navigation.navigate("ServiceSelection");
+  };
   const [isLoading, setIsLoading] = useState(false);
   const { authState } = useAuth();
   const socket = useRef(null);
@@ -52,7 +54,7 @@ const DriverScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io(`https://flexiride-backend.onrender.com`, {
+      socket.current = io(`https://flexiride.onrender.com`, {
         transports: ["websocket"],
         query: { driverId: authState.userId },
       });
@@ -76,32 +78,32 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, []);
-  // useEffect(() => {
-  //   const clearAllStorage = async () => {
-  //     try {
-  //       await AsyncStorage.clear();
-  //       console.log("All storage cleared successfully!");
-  //     } catch (error) {
-  //       console.error("Failed to clear storage:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const clearAllStorage = async () => {
+      try {
+        await AsyncStorage.clear();
+        console.log("All storage cleared successfully!");
+      } catch (error) {
+        console.error("Failed to clear storage:", error);
+      }
+    };
 
-  //   clearAllStorage();
-  // }, []);
+    clearAllStorage();
+  }, []);
 
-  // useEffect(() => {
-  //   const clearActiveBooking = async () => {
-  //     try {
-  //       await AsyncStorage.removeItem("activeBooking");
-  //       console.log("Active booking cleared successfully!");
-  //     } catch (error) {
-  //       console.error("Failed to clear active booking:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const clearActiveBooking = async () => {
+      try {
+        await AsyncStorage.removeItem("activeBooking");
+        console.log("Active booking cleared successfully!");
+      } catch (error) {
+        console.error("Failed to clear active booking:", error);
+      }
+    };
 
-  //   // Gọi hàm để xóa
-  //   clearActiveBooking();
-  // }, []);
+    // Gọi hàm để xóa
+    clearActiveBooking();
+  }, []);
   useEffect(() => {
     const loadActiveBooking = async () => {
       try {
@@ -131,7 +133,7 @@ const DriverScreen = ({ navigation }) => {
     const fetchRequestDetail = async (momentBook) => {
       try {
         const response = await axios.get(
-          `https://flexiride-backend.onrender.com/booking-traditional/request-by-moment/${momentBook}`
+          `https://flexiride.onrender.com/booking-traditional/request-by-moment/${momentBook}`
         );
 
         if (response.data) {
@@ -212,7 +214,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOnline = async () => {
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/driver/${authState.userId}/services`
+        `https://flexiride.onrender.com/driver/${authState.userId}/services`
       );
 
       if (!response.data.data || response.data.data.length === 0) {
@@ -281,7 +283,7 @@ const DriverScreen = ({ navigation }) => {
   const fetchServiceName = async (serviceId) => {
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/booking-traditional/vehicle/${serviceId}`
+        `https://flexiride.onrender.com/booking-traditional/vehicle/${serviceId}`
       );
       setServiceName(response.data.name);
     } catch (error) {
@@ -293,7 +295,7 @@ const DriverScreen = ({ navigation }) => {
     try {
       setIsLoading(true);
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/payment-history/income/today/${authState.userId}`
+        `https://flexiride.onrender.com/payment-history/income/today/${authState.userId}`
       );
       const { driverIncome } = response.data; // Thu nhập sau khi tính 70%
       setDriverEarnings(driverIncome);
@@ -391,7 +393,10 @@ const DriverScreen = ({ navigation }) => {
         <Ionicons name="stats-chart" size={24} color="black" />
         <Text style={styles.earningsText}>Thu nhập</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.profileButton}>
+      <TouchableOpacity
+        style={styles.profileButton}
+        onPress={() => navigation.navigate("DriverProfile")}
+      >
         <Ionicons name="person-circle-outline" size={50} color="black" />
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>5.0</Text>
@@ -450,6 +455,13 @@ const DriverScreen = ({ navigation }) => {
           >
             <Ionicons name="car-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Loại dịch vụ</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.serviceButton}
+            onPress={() => handleNavigate()}
+          >
+            <Ionicons name="location-outline" size={24} color="black" />
+            <Text style={styles.serviceText}>Xe ghép</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.serviceButton}>
             <Ionicons name="location-outline" size={24} color="black" />

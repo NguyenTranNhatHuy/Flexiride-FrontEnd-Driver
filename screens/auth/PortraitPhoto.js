@@ -84,40 +84,40 @@ const PortraitPhoto = () => {
   };
 
   // Function to handle image upload
-const handleUpload = async () => {
-  if (!selectedImage) {
-    Alert.alert("Lỗi", "Vui lòng chọn một ảnh trước khi tải lên");
-    return;
-  }
-
-  setUploading(true);
-  console.log("Uploading image:", selectedImage); // Log the selected image URI
-
-  try {
-    const uploadedAvatarUrl = await uploadImageToCloudinary(selectedImage);
-    console.log("Uploaded Avatar URL:", uploadedAvatarUrl); // Log the uploaded URL
-    setAvatarUrl(uploadedAvatarUrl);
-    setSelectedImage(uploadedAvatarUrl); // Set selectedImage to the uploaded URL
-
-    // Save the uploaded avatar URL to local storage
-    const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
-    if (storedPersonalInfo) {
-      const parsedInfo = JSON.parse(storedPersonalInfo);
-      parsedInfo.avatar = uploadedAvatarUrl; // Save avatar URL to personalInfo
-      await AsyncStorage.setItem("personalInfo", JSON.stringify(parsedInfo)); // Save back to local storage
+  const handleUpload = async () => {
+    if (!selectedImage) {
+      Alert.alert("Lỗi", "Vui lòng chọn một ảnh trước khi tải lên");
+      return;
     }
 
-    // Navigate to PersonalInformation with avatarUrl and completeFlag
-    navigation.navigate("PersonalInformation");
-  } catch (error) {
-    console.error("Upload error:", error); // Log any errors
-    Alert.alert("Lỗi", error.message);
-  } finally {
-    setUploading(false);
-  }
-};
+    setUploading(true);
+    console.log("Uploading image:", selectedImage); // Log the selected image URI
 
-  
+    try {
+      const uploadedAvatarUrl = await uploadImageToCloudinary(selectedImage);
+      console.log("Uploaded Avatar URL:", uploadedAvatarUrl); // Log the uploaded URL
+      setAvatarUrl(uploadedAvatarUrl);
+      setSelectedImage(uploadedAvatarUrl); // Set selectedImage to the uploaded URL
+
+      // Save the uploaded avatar URL to local storage
+      const storedPersonalInfo = await AsyncStorage.getItem("personalInfo");
+      if (storedPersonalInfo) {
+        const parsedInfo = JSON.parse(storedPersonalInfo);
+        parsedInfo.avatar = uploadedAvatarUrl; // Save avatar URL to personalInfo
+        await AsyncStorage.setItem("personalInfo", JSON.stringify(parsedInfo)); // Save back to local storage
+      }
+
+      // Navigate to PersonalInformation with avatarUrl and completeFlag
+      navigation.navigate("PersonalInformation");
+    } catch (error) {
+      console.error("Upload error:", error); // Log any errors
+      Alert.alert("Lỗi", error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -194,8 +194,6 @@ const handleUpload = async () => {
             <Text style={styles.saveButtonText}>Lưu</Text>
           )}
         </TouchableOpacity>
-
-        
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -276,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     marginBottom: 20,
-    marginLeft:260,
+    marginLeft: 260,
     alignSelf: "center",
   },
   saveButtonText: {

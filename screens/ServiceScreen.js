@@ -27,7 +27,7 @@ const ServiceScreen = () => {
     setError(null);
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/driver/${authState.userId}/services-active`
+        `https://flexiride.onrender.com/driver/${authState.userId}/services-active`
       );
 
       if (!response.data.data) {
@@ -70,7 +70,7 @@ const ServiceScreen = () => {
 
     try {
       await axios.post(
-        `https://flexiride-backend.onrender.com/driver/${authState.userId}/update-active-services`,
+        `https://flexiride.onrender.com/driver/${authState.userId}/update-active-services`,
         { activeServices }
       );
       Alert.alert("Thành công", "Danh sách dịch vụ đã được cập nhật.");

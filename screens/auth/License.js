@@ -21,7 +21,8 @@ const License = ({ navigation }) => {
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
   const [uploading, setUploading] = useState(false);
- 
+
+
   // Fetch license data from local storage when component mounts
   useEffect(() => {
     const fetchLicenseData = async () => {
@@ -191,7 +192,6 @@ const License = ({ navigation }) => {
         >
           <Text style={styles.cameraButtonText}>Chụp ảnh mặt sau</Text>
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={styles.saveButton}

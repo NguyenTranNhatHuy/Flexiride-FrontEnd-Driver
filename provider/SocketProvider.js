@@ -17,7 +17,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Kết nối socket khi component khởi tạo
-    socket.current = io(`https://flexiride-backend.onrender.com`, {
+    socket.current = io(`https://flexiride.onrender.com`, {
       transports: ["websocket"],
     });
 

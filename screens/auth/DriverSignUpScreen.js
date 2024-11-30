@@ -12,7 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import getAllDrivers from "../../service/DriverService";
+import { getAllDrivers } from "../../service/DriverService";
 import axios from "axios";
 const { height } = Dimensions.get("window");
 
@@ -247,6 +247,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 50,
     alignSelf: "flex-end",
+    zIndex: 10,
   },
   buttonText: {
     color: "white",

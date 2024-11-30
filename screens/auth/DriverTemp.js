@@ -13,7 +13,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
-import getAllDrivers from "../../service/DriverService";
+import { getAllDrivers } from "../../service/DriverService";
 import axios from "axios";
 import sendEmail from "../../utils/SentEmail";
 import { generateOtpCode } from "../../common/GenerateOtpCode";
@@ -23,6 +23,7 @@ const DriverTemp = ({ navigation }) => {
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
   const [isChecked, setIsChecked] = useState(false);
 
   // State to track error messages
@@ -177,6 +178,9 @@ const DriverTemp = ({ navigation }) => {
     if (!selectedCity) {
       newErrors.city = "Vui lòng chọn thành phố.";
     }
+    if (!selectedGender) {
+      newErrors.gender = "Vui lòng chọn giới tính.";
+    }
 
     setErrors(newErrors);
 
@@ -202,6 +206,7 @@ const DriverTemp = ({ navigation }) => {
           lastName: lastName,
           phoneNumber: phoneNumber,
           city: selectedCity,
+          gender: selectedGender,
         };
 
         // Save the updated info to AsyncStorage
@@ -307,10 +312,10 @@ const DriverTemp = ({ navigation }) => {
             {errors.city && (
               <Text style={styles.errorMessage}>{errors.city}</Text>
             )}
-          </View>
+          </View >
 
           {/* Checkbox and Continue Button */}
-          <View style={styles.checkboxContainer}>
+          <View View style={styles.checkboxContainer} >
             <TouchableOpacity onPress={toggleCheckbox} style={styles.checkbox}>
               {isChecked && <Icon name="check" size={16} color="green" />}
             </TouchableOpacity>
@@ -320,17 +325,19 @@ const DriverTemp = ({ navigation }) => {
               tư. Tôi cũng xác nhận đã đọc hiểu rõ và hoàn toàn tuân thủ các
               điều khoản và điều kiện.
             </Text>
-          </View>
-          {errors.terms && (
-            <Text style={styles.errorMessage}>{errors.terms}</Text>
-          )}
+          </View >
+          {
+            errors.terms && (
+              <Text style={styles.errorMessage}>{errors.terms}</Text>
+            )
+          }
 
-          <TouchableOpacity style={styles.button} onPress={handleContinue}>
+          < TouchableOpacity style={styles.button} onPress={handleContinue} >
             <Text style={styles.buttonText}>Tiếp tục</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </TouchableOpacity >
+        </View >
+      </ScrollView >
+    </KeyboardAvoidingView >
   );
 };
 

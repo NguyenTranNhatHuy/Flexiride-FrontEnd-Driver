@@ -12,7 +12,7 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import registerDriver from "../../service/AuthDriverService"; // Đảm bảo rằng đường dẫn đúng
+import { registerDriver } from "../../service/AuthDriverService"; // Đảm bảo rằng đường dẫn đúng
 const VehicleInformation = ({ navigation }) => {
   const [carImageCompleted, setCarImageCompleted] = useState(false);
   const [carInsuranceCompleted, setCarInsuranceCompleted] = useState(false);
@@ -84,6 +84,9 @@ const VehicleInformation = ({ navigation }) => {
 
       const storedBankAccount = await AsyncStorage.getItem("bankAccount");
       const parsedBankAccount = JSON.parse(storedBankAccount);
+
+      const storedServiceTypes = await AsyncStorage.getItem("serviceTypes");
+      const parsedServiceTypes = JSON.parse(storedServiceTypes);
       const driverData = {
         personalInfo: {
           email: parsedInfo.email,
@@ -91,9 +94,8 @@ const VehicleInformation = ({ navigation }) => {
           firstName: parsedInfo.firstName,
           lastName: parsedInfo.lastName,
           phoneNumber: parsedInfo.phoneNumber,
-          // gender: "",
+          gender: parsedInfo.gender,
           city: parsedInfo.city,
-          serviceType: parsedInfo.serviceType,
           avatar: parsedInfo.avatar,
           address: parsedAddress,
           emergencyContact: parsedEmergencyContact,
@@ -105,6 +107,7 @@ const VehicleInformation = ({ navigation }) => {
           vehicleRegistration: parsedVehicleRegistration,
           vehicleInsurance: parsedVehicleInsurance,
         },
+        serviceTypes: parsedServiceTypes,
         vehicleImages: parsedVehicleImages,
         bankAccount: parsedBankAccount,
         role: "booking",

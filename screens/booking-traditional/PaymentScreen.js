@@ -33,7 +33,7 @@ const PaymentScreen = ({ route, navigation }) => {
   //     const checkStatus = async () => {
   //       try {
   //         const response = await axios.get(
-  //           `https://flexiride-backend.onrender.com/booking-traditional/request/${bookingDetails.requestId}`
+  //           `https://flexiride.onrender.com/booking-traditional/request/${bookingDetails.requestId}`
   //         );
 
   //         if (response.data?.status === "completed") {
@@ -71,7 +71,7 @@ const PaymentScreen = ({ route, navigation }) => {
   const fetchRequestDetail = async (requestId) => {
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/booking-traditional/request/${requestId}`
+        `https://flexiride.onrender.com/booking-traditional/request/${requestId}`
       );
 
       if (response.data) {
@@ -95,7 +95,7 @@ const PaymentScreen = ({ route, navigation }) => {
       console.log("🚀 ~ updateRequestStatus ~ requestId:", requestId);
 
       await axios.put(
-        `https://flexiride-backend.onrender.com/booking-traditional/update-status/${requestId}`,
+        `https://flexiride.onrender.com/booking-traditional/update-status/${requestId}`,
         { status: "completed" }
       );
 
@@ -118,7 +118,7 @@ const PaymentScreen = ({ route, navigation }) => {
       console.log("🚀 ~ updateRequestStatus ~ paymentData:", paymentData);
 
       await axios.post(
-        `https://flexiride-backend.onrender.com/payment-history/create`,
+        `https://flexiride.onrender.com/payment-history/create`,
         paymentData
       );
 

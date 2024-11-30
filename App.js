@@ -27,7 +27,6 @@ import { AuthProvider } from "./provider/AuthProvider";
 import HomeScreen from "./screens/HomeScreen";
 import { SocketProvider } from "./provider/SocketProvider";
 import { LocationProvider } from "./provider/LocationCurrentProvider";
-import ForgotPassworDriver from "./screens/forgot-pass/ForgotPasswordDriver";
 import EnterOtp from "./screens/forgot-pass/EnterOtp";
 import EnterNewPass from "./screens/forgot-pass/EnterNewPass";
 import ChangePassSuccess from "./screens/forgot-pass/ChangePassSuccess";
@@ -54,6 +53,15 @@ import CancelScreen from "./screens/wallet/CancelPaymentScreen";
 import TransactionHistoryScreen from "./screens/wallet/TransactionHistoryScreen";
 import WithdrawalScreen from "./screens/wallet/WithdrawalScreen";
 
+
+import { DriverAvailableRidesScreen } from "./screens/bookingCarpoolDriver/DriverAvailableRidesScreen";
+import { ManageDriverRidesScreen } from "./screens/bookingCarpoolDriver/ManageDriverRidesScreen";
+import { PickupProgressScreen } from "./screens/bookingCarpoolDriver/PickupProgressScreen";
+import { ServiceSelectionScreen } from "./screens/bookingCarpoolDriver/ServiceSelectionScreen";
+import ChangePassword from "./screens/auth/ChangePassword";
+import UpdateDriverInfo from "./screens/profile/UpdateDriverInfo";
+import OptimalRouteScreen from "./screens/bookingCarpoolDriver/OptimalRouteScreen"
+import SingleRouteScreen from "./screens/bookingCarpoolDriver/SingleRouteScreen";
 export default function App() {
   enableScreens();
   Vietmap.setApiKey(null);
@@ -286,6 +294,24 @@ export default function App() {
                 component={WalletScreen}
                 options={{ title: "Ví cá nhân" }}
               />
+              <Stack.Screen
+                name="ChangePassword"
+                component={ChangePassword}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="UpdateDriverInfo"
+                component={UpdateDriverInfo}
+                options={{ headerShown: false }}
+              />
+
+              {/* Screens for booking carpool driver */}
+              <Stack.Screen name="DriverAvailableRides" component={DriverAvailableRidesScreen} />
+              <Stack.Screen name="ManageDriverRides" component={ManageDriverRidesScreen} />
+              <Stack.Screen name="PickupProgress" component={PickupProgressScreen} />
+              <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
+              <Stack.Screen name="OptimalRoute" component={OptimalRouteScreen} />
+              <Stack.Screen name="SingleRoute" component={SingleRouteScreen} />
               <Stack.Screen
                 name="TopUpScreen"
                 component={TopUpScreen}

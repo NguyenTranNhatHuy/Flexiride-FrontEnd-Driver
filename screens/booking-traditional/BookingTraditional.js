@@ -47,7 +47,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io(`https://flexiride-backend.onrender.com`, {
+      socket.current = io(`https://flexiride.onrender.com`, {
         transports: ["websocket"],
         query: { driverId: authState.userId },
       });
@@ -86,7 +86,7 @@ const BookingTraditional = ({ navigation, route }) => {
   const fetchCustomerDetails = async (customerId) => {
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/customer/detail/${customerId}`
+        `https://flexiride.onrender.com/customer/detail/${customerId}`
       );
       if (response.data) {
         setCustomer(response.data);
@@ -105,7 +105,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/booking-traditional/request-by-moment/${momentBook}`
+        `https://flexiride.onrender.com/booking-traditional/request-by-moment/${momentBook}`
       );
 
       if (response.data) {
@@ -213,7 +213,7 @@ const BookingTraditional = ({ navigation, route }) => {
     try {
       setIsUpdatingStatus(true); // Bắt đầu quá trình cập nhật
       await axios.put(
-        `https://flexiride-backend.onrender.com/booking-traditional/update-status/${request._id}`,
+        `https://flexiride.onrender.com/booking-traditional/update-status/${request._id}`,
         { status: newStatus }
       );
 

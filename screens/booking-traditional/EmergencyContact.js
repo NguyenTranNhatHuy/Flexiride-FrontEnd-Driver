@@ -50,7 +50,7 @@ const EmergencyContactsScreen = ({ route, navigation }) => {
   const fetchEmergencyContact = async () => {
     try {
       const response = await axios.get(
-        `https://flexiride-backend.onrender.com/driver/detail/${driverId}`
+        `https://flexiride.onrender.com/driver/detail/${driverId}`
       );
       if (response.data && response.data.driver) {
         setEmergencyContact(response.data.driver.personalInfo.emergencyContact);
