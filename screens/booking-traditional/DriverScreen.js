@@ -36,7 +36,7 @@ const DriverScreen = ({ navigation }) => {
     setIsEarningsVisible(!isEarningsVisible);
   };
   const handleNavigate = () => {
-    navigation.navigate('ServiceSelection');
+    navigation.navigate("ServiceSelection");
   };
   const [isLoading, setIsLoading] = useState(false);
   const { authState } = useAuth();
@@ -78,32 +78,32 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, []);
-  useEffect(() => {
-    const clearAllStorage = async () => {
-      try {
-        await AsyncStorage.clear();
-        console.log("All storage cleared successfully!");
-      } catch (error) {
-        console.error("Failed to clear storage:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const clearAllStorage = async () => {
+  //     try {
+  //       await AsyncStorage.clear();
+  //       console.log("All storage cleared successfully!");
+  //     } catch (error) {
+  //       console.error("Failed to clear storage:", error);
+  //     }
+  //   };
 
-    clearAllStorage();
-  }, []);
+  //   clearAllStorage();
+  // }, []);
 
-  useEffect(() => {
-    const clearActiveBooking = async () => {
-      try {
-        await AsyncStorage.removeItem("activeBooking");
-        console.log("Active booking cleared successfully!");
-      } catch (error) {
-        console.error("Failed to clear active booking:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const clearActiveBooking = async () => {
+  //     try {
+  //       await AsyncStorage.removeItem("activeBooking");
+  //       console.log("Active booking cleared successfully!");
+  //     } catch (error) {
+  //       console.error("Failed to clear active booking:", error);
+  //     }
+  //   };
 
-    // Gọi hàm để xóa
-    clearActiveBooking();
-  }, []);
+  //   // Gọi hàm để xóa
+  //   clearActiveBooking();
+  // }, []);
   useEffect(() => {
     const loadActiveBooking = async () => {
       try {
@@ -316,8 +316,8 @@ const DriverScreen = ({ navigation }) => {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return (R * c).toFixed(1);
   };
@@ -325,23 +325,23 @@ const DriverScreen = ({ navigation }) => {
   const toRadians = (degrees) => degrees * (Math.PI / 180);
   const currentLocationGeoJson = currentLocation
     ? {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [
-              currentLocation.longitude,
-              currentLocation.latitude,
-            ],
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [
+                currentLocation.longitude,
+                currentLocation.latitude,
+              ],
+            },
+            properties: {
+              name: "Current Location",
+            },
           },
-          properties: {
-            name: "Current Location",
-          },
-        },
-      ],
-    }
+        ],
+      }
     : null;
 
   const handleRelocate = () => {
@@ -393,7 +393,8 @@ const DriverScreen = ({ navigation }) => {
         <Ionicons name="stats-chart" size={24} color="black" />
         <Text style={styles.earningsText}>Thu nhập</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.profileButton}
+      <TouchableOpacity
+        style={styles.profileButton}
         onPress={() => navigation.navigate("DriverProfile")}
       >
         <Ionicons name="person-circle-outline" size={50} color="black" />
@@ -455,7 +456,10 @@ const DriverScreen = ({ navigation }) => {
             <Ionicons name="car-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Loại dịch vụ</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.serviceButton} onPress={() => handleNavigate()}>
+          <TouchableOpacity
+            style={styles.serviceButton}
+            onPress={() => handleNavigate()}
+          >
             <Ionicons name="location-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Xe ghép</Text>
           </TouchableOpacity>

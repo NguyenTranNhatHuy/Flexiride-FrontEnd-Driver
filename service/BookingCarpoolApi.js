@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import { IP_ADDRESS } from "@env";
 
 // const DOMAIN = 'http://192.168.111.52:3000/booking-carpool'; // Add /booking-carpool to the base URL
@@ -10,7 +10,7 @@ const createApiInstance = (token) => {
     baseURL: DOMAIN,
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };
@@ -19,14 +19,14 @@ const createApiInstance = (token) => {
 const createCarpoolRequest = async (data, customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.post('/create-request', data);
+    const response = await customerApi.post("/create-request", data);
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to create carpool request');
+      throw new Error("Failed to create carpool request");
     }
   } catch (error) {
-    console.error('Error creating carpool request:', error.message);
+    console.error("Error creating carpool request:", error.message);
     throw error;
   }
 };
@@ -34,14 +34,14 @@ const createCarpoolRequest = async (data, customerToken) => {
 const getAvailableRides = async (params, customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.get('/available-rides', { params });
+    const response = await customerApi.get("/available-rides", { params });
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch available rides');
+      throw new Error("Failed to fetch available rides");
     }
   } catch (error) {
-    console.error('Error fetching available rides:', error.message);
+    console.error("Error fetching available rides:", error.message);
     throw error;
   }
 };
@@ -49,14 +49,17 @@ const getAvailableRides = async (params, customerToken) => {
 const joinCarpoolRequest = async (requestId, location, customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.post(`/join-request/${requestId}`, location);
+    const response = await customerApi.post(
+      `/join-request/${requestId}`,
+      location
+    );
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to join carpool request');
+      throw new Error("Failed to join carpool request");
     }
   } catch (error) {
-    console.error('Error joining carpool request:', error.message);
+    console.error("Error joining carpool request:", error.message);
     throw error;
   }
 };
@@ -68,10 +71,10 @@ const cancelCarpoolRequest = async (requestId, customerToken) => {
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to cancel carpool request');
+      throw new Error("Failed to cancel carpool request");
     }
   } catch (error) {
-    console.error('Error canceling carpool request:', error.message);
+    console.error("Error canceling carpool request:", error.message);
     throw error;
   }
 };
@@ -79,14 +82,14 @@ const cancelCarpoolRequest = async (requestId, customerToken) => {
 const getCustomerRides = async (customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.get('/my-rides');
+    const response = await customerApi.get("/my-rides");
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch customer rides');
+      throw new Error("Failed to fetch customer rides");
     }
   } catch (error) {
-    console.error('Error fetching customer rides:', error.message);
+    console.error("Error fetching customer rides:", error.message);
     throw error;
   }
 };
@@ -94,14 +97,14 @@ const getCustomerRides = async (customerToken) => {
 const getCustomerNotifications = async (customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.get('/notification/');
+    const response = await customerApi.get("/notification/");
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch customer notifications');
+      throw new Error("Failed to fetch customer notifications");
     }
   } catch (error) {
-    console.error('Error fetching customer notifications:', error.message);
+    console.error("Error fetching customer notifications:", error.message);
     throw error;
   }
 };
@@ -109,14 +112,17 @@ const getCustomerNotifications = async (customerToken) => {
 const submitFeedback = async (driverId, feedbackData, customerToken) => {
   const customerApi = createApiInstance(customerToken);
   try {
-    const response = await customerApi.post(`/feedback/${driverId}`, feedbackData);
+    const response = await customerApi.post(
+      `/feedback/${driverId}`,
+      feedbackData
+    );
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to submit feedback');
+      throw new Error("Failed to submit feedback");
     }
   } catch (error) {
-    console.error('Error submitting feedback:', error.message);
+    console.error("Error submitting feedback:", error.message);
     throw error;
   }
 };
@@ -125,14 +131,14 @@ const submitFeedback = async (driverId, feedbackData, customerToken) => {
 const getDriverAvailableRides = async (driverToken) => {
   const driverApi = createApiInstance(driverToken);
   try {
-    const response = await driverApi.get('/driver-rides/get-request');
+    const response = await driverApi.get("/driver-rides/get-request");
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch available rides for driver');
+      throw new Error("Failed to fetch available rides for driver");
     }
   } catch (error) {
-    console.error('Error fetching available rides for driver:', error.message);
+    console.error("Error fetching available rides for driver:", error.message);
     throw error;
   }
 };
@@ -144,10 +150,10 @@ const acceptCarpoolRequest = async (requestId, driverToken) => {
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to accept carpool request');
+      throw new Error("Failed to accept carpool request");
     }
   } catch (error) {
-    console.error('Error accepting carpool request:', error.message);
+    console.error("Error accepting carpool request:", error.message);
     throw error;
   }
 };
@@ -155,14 +161,14 @@ const acceptCarpoolRequest = async (requestId, driverToken) => {
 const getDriverRides = async (driverToken) => {
   const driverApi = createApiInstance(driverToken);
   try {
-    const response = await driverApi.get('/driver-rides');
+    const response = await driverApi.get("/driver-rides");
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch driver rides');
+      throw new Error("Failed to fetch driver rides");
     }
   } catch (error) {
-    console.error('Error fetching driver rides:', error.message);
+    console.error("Error fetching driver rides:", error.message);
     throw error;
   }
 };
@@ -170,14 +176,16 @@ const getDriverRides = async (driverToken) => {
 const updatePickupProgress = async (rideId, customerId, driverToken) => {
   const driverApi = createApiInstance(driverToken);
   try {
-    const response = await driverApi.put(`/driver-rides/${rideId}/pickup/${customerId}`);
+    const response = await driverApi.put(
+      `/driver-rides/${rideId}/pickup/${customerId}`
+    );
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to update pickup progress');
+      throw new Error("Failed to update pickup progress");
     }
   } catch (error) {
-    console.error('Error updating pickup progress:', error.message);
+    console.error("Error updating pickup progress:", error.message);
     throw error;
   }
 };
@@ -189,10 +197,10 @@ const getCustomerStatusPickup = async (rideId, driverToken) => {
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to fetch customer status');
+      throw new Error("Failed to fetch customer status");
     }
   } catch (error) {
-    console.error('Error fetching customer status:', error.message);
+    console.error("Error fetching customer status:", error.message);
     throw error;
   }
 };
@@ -204,10 +212,10 @@ const updateStartStatusRequest = async (rideId, driverToken) => {
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to update start status');
+      throw new Error("Failed to update start status");
     }
   } catch (error) {
-    console.error('Error updating start status:', error.message);
+    console.error("Error updating start status:", error.message);
     throw error;
   }
 };
@@ -219,10 +227,10 @@ const updateCompleteStatusRequest = async (rideId, driverToken) => {
     if (response.status === 200) {
       return response;
     } else {
-      throw new Error('Failed to update complete status');
+      throw new Error("Failed to update complete status");
     }
   } catch (error) {
-    console.error('Error updating complete status:', error.message);
+    console.error("Error updating complete status:", error.message);
     throw error;
   }
 };

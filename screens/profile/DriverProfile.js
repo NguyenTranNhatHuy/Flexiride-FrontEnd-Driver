@@ -13,8 +13,8 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
+
 import { useAuth } from "../../provider/AuthProvider";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker"; // Import ImagePicker from expo
@@ -152,7 +152,7 @@ const DriverProfile = ({ route }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Icon name="arrow-left" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
           <Text style={styles.headerText}>Thông tin cá nhân</Text>
         </View>
 

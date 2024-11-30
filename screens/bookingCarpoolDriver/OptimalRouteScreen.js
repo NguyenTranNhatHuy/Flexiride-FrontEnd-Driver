@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Text } from 'react-native';
-import MapView, { Polyline, Marker } from 'react-native-maps';
-import polyline from '@mapbox/polyline';
-import { VIETMAP_API_KEY } from '@env';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  Text,
+} from "react-native";
+import VietmapGL from "@vietmap/vietmap-gl-react-native"; // Import Vietmap
+import polyline from "@mapbox/polyline";
+import { VIETMAP_API_KEY } from "@env";
 
 const OptimalRouteScreen = ({ route }) => {
   const { driverLocation, pickupPoints } = route.params;
   const [routePoints, setRoutePoints] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const [mapRegion, setMapRegion] = useState({
-    latitude: driverLocation.latitude,
-    longitude: driverLocation.longitude,
-    latitudeDelta: 0.05, // Độ rộng bản đồ ban đầu
-    longitudeDelta: 0.05,
-  });
 
   useEffect(() => {
     fetchOptimalRoute();
@@ -22,8 +22,8 @@ const OptimalRouteScreen = ({ route }) => {
 
   const fetchOptimalRoute = async () => {
     const points = [driverLocation, ...pickupPoints]
-      .map(point => `${point.latitude},${point.longitude}`)
-      .join('&point=');
+      .map((point) => `${point.latitude},${point.longitude}`)
+      .join("&point=");
 
     const tspUrl = `https://maps.vietmap.vn/api/tsp?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${points}&vehicle=car&roundtrip=false`;
 
@@ -32,33 +32,19 @@ const OptimalRouteScreen = ({ route }) => {
       const data = await response.json();
 
       if (data.paths && data.paths.length > 0) {
-        const decodedPoints = polyline.decode(data.paths[0].points).map(([latitude, longitude]) => ({ latitude, longitude }));
+        const decodedPoints = polyline
+          .decode(data.paths[0].points)
+          .map(([latitude, longitude]) => [longitude, latitude]);
         setRoutePoints(decodedPoints);
       } else {
-        Alert.alert('Lỗi', 'Không thể tính toán lộ trình.');
+        Alert.alert("Lỗi", "Không thể tính toán lộ trình.");
       }
     } catch (error) {
-      console.error('Error fetching route:', error);
-      Alert.alert('Lỗi', 'Không thể kết nối đến API.');
+      console.error("Error fetching route:", error);
+      Alert.alert("Lỗi", "Không thể kết nối đến API.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleZoomIn = () => {
-    setMapRegion(prevRegion => ({
-      ...prevRegion,
-      latitudeDelta: prevRegion.latitudeDelta / 2,
-      longitudeDelta: prevRegion.longitudeDelta / 2,
-    }));
-  };
-
-  const handleZoomOut = () => {
-    setMapRegion(prevRegion => ({
-      ...prevRegion,
-      latitudeDelta: prevRegion.latitudeDelta * 2,
-      longitudeDelta: prevRegion.longitudeDelta * 2,
-    }));
   };
 
   if (loading) {
@@ -71,41 +57,75 @@ const OptimalRouteScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <VietmapGL.MapView
         style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={(region) => setMapRegion(region)}
+        styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
       >
-        {/* Vẽ đường đi */}
-        <Polyline coordinates={routePoints} strokeWidth={4} strokeColor="blue" />
-        {/* Hiển thị tài xế */}
-        <Marker
-          coordinate={driverLocation}
-          title="Tài xế"
-          pinColor="green"
+        <VietmapGL.Camera
+          zoomLevel={12}
+          centerCoordinate={[driverLocation.longitude, driverLocation.latitude]}
         />
+
+        {/* Vẽ đường đi */}
+        {routePoints.length > 0 && (
+          <VietmapGL.ShapeSource
+            id="routeSource"
+            shape={{
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: routePoints,
+              },
+            }}
+          >
+            <VietmapGL.LineLayer id="routeLine" style={styles.routeLine} />
+          </VietmapGL.ShapeSource>
+        )}
+
+        {/* Hiển thị tài xế */}
+        <VietmapGL.PointAnnotation
+          id="driverMarker"
+          coordinate={[driverLocation.longitude, driverLocation.latitude]}
+        >
+          <View style={styles.markerDriver} />
+        </VietmapGL.PointAnnotation>
+
         {/* Hiển thị các điểm đón */}
         {pickupPoints.map((point, index) => (
-          <Marker
-            key={index}
-            coordinate={point}
-            title={`Điểm đón ${index + 1}`}
-            pinColor="red"
-          />
+          <VietmapGL.PointAnnotation
+            key={`pickupPoint-${index}`}
+            id={`pickupPoint-${index}`}
+            coordinate={[point.longitude, point.latitude]}
+          >
+            <View style={styles.markerCustomer}>
+              <Text style={styles.markerLabel}>{`P${index + 1}`}</Text>
+            </View>
+          </VietmapGL.PointAnnotation>
         ))}
-      </MapView>
+      </VietmapGL.MapView>
 
       {/* Nút zoom */}
       <View style={styles.zoomControls}>
-        <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
+        <TouchableOpacity
+          style={styles.zoomButton}
+          onPress={() => adjustZoom(0.5)}
+        >
           <Text style={styles.zoomText}>+</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
+        <TouchableOpacity
+          style={styles.zoomButton}
+          onPress={() => adjustZoom(2)}
+        >
           <Text style={styles.zoomText}>-</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+
+  function adjustZoom(scale) {
+    // Bạn có thể điều chỉnh zoom bằng cách thay đổi Camera state hoặc dùng một hàm cụ thể của Vietmap GL.
+    // Vì Vietmap không hỗ trợ trực tiếp `latitudeDelta` hay `longitudeDelta`, bạn sẽ cần điều chỉnh bằng thuộc tính zoomLevel của `VietmapGL.Camera`.
+  }
 };
 
 const styles = StyleSheet.create({
@@ -117,26 +137,49 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  routeLine: {
+    lineWidth: 4,
+    lineColor: "blue",
+  },
+  markerDriver: {
+    width: 10,
+    height: 10,
+    backgroundColor: "green",
+    borderRadius: 5,
+  },
+  markerCustomer: {
+    width: 10,
+    height: 10,
+    backgroundColor: "red",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  markerLabel: {
+    color: "white",
+    fontSize: 8,
+    fontWeight: "bold",
   },
   zoomControls: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
     right: 10,
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   zoomButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: "#2196F3",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   zoomText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
