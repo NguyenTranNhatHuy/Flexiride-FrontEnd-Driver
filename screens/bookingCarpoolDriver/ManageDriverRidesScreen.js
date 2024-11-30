@@ -2,19 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { getDriverRides } from '../../service/BookingCarpoolApi';
+import { useAuth } from "../../provider/AuthProvider";
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
 
 export const ManageDriverRidesScreen = ({ navigation }) => {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { authState, logout } = useAuth();
 
-  useEffect(() => {
-    fetchRides();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchRides();
+    }, [])
+  );
 
   const fetchRides = async () => {
     setLoading(true);
     try {
-      const response = await getDriverRides();
+      const response = await getDriverRides(authState.token);
       setRides(response.data);
     } catch (error) {
       console.error('Error fetching driver rides:', error);
@@ -37,16 +42,18 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
     return price.toLocaleString('vi-VN');
   };
 
-  const getStatusColor = (status) => {
+  const getStatusTextColor = (status) => {
     switch (status) {
       case 'pending':
-        return '#FFB300'; // Light yellow for pending
+        return '#FF6F00'; // Darker yellow for pending
       case 'accepted':
-        return '#66BB6A'; // Light green for accepted
+        return '#388E3C'; // Dark green for accepted
       case 'completed':
-        return '#42A5F5'; // Light blue for completed
+        return '#1976D2'; // Dark blue for completed
       case 'canceled':
-        return '#FF7043'; // Light red for canceled
+        return '#D32F2F'; // Dark red for canceled
+      case 'ongoing':
+        return '#F57C00'; // Dark amber for ongoing
       default:
         return '#757575'; // Grey for unknown status
     }
@@ -54,13 +61,13 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
 
   const handleCardPress = (ride) => {
     // Navigate to "PickupProgress" and pass the ride data
-    navigation.navigate('PickupProgress', { rideInfor : ride });
+    navigation.navigate('PickupProgress', { rideInfor: ride });
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFB300" />
+        <ActivityIndicator size="large" color="#0000ff" />
         <Text style={styles.loadingText}>Loading your rides...</Text>
       </View>
     );
@@ -76,13 +83,13 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
           keyExtractor={(item, index) => item._id ? item._id : index.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => handleCardPress(item)}>
-              <View style={[styles.card, { borderColor: getStatusColor(item.status) }]}>
+              <View style={[styles.card, { borderColor: getStatusTextColor(item.status) }]}>
                 <Text style={styles.rideInfo}>Đi từ: <Text style={styles.highlightText}>{item.start_location}</Text></Text>
                 <Text style={styles.rideInfo}>Đến: <Text style={styles.highlightText}>{item.end_location}</Text></Text>
                 <Text style={styles.rideInfo}>Ngày Xuất phát: <Text style={styles.highlightText}>{formatDate(item.date)}</Text></Text>
                 <Text style={styles.rideInfo}>Thời gian xuất phát: <Text style={styles.highlightText}>{item.time_start}</Text></Text>
                 <Text style={styles.rideInfo}>Giá: <Text style={styles.priceText}>{formatPrice(item.price)} VNĐ</Text></Text>
-                <Text style={[styles.rideInfo, { color: getStatusColor(item.status) }]}>Trạng thái: {item.status}</Text>
+                <Text style={[styles.rideInfo, { color: getStatusTextColor(item.status) }]}>Trạng thái: {item.status}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -96,7 +103,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#FFF9E1', // Light yellow background
+    backgroundColor: '#f0f8ff',
   },
   loadingContainer: {
     flex: 1,
@@ -115,7 +122,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 15,
     marginBottom: 10,
@@ -132,11 +139,12 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   highlightText: {
-    color: '#FFB300', // Highlight in yellow
+    color: '#2196F3',
     fontWeight: 'bold',
   },
   priceText: {
-    color: '#66BB6A', // Green for price
+    color: '#4CAF50',
     fontWeight: 'bold',
   },
 });
+

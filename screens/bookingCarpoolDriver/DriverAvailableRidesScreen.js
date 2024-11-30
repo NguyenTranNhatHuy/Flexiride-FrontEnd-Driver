@@ -3,23 +3,30 @@ import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { getDriverAvailableRides, acceptCarpoolRequest } from '../../service/BookingCarpoolApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAuth } from "../../provider/AuthProvider";
 
 export const DriverAvailableRidesScreen = ({ navigation }) => {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(null);
+  const { authState, logout } = useAuth();
 
   useEffect(() => {
+    console.log("==================================================")
+    console.log("authState.token: ",authState.token);
     fetchRides();
   }, []);
 
   const fetchRides = async () => {
     setLoading(true);
     try {
-      const response = await getDriverAvailableRides();
+      console.log("==================================================")
+      const response = await getDriverAvailableRides(authState.token);
+      console.log("authState.token: ",response.data);
       setRides(response.data);
+      console.log("==================================================")
     } catch (error) {
-      console.error('Error fetching available rides:', error);
+      console.error('Error fetching available rides   :', error);
     } finally {
       setLoading(false);
     }
@@ -29,7 +36,7 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
     setAccepting(requestId);
     try {
       console.log("RequestID: ", requestId);
-      await acceptCarpoolRequest(requestId);
+      await acceptCarpoolRequest(requestId, authState.token);
       navigation.navigate('ManageDriverRides');
     } catch (error) {
       console.error('Error accepting the request:', error);
