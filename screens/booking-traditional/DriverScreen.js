@@ -76,18 +76,18 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, []);
-  useEffect(() => {
-    const clearAllStorage = async () => {
-      try {
-        await AsyncStorage.clear();
-        console.log("All storage cleared successfully!");
-      } catch (error) {
-        console.error("Failed to clear storage:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const clearAllStorage = async () => {
+  //     try {
+  //       await AsyncStorage.clear();
+  //       console.log("All storage cleared successfully!");
+  //     } catch (error) {
+  //       console.error("Failed to clear storage:", error);
+  //     }
+  //   };
 
-    clearAllStorage();
-  }, []);
+  //   clearAllStorage();
+  // }, []);
 
   // useEffect(() => {
   //   const clearActiveBooking = async () => {

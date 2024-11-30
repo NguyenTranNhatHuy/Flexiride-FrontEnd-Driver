@@ -17,6 +17,7 @@ import VietmapGL from "@vietmap/vietmap-gl-react-native";
 import useLocation from "../../hook/useLocation";
 import { useAuth } from "../../provider/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import io from "socket.io-client";
 
 const BookingTraditional = ({ navigation, route }) => {
   const { currentLocation } = useLocation();
@@ -29,24 +30,36 @@ const BookingTraditional = ({ navigation, route }) => {
   const [request, setRequest] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const pickupLocation = bookingDetails.pickupLocation;
   const destinationLocation = bookingDetails.destinationLocation;
   const mapRef = useRef(null);
   const routeCache = {};
   const { authState } = useAuth();
+  const socket = useRef(null);
 
   useEffect(() => {
-    console.table("booking detail data:     ", bookingDetails);
+    console.log("booking detail data:     ", bookingDetails);
     fetchCustomerDetails(bookingDetails.customerId);
     fetchRequestDetail(momentBook);
   }, []);
 
   useEffect(() => {
-    if (currentLocation) {
-      console.log("Vị trí hiện tại:", currentLocation);
+    if (!socket.current) {
+      socket.current = io(`http://${IP_ADDRESS}:3000`, {
+        transports: ["websocket"],
+        query: { driverId: authState.userId },
+      });
     }
-  }, [currentLocation]);
+
+    return () => {
+      if (socket.current) {
+        socket.current.disconnect();
+        socket.current = null;
+      }
+    };
+  }, []);
   useEffect(() => {
     const saveBookingToStorage = async () => {
       try {
@@ -191,20 +204,46 @@ const BookingTraditional = ({ navigation, route }) => {
       return;
     }
 
+    // Kiểm tra nếu trạng thái đang được cập nhật
+    if (isUpdatingStatus) {
+      console.log("Đang cập nhật trạng thái, vui lòng chờ...");
+      return;
+    }
+
     try {
+      setIsUpdatingStatus(true); // Bắt đầu quá trình cập nhật
       await axios.put(
         `http://${IP_ADDRESS}:3000/booking-traditional/update-status/${request._id}`,
         { status: newStatus }
       );
+
       setRequest((prev) => ({ ...prev, status: newStatus }));
+      console.log("🚀 ~ updateStatus ~ newStatus:", newStatus);
+
+      // Gửi thông báo cập nhật trạng thái qua socket
+      if (socket.current) {
+        socket.current.emit("updateStatus", {
+          requestId: request._id,
+          newStatus,
+        });
+        console.log("🚀 socket event sent:", newStatus);
+      }
+
       Alert.alert("Thông báo", `Trạng thái cập nhật thành ${newStatus}`);
     } catch (error) {
       console.error("Error updating status:", error);
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái");
+    } finally {
+      setIsUpdatingStatus(false); // Hoàn tất quá trình cập nhật
     }
   };
 
   const handleStatusUpdate = () => {
+    if (isUpdatingStatus) {
+      Alert.alert("Thông báo", "Đang cập nhật trạng thái, vui lòng chờ...");
+      return;
+    }
+
     const statusFlow = [
       "confirmed", // tài xế đã xác nhận request
       "on the way", // đang trên đường đến điểm đón
