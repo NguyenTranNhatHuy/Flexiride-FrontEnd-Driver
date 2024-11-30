@@ -11,54 +11,48 @@ import {
   Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import sendEmail from "../../utils/SentEmail";
-import { generateOtpCode } from "../../common/GenerateOtpCode";
-import { getAllDrivers } from "../../service/DriverService";
+import { changeDriverPassword } from "../../service/AuthDriverService";
 
-const ForgotPasswordDriver = ({ navigation }) => {
-  const [email, setEmail] = useState("");
+const ChangePassword = ({ navigation, route }) => {
+  const { token, driverId } = route.params;
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
 
-  const validateEmail = (input) => {
-    const emailRegex = /^[a-zA-Z][^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(input);
+  const validatePassword = (input) => {
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,12}$/;
+    return passwordRegex.test(input);
   };
 
   const handleContinue = async () => {
     let newErrors = {};
 
-    // Email validation
-    if (!email) {
-      newErrors.email = "Vui lòng nhập email.";
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Email không hợp lệ.";
-    } else {
-      try {
-        // Check if the email already exists in the system
-        const drivers = await getAllDrivers();
-        const emailExists = drivers.some(
-          (driver) => driver.personalInfo.email === email
-        );
+    // Password validation
+    if (!newPassword) {
+      newErrors.newPassword = "Vui lòng nhập mật khẩu mới.";
+    } else if (!validatePassword(newPassword)) {
+      newErrors.newPassword =
+        "Mật khẩu phải có 8-12 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.";
+    }
 
-        if (!emailExists) {
-          newErrors.email = "Email không tồn tại trong ứng dụng.";
-        }
-      } catch (error) {
-        // console.error("Failed to check existing email:", error);
-        // Alert.alert("Lỗi", "Đã xảy ra lỗi khi kiểm tra email.");
-      }
+    // Confirm Password validation
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Mật khẩu không khớp.";
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        const otpCode = generateOtpCode();
-        const name = "User"; // Placeholder for name
-        sendEmail(name, email, otpCode);
-        navigation.navigate("EnterOtp", { otpCode, name, email });
+        // Call changePassword API
+        await changeDriverPassword(driverId, newPassword, token);
+        Alert.alert("Thành công", "Mật khẩu đã được cập nhật.");
+        navigation.navigate("DriverProfile");
       } catch (error) {
-        Alert.alert("Lỗi", "Đã xảy ra lỗi khi gửi mã OTP.");
+        Alert.alert("Lỗi", "Đã xảy ra lỗi khi cập nhật mật khẩu.");
       }
     }
   };
@@ -70,7 +64,7 @@ const ForgotPasswordDriver = ({ navigation }) => {
     >
       <TouchableOpacity style={styles.backButton}>
         <Icon
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => navigation.navigate("DriverProfile")}
           name="arrow-left"
           size={20}
           color="black"
@@ -81,29 +75,37 @@ const ForgotPasswordDriver = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.headerText}>
-            Bạn quên mật khẩu của chính mình?
-          </Text>
-          <Text style={styles.subHeaderText}>
-            Cung cấp cho chúng tôi email của bạn.
-          </Text>
+          <Text style={styles.headerText}>Nhập mật khẩu mới của bạn</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              onChangeText={setNewPassword}
+              value={newPassword}
+              placeholder="Mật khẩu mới *"
+              secureTextEntry={true}
+              placeholderTextColor="#6D6A6A"
+            />
+            {errors.newPassword && (
+              <Text style={styles.errorMessage}>{errors.newPassword}</Text>
+            )}
+          </View>
 
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              onChangeText={setEmail}
-              value={email}
-              placeholder="Email *"
-              keyboardType="email-address"
+              onChangeText={setConfirmPassword}
+              value={confirmPassword}
+              placeholder="Nhập lại mật khẩu mới *"
+              secureTextEntry={true}
               placeholderTextColor="#6D6A6A"
             />
-            {errors.email && (
-              <Text style={styles.errorMessage}>{errors.email}</Text>
+            {errors.confirmPassword && (
+              <Text style={styles.errorMessage}>{errors.confirmPassword}</Text>
             )}
           </View>
 
           <TouchableOpacity style={styles.button} onPress={handleContinue}>
-            <Text style={styles.buttonText}>Tiếp tục</Text>
+            <Text style={styles.buttonText}>Cập nhật</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -139,13 +141,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#000",
     textAlign: "left",
-  },
-  subHeaderText: {
-    fontSize: 16,
-    textAlign: "left",
-    paddingHorizontal: 0,
-    fontWeight: "300",
-    marginBottom: 10,
   },
   input: {
     height: 50,
@@ -185,4 +180,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ForgotPasswordDriver;
+export default ChangePassword;

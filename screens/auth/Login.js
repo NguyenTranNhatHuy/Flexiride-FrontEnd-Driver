@@ -37,7 +37,7 @@ export default function Login({ navigation }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // console.log("API: " + IP_ADDRESS);
   const handleSubmit = async () => {
     if (validateForm()) {
       setIsLoading(true);
@@ -47,6 +47,7 @@ export default function Login({ navigation }) {
         role: "2",
       };
       try {
+        console.log(IP_ADDRESS)
         const response = await axios.post(
           `http://${IP_ADDRESS}:3000/auth/login`,
           loginData
@@ -58,6 +59,7 @@ export default function Login({ navigation }) {
               user: response.data.user,
             });
             navigation.navigate("DriverScreen");
+            // navigation.navigate("DriverProfile");
           } else {
             setErrors({ general: "Tài khoản chưa được phê duyệt." });
           }

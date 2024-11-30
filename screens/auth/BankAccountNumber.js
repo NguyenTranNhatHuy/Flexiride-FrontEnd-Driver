@@ -11,6 +11,7 @@ import {
   Modal,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,32 +24,31 @@ const BankAccountNumber = ({ route, navigation }) => {
   const [selectedBank, setSelectedBank] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [accountHolder, setAccountHolder] = useState(""); // Tên chủ tài khoản
-  const [accountNumber, setAccountNumber] = useState(""); // Số tài khoản
-  const [errors, setErrors] = useState({}); // Object to hold error messages
+  const [accountHolder, setAccountHolder] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const response = await axios.get("https://api.httzip.com/api/bank/list");
-        const bankData = response.data.data.map(bank => ({
+        const response = await axios.get(
+          "https://api.httzip.com/api/bank/list"
+        );
+        const bankData = response.data.data.map((bank) => ({
           label: bank.short_name,
-          value: bank.code, // Use code for unique identification
+          value: bank.code,
           image: bank.logo_url,
-          swiftCode: bank.swift_code, // Example usage of additional field
         }));
         setBanks(bankData);
         setFilteredBanks(bankData);
-        
-        // Call loadBankAccountData here after bank data has been fetched
         loadBankAccountData(bankData);
       } catch (error) {
         console.error("Error fetching bank data:", error);
       }
     };
-  
+
     const loadBankAccountData = async (bankData) => {
       try {
         const storedData = await AsyncStorage.getItem('bankAccount');
@@ -64,7 +64,7 @@ const BankAccountNumber = ({ route, navigation }) => {
         console.error("Error loading bank account data:", error);
       }
     };
-  
+
     fetchBanks(); // Initiate fetching banks
   }, []); // Empty dependency array to run once on mount
 
@@ -87,12 +87,13 @@ const BankAccountNumber = ({ route, navigation }) => {
 
   const validate = () => {
     const newErrors = {};
-    const accountNumberRegex = /^\d+$/; // Regular expression for only digits
+    const accountNumberRegex = /^\d+$/;
 
     if (!accountNumber) {
       newErrors.accountNumber = "Số tài khoản không được để trống.";
     } else if (!accountNumberRegex.test(accountNumber)) {
-      newErrors.accountNumber = "Số tài khoản phải là số và không chứa chữ và kí tự đặc biệt.";
+      newErrors.accountNumber =
+        "Số tài khoản phải là số và không chứa chữ và kí tự đặc biệt.";
     }
 
     if (!selectedBank) {
@@ -100,52 +101,67 @@ const BankAccountNumber = ({ route, navigation }) => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleAccountNumberChange = async (number) => {
+    setAccountNumber(number);
+    if (selectedBank && number) {
+      setLoading(true); // Show loading modal
+      try {
+        const response = await axios.post(
+          "https://api.httzip.com/api/bank/id-lookup-prod",
+          { bank: selectedBank.value, account: number },
+          {
+            headers: {
+              "x-api-key": "b7501e2a-eb2d-4632-85b1-9850df1e0d0ckey",
+              "x-api-secret": "1d67351f-dd0d-4b0f-a9cc-275454513b18secret",
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setAccountHolder(response.data.data.ownerName);
+          setErrorMessage("");
+        } else {
+          setAccountHolder("");
+          setErrorMessage("Tài khoản ngân hàng không tồn tại.");
+        }
+      } catch (error) {
+        setAccountHolder("");
+        setErrorMessage("Số tài khoản ngân hàng không tồn tại.");
+      } finally {
+        setLoading(false); // Hide loading modal
+      }
+    }
   };
 
   const handleSave = async () => {
-    // Validate the inputs first
     if (validate()) {
       if (!isChecked) {
-        setErrorMessage("Bạn phải cam kết thông tin tài khoản ngân hàng là chính xác.");
+        Alert.alert(
+          "Thông báo",
+          "Bạn phải cam kết thông tin tài khoản ngân hàng là chính xác."
+        );
       } else {
-        // Prepare the data for validation
-        const validationData = {
-          bank: selectedBank ? selectedBank.value : "",
-          account: accountNumber,
+        const bankAccountData = {
+          accountHolderName: accountHolder,
+          accountNumber,
+          bankName: selectedBank ? selectedBank.label : null,
         };
-  
+
         try {
-          const response = await axios.post(
-            "https://api.httzip.com/api/bank/id-lookup-prod",
-            validationData,
-            {
-              headers: {
-                "x-api-key": "b7501e2a-eb2d-4632-85b1-9850df1e0d0ckey",
-                "x-api-secret": "1d67351f-dd0d-4b0f-a9cc-275454513b18secret",
-              },
-            }
+          await AsyncStorage.setItem(
+            "bankAccount",
+            JSON.stringify(bankAccountData)
           );
-  
-          if (response.data.success) {
-            const bankAccountData = {
-              accountHolderName: response.data.data.ownerName,
-              accountNumber,
-              bankName: selectedBank ? selectedBank.label : null,
-            };
-  
-            await AsyncStorage.setItem('bankAccount', JSON.stringify(bankAccountData));
-            navigation.navigate("PersonalInformation");
-          } else {
-            setErrorMessage("Tài khoản ngân hàng không tồn tại.");
-          }
+          navigation.navigate("PersonalInformation");
         } catch (error) {
-          setErrorMessage("Số tài khoản ngân hàng không tồn tại.");
+          console.error("Error saving bank account data:", error);
         }
       }
     }
   };
-  
 
   return (
     <KeyboardAvoidingView
@@ -165,15 +181,39 @@ const BankAccountNumber = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.headerText}>Tài khoản ngân hàng</Text>
-        
-        {/* Non-editable TextInput for account holder's name */}
-        <TextInput
-          style={styles.input}
-          placeholder="Tên chủ tài khoản"
-          placeholderTextColor="#999"
-          value={accountHolder}
-          editable={false} // Set editable to false to make it read-only
-        />
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Tên chủ tài khoản"
+            placeholderTextColor="#999"
+            value={accountHolder}
+            editable={false}
+          />
+          {loading && (
+            <ActivityIndicator
+              size="small"
+              color="gray"
+              style={styles.loadingIndicator}
+            />
+          )}
+        </View>
+
+        {errors.accountNumber && (
+          <Text style={styles.errorText}>{errors.accountNumber}</Text>
+        )}
+        <TouchableOpacity
+          onPress={() => setModalVisible(true)}
+          style={styles.dropdownContainer}
+        >
+          <Text style={styles.selectedBankText}>
+            {selectedBank ? selectedBank.label : "Chọn ngân hàng..."}
+          </Text>
+          <Icon name="chevron-down" size={20} color="black" />
+        </TouchableOpacity>
+        {errors.selectedBank && (
+          <Text style={styles.errorText}>{errors.selectedBank}</Text>
+        )}
 
         <TextInput
           style={styles.input}
@@ -182,23 +222,10 @@ const BankAccountNumber = ({ route, navigation }) => {
           keyboardType="phone-pad"
           returnKeyType="done"
           value={accountNumber}
-          onChangeText={setAccountNumber}
+          onChangeText={handleAccountNumberChange}
         />
-        {errors.accountNumber && (
-          <Text style={styles.errorText}>{errors.accountNumber}</Text>
-        )}
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.dropdownContainer}>
-          <Text style={styles.selectedBankText}>
-            {selectedBank ? selectedBank.label : 'Chọn ngân hàng...'}
-          </Text>
-          <Icon name="chevron-down" size={20} color="black" />
-        </TouchableOpacity>
-        {errors.selectedBank && (
-          <Text style={styles.errorText}>{errors.selectedBank}</Text>
-        )}
-
         {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
+          <Text style={styles.errorText}>{errorMessage}</Text>
         ) : null}
 
         <Modal
@@ -224,12 +251,18 @@ const BankAccountNumber = ({ route, navigation }) => {
                     style={styles.bankItem}
                     onPress={() => handleBankSelect(bank)}
                   >
-                    <Image source={{ uri: bank.image }} style={styles.bankLogo} />
+                    <Image
+                      source={{ uri: bank.image }}
+                      style={styles.bankLogo}
+                    />
                     <Text style={styles.bankLabel}>{bank.label}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.closeButton}
+              >
                 <Text style={styles.closeButtonText}>Đóng</Text>
               </TouchableOpacity>
             </View>
@@ -239,9 +272,7 @@ const BankAccountNumber = ({ route, navigation }) => {
         <View style={styles.checkboxContainer}>
           <TouchableOpacity onPress={toggleCheckbox} style={styles.checkbox}>
             <View style={styles.checkboxBox}>
-              {isChecked && (
-                <Icon name="check" size={16} color="green" />
-              )}
+              {isChecked && <Icon name="check" size={16} color="green" />}
             </View>
           </TouchableOpacity>
           <Text style={styles.checkboxLabel}>
@@ -270,6 +301,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+  },
+  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%" },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  loadingContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#270C6D",
   },
   input: {
     backgroundColor: "white",
@@ -335,7 +384,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 40,
     marginRight: 10,
-    resizeMode:'contain'
+    resizeMode: "contain",
   },
   bankLabel: {
     fontSize: 16,
@@ -376,7 +425,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: "center",
     marginTop: 5,
-    marginLeft:260
+    marginLeft: 260,
   },
   saveButtonText: {
     color: "white",
