@@ -30,7 +30,7 @@ const Earnings = ({ navigation }) => {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/summary/${authState.userId}`
+        `https://flexiride-backend.onrender.com/payment-history/income/summary/${authState.userId}`
       );
 
       const { totalIncome, totalTrips } = response.data;
@@ -43,7 +43,7 @@ const Earnings = ({ navigation }) => {
   const fetchAllEarnings = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/all/${authState.userId}`
+        `https://flexiride-backend.onrender.com/payment-history/income/all/${authState.userId}`
       );
 
       // Lưu kết quả vào state

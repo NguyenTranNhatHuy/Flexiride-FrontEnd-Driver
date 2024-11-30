@@ -21,12 +21,12 @@ const WalletScreen = ({ navigation }) => {
   const fetchWalletBalance = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/wallet`,
-        {
-          headers: {
-            Authorization: `Bearer ${authState.token}`, // Truyền token vào header
-          },
-        }
+        `https://flexiride-backend.onrender.com/driver/wallet/${authState.userId}/wallet`
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${authState.token}`, // Truyền token vào header
+        //   },
+        // }
       );
       console.log("Wallet Balance Response:", response.data);
 

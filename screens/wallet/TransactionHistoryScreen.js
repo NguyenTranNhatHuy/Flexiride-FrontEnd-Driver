@@ -21,7 +21,7 @@ const TransactionHistoryScreen = () => {
   const fetchTransactions = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/wallet/${authState.userId}/transactions`,
+        `https://flexiride-backend.onrender.com/driver/wallet/${authState.userId}/transactions`,
         {
           headers: {
             Authorization: `Bearer ${authState.token}`, // Truyền token vào header

@@ -48,7 +48,7 @@ export default function Login({ navigation }) {
       };
       try {
         const response = await axios.post(
-          `http://${IP_ADDRESS}:3000/auth/login`,
+          `https://flexiride-backend.onrender.com/auth/login`,
           loginData
         );
         if (response.data.token) {

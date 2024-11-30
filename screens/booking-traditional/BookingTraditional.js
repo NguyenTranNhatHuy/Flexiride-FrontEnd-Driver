@@ -47,7 +47,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io(`http://${IP_ADDRESS}:3000`, {
+      socket.current = io(`https://flexiride-backend.onrender.com`, {
         transports: ["websocket"],
         query: { driverId: authState.userId },
       });
@@ -86,7 +86,7 @@ const BookingTraditional = ({ navigation, route }) => {
   const fetchCustomerDetails = async (customerId) => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/customer/detail/${customerId}`
+        `https://flexiride-backend.onrender.com/customer/detail/${customerId}`
       );
       if (response.data) {
         setCustomer(response.data);
@@ -105,7 +105,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
+        `https://flexiride-backend.onrender.com/booking-traditional/request-by-moment/${momentBook}`
       );
 
       if (response.data) {
@@ -213,7 +213,7 @@ const BookingTraditional = ({ navigation, route }) => {
     try {
       setIsUpdatingStatus(true); // Bắt đầu quá trình cập nhật
       await axios.put(
-        `http://${IP_ADDRESS}:3000/booking-traditional/update-status/${request._id}`,
+        `https://flexiride-backend.onrender.com/booking-traditional/update-status/${request._id}`,
         { status: newStatus }
       );
 
@@ -297,7 +297,6 @@ const BookingTraditional = ({ navigation, route }) => {
         return "Đã trả khách";
       case "dropped off":
         return "Hoàn thành chuyến";
-
       default:
         return "Cập nhật";
     }

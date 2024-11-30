@@ -52,7 +52,7 @@ const DriverScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (!socket.current) {
-      socket.current = io(`http://${IP_ADDRESS}:3000`, {
+      socket.current = io(`https://flexiride-backend.onrender.com`, {
         transports: ["websocket"],
         query: { driverId: authState.userId },
       });
@@ -131,7 +131,7 @@ const DriverScreen = ({ navigation }) => {
     const fetchRequestDetail = async (momentBook) => {
       try {
         const response = await axios.get(
-          `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${momentBook}`
+          `https://flexiride-backend.onrender.com/booking-traditional/request-by-moment/${momentBook}`
         );
 
         if (response.data) {
@@ -212,7 +212,7 @@ const DriverScreen = ({ navigation }) => {
   const handleGoOnline = async () => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/driver/${authState.userId}/services`
+        `https://flexiride-backend.onrender.com/driver/${authState.userId}/services`
       );
 
       if (!response.data.data || response.data.data.length === 0) {
@@ -281,7 +281,7 @@ const DriverScreen = ({ navigation }) => {
   const fetchServiceName = async (serviceId) => {
     try {
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/booking-traditional/vehicle/${serviceId}`
+        `https://flexiride-backend.onrender.com/booking-traditional/vehicle/${serviceId}`
       );
       setServiceName(response.data.name);
     } catch (error) {
@@ -293,7 +293,7 @@ const DriverScreen = ({ navigation }) => {
     try {
       setIsLoading(true);
       const response = await axios.get(
-        `http://${IP_ADDRESS}:3000/payment-history/income/today/${authState.userId}`
+        `https://flexiride-backend.onrender.com/payment-history/income/today/${authState.userId}`
       );
       const { driverIncome } = response.data; // Thu nhập sau khi tính 70%
       setDriverEarnings(driverIncome);

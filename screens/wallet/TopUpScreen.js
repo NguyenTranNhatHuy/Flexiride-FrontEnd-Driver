@@ -29,7 +29,7 @@ const TopUpScreen = ({ navigation }) => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `http://${IP_ADDRESS}:3000/driver/wallet/topup`,
+        `https://flexiride-backend.onrender.com/driver/wallet/topup`,
         {
           driverId: authState.userId,
           amount: parseFloat(amount),
