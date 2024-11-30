@@ -40,13 +40,13 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return '#FFA726'; // Orange for pending
+        return '#FFB300'; // Light yellow for pending
       case 'accepted':
-        return '#4CAF50'; // Green for accepted
+        return '#66BB6A'; // Light green for accepted
       case 'completed':
-        return '#2196F3'; // Blue for completed
+        return '#42A5F5'; // Light blue for completed
       case 'canceled':
-        return '#F44336'; // Red for canceled
+        return '#FF7043'; // Light red for canceled
       default:
         return '#757575'; // Grey for unknown status
     }
@@ -60,7 +60,7 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#FFB300" />
         <Text style={styles.loadingText}>Loading your rides...</Text>
       </View>
     );
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: '#FFF9E1', // Light yellow background
   },
   loadingContainer: {
     flex: 1,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF',
     borderRadius: 8,
     padding: 15,
     marginBottom: 10,
@@ -132,12 +132,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   highlightText: {
-    color: '#2196F3',
+    color: '#FFB300', // Highlight in yellow
     fontWeight: 'bold',
   },
   priceText: {
-    color: '#4CAF50',
+    color: '#66BB6A', // Green for price
     fontWeight: 'bold',
   },
 });
-
