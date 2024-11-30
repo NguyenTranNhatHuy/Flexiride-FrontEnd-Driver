@@ -46,7 +46,12 @@ import Earnings from "./screens/booking-traditional/Earnings";
 import EarningsDetailScreen from "./screens/booking-traditional/EarningDetails";
 import EarningsHistoryScreen from "./screens/booking-traditional/EarningsHistoryScreen";
 import ServiceScreen from "./screens/ServiceScreen";
-import WalletScreen from "./screens/WalletScreen";
+import WalletScreen from "./screens/wallet/WalletScreen";
+import TopUpScreen from "./screens/wallet/TopUpScreen";
+import ReturnScreen from "./screens/wallet/ReturnPaymentScreen";
+import CancelScreen from "./screens/wallet/CancelPaymentScreen";
+import TransactionHistoryScreen from "./screens/wallet/TransactionHistoryScreen";
+import WithdrawalScreen from "./screens/wallet/WithdrawalScreen";
 
 
 import { DriverAvailableRidesScreen } from "./screens/bookingCarpoolDriver/DriverAvailableRidesScreen";
@@ -61,13 +66,39 @@ export default function App() {
   enableScreens();
   Vietmap.setApiKey(null);
 
+  const linking = {
+    prefixes: ["flexiride://"], // Cấu hình scheme
+    config: {
+      screens: {
+        ReturnScreen: {
+          path: "ReturnScreen",
+          parse: {
+            code: (code) => code,
+            id: (id) => id,
+            status: (status) => status,
+            orderCode: (orderCode) => orderCode,
+          },
+        },
+        CancelScreen: {
+          path: "CancelScreen",
+          parse: {
+            code: (code) => code,
+            id: (id) => id,
+            status: (status) => status,
+            orderCode: (orderCode) => orderCode,
+          },
+        },
+      },
+    },
+  };
+
   const Stack = createNativeStackNavigator();
   return (
     // <SocketProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <LocationProvider>
         <AuthProvider>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <Stack.Navigator initialRouteName="Splash">
               <Stack.Screen
                 name="Splash"
@@ -281,6 +312,31 @@ export default function App() {
               <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
               <Stack.Screen name="OptimalRoute" component={OptimalRouteScreen} />
               <Stack.Screen name="SingleRoute" component={SingleRouteScreen} />
+              <Stack.Screen
+                name="TopUpScreen"
+                component={TopUpScreen}
+                options={{ title: "Ví cá nhân" }}
+              />
+              <Stack.Screen
+                name="ReturnScreen"
+                component={ReturnScreen}
+                options={{ title: "Giao dịch thành công" }}
+              />
+              <Stack.Screen
+                name="CancelScreen"
+                component={CancelScreen}
+                options={{ title: "Giao dịch bị hủy" }}
+              />
+              <Stack.Screen
+                name="TransactionHistoryScreen"
+                component={TransactionHistoryScreen}
+                options={{ title: "Lịch sử giao dịch" }}
+              />
+              <Stack.Screen
+                name="WithdrawalScreen"
+                component={WithdrawalScreen}
+                options={{ title: "Rút tiền" }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>
