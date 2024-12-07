@@ -43,10 +43,10 @@ const EarningsDetails = () => {
         {timeframe === "today"
           ? "Hôm nay"
           : timeframe === "yesterday"
-            ? "Hôm qua"
-            : timeframe === "week"
-              ? "Tuần này"
-              : "Tháng này"}
+          ? "Hôm qua"
+          : timeframe === "week"
+          ? "Tuần này"
+          : "Tháng này"}
       </Text>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>Tổng thu nhập</Text>

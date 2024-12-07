@@ -78,17 +78,20 @@ const TransactionHistoryScreen = () => {
         statusText = "Đã hủy";
         statusStyle = styles.cancelled;
         break;
-
       default:
         statusText = "Trạng thái không xác định";
     }
 
+    // Xác định dấu
+    const amountPrefix = item.type === "TOPUP" ? "+" : "-";
+    const formattedAmount = `${amountPrefix}${item.amount.toLocaleString(
+      "vi-VN"
+    )} ₫`;
+
     return (
       <View style={styles.transactionCard} key={item._id}>
         <View style={styles.transactionHeader}>
-          <Text style={styles.transactionAmount}>
-            {item.amount.toLocaleString("vi-VN")} ₫
-          </Text>
+          <Text style={styles.transactionAmount}>{formattedAmount}</Text>
           <Text style={[styles.transactionStatus, statusStyle]}>
             {statusText}
           </Text>

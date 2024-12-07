@@ -47,7 +47,7 @@ export default function Login({ navigation }) {
         role: "2",
       };
       try {
-        console.log(IP_ADDRESS)
+        console.log(IP_ADDRESS);
         const response = await axios.post(
           `https://flexiride.onrender.com/auth/login`,
           loginData

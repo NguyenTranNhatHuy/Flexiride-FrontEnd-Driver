@@ -23,7 +23,7 @@ const sendEmail = async (name, email, otpCode) => {
     } else {
       Alert.alert("Lỗi", result.message || "Không thể gửi email.");
     }
-  } catch (error) { }
+  } catch (error) {}
 };
 
 export default sendEmail;

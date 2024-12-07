@@ -176,7 +176,7 @@ const TopUpScreen = ({ navigation }) => {
               style={[
                 styles.quickSelectButtonText,
                 amount == value.toString() &&
-                styles.quickSelectButtonTextSelected,
+                  styles.quickSelectButtonTextSelected,
               ]}
             >
               {value.toLocaleString("vi-VN")}

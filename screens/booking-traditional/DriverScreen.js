@@ -357,6 +357,7 @@ const DriverScreen = ({ navigation }) => {
         <VietmapGL.MapView
           ref={mapRef}
           style={{ flex: 1 }}
+          // styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
           styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
         >
           <VietmapGL.Camera

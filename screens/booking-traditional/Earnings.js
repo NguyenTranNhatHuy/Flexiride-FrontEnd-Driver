@@ -74,10 +74,10 @@ const Earnings = ({ navigation }) => {
                 {timeframe === "today"
                   ? "Hôm nay"
                   : timeframe === "yesterday"
-                    ? "Hôm qua"
-                    : timeframe === "week"
-                      ? "Tuần này"
-                      : "Tháng này"}
+                  ? "Hôm qua"
+                  : timeframe === "week"
+                  ? "Tuần này"
+                  : "Tháng này"}
               </Text>
               <Text style={styles.cardValue}>
                 {formatCurrency(earnings[timeframe]?.driverIncome || 0)}

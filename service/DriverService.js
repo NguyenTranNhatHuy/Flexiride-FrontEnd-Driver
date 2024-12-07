@@ -4,7 +4,7 @@ import { IP_ADDRESS } from "@env";
 const DRIVER_API_URL = `https://flexiride.onrender.com/driver/`;
 
 const getAllDrivers = async () => {
-  console.log(IP_ADDRESS)
+  console.log(IP_ADDRESS);
   try {
     const response = await axios.get(`${DRIVER_API_URL}drivers`);
     if (response.status === 200) {
