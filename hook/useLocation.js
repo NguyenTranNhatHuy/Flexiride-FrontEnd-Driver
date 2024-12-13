@@ -56,7 +56,11 @@ const useLocation = () => {
     setLocationStatus("Đang lấy vị trí...");
     Geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
+
+        if (accuracy > 50) {
+          console.warn("Vị trí không chính xác, độ chính xác > 50m");
+        }
 
         setCurrentLocation({
           latitude,
@@ -67,10 +71,10 @@ const useLocation = () => {
         setLocationStatus("Đã lấy vị trí.");
       },
       (error) => {
-        console.error("Lỗi lấy vị trí:", error);
+        console.error("Lỗi lấy vị trí lần đầu:", error.message);
         fallbackLowAccuracyLocation();
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
     );
   };
 

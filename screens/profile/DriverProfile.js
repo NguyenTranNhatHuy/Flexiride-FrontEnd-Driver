@@ -151,10 +151,13 @@ const DriverProfile = ({ route }) => {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.header}
+          onPress={() => navigation.goBack()}
+        >
           <Ionicons name="arrow-back" size={24} color="#fff" />
           <Text style={styles.headerText}>Thông tin cá nhân</Text>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>

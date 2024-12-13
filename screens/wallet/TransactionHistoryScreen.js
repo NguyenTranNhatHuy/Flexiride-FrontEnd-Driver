@@ -31,7 +31,7 @@ const TransactionHistoryScreen = () => {
       if (response.data.success) {
         setTransactions(response.data.transactions);
       } else {
-        Alert.alert("Lỗi", "Không thể lấy lịch sử giao dịch.");
+        Alert.alert("Lỗi", "Không thể lấy lịch sử giao dịch. ");
       }
     } catch (error) {
       console.error("Error fetching transactions:", error.message);
@@ -67,7 +67,7 @@ const TransactionHistoryScreen = () => {
         statusStyle = styles.pending;
         break;
       case "PAID":
-        statusText = "Hoàn thành";
+        statusText = "Đã thanh toán";
         statusStyle = styles.success;
         break;
       case "FAILED":
@@ -77,6 +77,14 @@ const TransactionHistoryScreen = () => {
       case "CANCELLED":
         statusText = "Đã hủy";
         statusStyle = styles.cancelled;
+        break;
+      case "APPROVED":
+        statusText = "Đã duyệt";
+        statusStyle = styles.cancelled;
+        break;
+      case "COMPLETED":
+        statusText = "Đã hoàn thành";
+        statusStyle = styles.success;
         break;
       default:
         statusText = "Trạng thái không xác định";

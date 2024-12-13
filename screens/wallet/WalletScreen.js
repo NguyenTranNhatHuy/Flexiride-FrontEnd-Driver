@@ -28,7 +28,7 @@ const WalletScreen = ({ navigation }) => {
           },
         }
       );
-      console.log("Wallet Balance Response:", response.data);
+      console.log("Wallet Balance Response: ", response.data);
 
       if (response.data && response.data.walletBalance !== undefined) {
         setWalletBalance(response.data.walletBalance);

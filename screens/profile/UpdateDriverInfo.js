@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { Ionicons } from "@expo/vector-icons";
 import {
   getAllDrivers,
   getDriverById,
@@ -169,13 +169,11 @@ const UpdateDriverInfo = ({ navigation, route }) => {
       behavior={Platform.OS === "android" ? "height" : null}
     >
       {/* Back Button */}
-      <TouchableOpacity style={styles.backButton}>
-        <Icon
-          onPress={() => navigation.navigate("DriverProfile")}
-          name="arrow-left"
-          size={20}
-          color="black"
-        />
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}

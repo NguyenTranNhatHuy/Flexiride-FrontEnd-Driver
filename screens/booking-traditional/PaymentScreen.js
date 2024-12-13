@@ -19,6 +19,7 @@ import { useAuth } from "../../provider/AuthProvider";
 const PaymentScreen = ({ route, navigation }) => {
   const bookingDetails = route.params?.bookingDetails;
   const requestId = route.params?.requestId;
+  const customerName = route.params?.customerName;
 
   const [tollFee, setTollFee] = useState(0);
   const [extraFee, setExtraFee] = useState(0);
@@ -162,41 +163,13 @@ const PaymentScreen = ({ route, navigation }) => {
       {/* Payment Details */}
       <View style={styles.paymentContainer}>
         <Text style={styles.header}>Thanh toán</Text>
-        <Text style={styles.customerName}>
-          Khách hàng: {bookingDetails.customerName}
-        </Text>
+        <Text style={styles.customerName}>Khách hàng: {customerName}</Text>
         <Text style={styles.amount}>{formatCurrency(calculateTotal())}</Text>
         <Text style={styles.paymentStatus}>
           {request?.payment_method === "cash"
             ? "Tiền mặt"
             : "Thanh toán online"}
         </Text>
-      </View>
-
-      {/* Fees */}
-      <View style={styles.feesContainer}>
-        <View style={styles.feeRow}>
-          <MaterialIcons name="toll" size={20} color="#FFC107" />
-          <Text style={styles.feeLabel}>Lệ phí cầu đường</Text>
-          <TextInput
-            style={styles.feeInput}
-            placeholder="Nhập lệ phí"
-            keyboardType="numeric"
-            value={tollFee.toString()}
-            onChangeText={(value) => setTollFee(value)}
-          />
-        </View>
-        <View style={styles.feeRow}>
-          <Ionicons name="add-circle" size={20} color="#FFC107" />
-          <Text style={styles.feeLabel}>Phụ phí</Text>
-          <TextInput
-            style={styles.feeInput}
-            placeholder="Nhập phụ phí"
-            keyboardType="numeric"
-            value={extraFee.toString()}
-            onChangeText={(value) => setExtraFee(value)}
-          />
-        </View>
       </View>
 
       {/* Confirm Button */}

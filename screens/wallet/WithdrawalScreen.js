@@ -36,7 +36,7 @@ const WithdrawalScreen = ({ navigation }) => {
       if (response.data.success) {
         setBankAccount(response.data.bankAccount);
       } else {
-        Alert.alert("Lỗi", "Không thể lấy thông tin ngân hàng.");
+        Alert.alert("Lỗi", "Không thể lấy thông tin ngân hàng. ");
       }
     } catch (error) {
       console.error("Error fetching bank account info:", error.message);
@@ -116,7 +116,68 @@ const WithdrawalScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+  const handleQuickSelect = (value) => {
+    setAmount(value.toString());
+  };
+  const numberToWords = (num) => {
+    const units = [
+      "",
+      "một",
+      "hai",
+      "ba",
+      "bốn",
+      "năm",
+      "sáu",
+      "bảy",
+      "tám",
+      "chín",
+    ];
+    const tens = [
+      "",
+      "mười",
+      "hai mươi",
+      "ba mươi",
+      "bốn mươi",
+      "năm mươi",
+      "sáu mươi",
+      "bảy mươi",
+      "tám mươi",
+      "chín mươi",
+    ];
+    const scales = ["", "nghìn", "triệu", "tỷ"];
 
+    if (num === 0) return "không đồng";
+    if (!Number.isInteger(num) || num < 0) return "Số không hợp lệ";
+
+    let words = [];
+    let scaleIndex = 0;
+
+    while (num > 0) {
+      const part = num % 1000;
+      if (part > 0) {
+        const partWords = [];
+        const hundreds = Math.floor(part / 100);
+        const remainder = part % 100;
+
+        if (hundreds > 0) partWords.push(`${units[hundreds]} trăm`);
+        if (remainder > 0) {
+          if (remainder < 10) {
+            partWords.push(`lẻ ${units[remainder]}`);
+          } else if (remainder < 20) {
+            partWords.push(`mười ${units[remainder % 10]}`);
+          } else {
+            const ten = Math.floor(remainder / 10);
+            const unit = remainder % 10;
+            partWords.push(`${tens[ten]} ${unit === 5 ? "lăm" : units[unit]}`);
+          }
+        }
+        words.unshift(`${partWords.join(" ")} ${scales[scaleIndex]}`.trim());
+      }
+      num = Math.floor(num / 1000);
+      scaleIndex++;
+    }
+    return words.join(" ").trim() + " đồng";
+  };
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.walletItem}>
@@ -151,8 +212,31 @@ const WithdrawalScreen = ({ navigation }) => {
       ) : (
         <Text style={styles.loadingText}>Đang tải thông tin ngân hàng...</Text>
       )}
+      <Text style={styles.label}>Chọn số tiền:</Text>
 
-      <Text style={styles.label}>Số tiền muốn rút:</Text>
+      <View style={styles.quickSelectContainer}>
+        {[100000, 200000, 1000000].map((value) => (
+          <TouchableOpacity
+            key={value}
+            style={[
+              styles.quickSelectButton,
+              amount == value.toString() && styles.quickSelectButtonSelected,
+            ]}
+            onPress={() => handleQuickSelect(value)}
+          >
+            <Text
+              style={[
+                styles.quickSelectButtonText,
+                amount == value.toString() &&
+                  styles.quickSelectButtonTextSelected,
+              ]}
+            >
+              {value.toLocaleString("vi-VN")}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={styles.label}>Hoặc nhập số tiền bạn muốn rút:</Text>
       <TextInput
         style={styles.input}
         placeholder="Nhập số tiền (₫)"
@@ -160,6 +244,11 @@ const WithdrawalScreen = ({ navigation }) => {
         value={amount}
         onChangeText={(value) => setAmount(value)}
       />
+      {amount && (
+        <Text style={styles.amountInWords}>
+          Bằng chữ: {numberToWords(Number(amount))}
+        </Text>
+      )}
       <TouchableOpacity
         style={[styles.button, isLoading && styles.disabledButton]}
         onPress={handleWithdrawalRequest}
@@ -171,6 +260,11 @@ const WithdrawalScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Gửi yêu cầu</Text>
         )}
       </TouchableOpacity>
+
+      <Text style={styles.waitApprovalText}>
+        Sau khi gửi yêu cầu, bạn cần đợi quản trị viên duyệt trước khi nhận
+        tiền.
+      </Text>
     </View>
   );
 };
@@ -237,13 +331,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   bankInfoText: {
-    fontSize: 16,
+    fontSize: 13,
     color: "#333333",
     marginBottom: 5,
   },
   bankInfoLabel: {
     fontWeight: "bold",
     color: "#555555",
+    fontSize: 13,
   },
   loadingText: {
     fontSize: 14,
@@ -279,6 +374,47 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFFFFF",
     fontSize: 18,
+    fontWeight: "bold",
+  },
+  quickSelectContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  quickSelectButton: {
+    flex: 1,
+    marginHorizontal: 2,
+    padding: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+  },
+  quickSelectButtonSelected: {
+    borderColor: "#FFB400",
+    backgroundColor: "#FFF8E1",
+  },
+  quickSelectButtonText: {
+    fontSize: 15,
+    color: "#555555",
+  },
+  quickSelectButtonTextSelected: {
+    color: "#FFB400",
+    fontWeight: "bold",
+  },
+  amountInWords: {
+    fontSize: 14,
+    color: "#555",
+    // fontStyle: "italic",
+    // marginVertical: 10,
+    marginBottom: 30,
+  },
+  waitApprovalText: {
+    marginTop: 20,
+    fontSize: 11,
+    color: "#FF5722",
+    textAlign: "center",
     fontWeight: "bold",
   },
 });

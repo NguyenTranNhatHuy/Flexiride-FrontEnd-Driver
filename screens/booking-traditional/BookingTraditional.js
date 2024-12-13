@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  PermissionsAndroid,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
@@ -18,6 +20,7 @@ import useLocation from "../../hook/useLocation";
 import { useAuth } from "../../provider/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import io from "socket.io-client";
+import call from "react-native-phone-call";
 
 const BookingTraditional = ({ navigation, route }) => {
   const { currentLocation } = useLocation();
@@ -38,6 +41,7 @@ const BookingTraditional = ({ navigation, route }) => {
   const routeCache = {};
   const { authState } = useAuth();
   const socket = useRef(null);
+  const [hasCanceledRide, setHasCanceledRide] = useState(false);
 
   useEffect(() => {
     console.log("booking detail data:     ", bookingDetails);
@@ -52,9 +56,22 @@ const BookingTraditional = ({ navigation, route }) => {
         query: { driverId: authState.userId },
       });
     }
-
+    socket.current.on("rideCanceled", ({ requestId, reason }) => {
+      if (!hasCanceledRide) {
+        // Kiểm tra trạng thái hủy chuyến
+        setHasCanceledRide(true); // Đánh dấu đã xử lý
+        setActiveBooking(null);
+        AsyncStorage.removeItem("activeBooking");
+        Alert.alert("Thông báo", `Khách hàng đã hủy chuyến đi: ${reason}.`, [
+          { text: "Đã hiểu" },
+        ]);
+        navigation.replace("DriverScreen");
+      }
+    });
     return () => {
       if (socket.current) {
+        socket.current.off("rideCanceled");
+
         socket.current.disconnect();
         socket.current = null;
       }
@@ -90,12 +107,12 @@ const BookingTraditional = ({ navigation, route }) => {
       );
       if (response.data) {
         setCustomer(response.data);
-        // console.warn("customer data : ", response.data);
+        console.log("customer data : ", response.data);
       } else {
         console.log("No customer data found");
       }
     } catch (error) {
-      console.error("Error fetching customer details:", error);
+      console.error("Error fetching customer details: ", error);
       Alert.alert("Lỗi", "Không thể lấy thông tin khách hàng");
     }
   };
@@ -120,6 +137,7 @@ const BookingTraditional = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error("Error fetching request details:", error);
+      navigation.replace("DriverScreen");
       Alert.alert("Lỗi", "Không thể lấy thông tin yêu cầu");
     }
   };
@@ -159,7 +177,7 @@ const BookingTraditional = ({ navigation, route }) => {
     try {
       // Make API call for route calculation
       const response = await axios.get(
-        `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${start.latitude},${start.longitude}&point=${end.latitude},${end.longitude}&vehicle=car&points_encoded=true`
+        `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${VIETMAP_API_KEY}&point=${start.latitude},${start.longitude}&point=${end.latitude},${end.longitude}&vehicle=motorcycle&points_encoded=true`
       );
 
       const { paths } = response.data;
@@ -228,8 +246,6 @@ const BookingTraditional = ({ navigation, route }) => {
         });
         console.log("🚀 socket event sent:", newStatus);
       }
-
-      Alert.alert("Thông báo", `Trạng thái cập nhật thành ${newStatus}`);
     } catch (error) {
       console.error("Error updating status:", error);
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái");
@@ -273,14 +289,16 @@ const BookingTraditional = ({ navigation, route }) => {
       return;
     }
 
-    updateStatus(nextStatus);
-
-    if (nextStatus === "dropped off") {
-      navigation.navigate("PaymentScreen", {
-        bookingDetails,
-        requestId: request._id,
-      });
-    }
+    // Cập nhật trạng thái và điều hướng khi hoàn thành
+    updateStatus(nextStatus).then(() => {
+      if (nextStatus === "dropped off") {
+        navigation.navigate("PaymentScreen", {
+          bookingDetails,
+          requestId: request._id,
+          customerName: customer.name,
+        });
+      }
+    });
   };
 
   const getButtonLabel = () => {
@@ -355,7 +373,48 @@ const BookingTraditional = ({ navigation, route }) => {
   const handleSupportCenterPress = () => {
     setSupportModalVisible(true);
   };
+  useEffect(() => {
+    requestCallPermission(); // Yêu cầu quyền khi modal được mở
+  }, []);
 
+  // Yêu cầu quyền gọi điện trên Android
+  const requestCallPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+        {
+          title: "Cấp quyền gọi điện",
+          message: "Ứng dụng cần quyền để thực hiện cuộc gọi khẩn cấp.",
+          buttonPositive: "Đồng ý",
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+  const handleCall = async () => {
+    const phoneNumber = customer.phone;
+    const hasPermission = await requestCallPermission(); // Kiểm tra quyền gọi điện
+
+    if (!hasPermission) {
+      Alert.alert("Lỗi", "Ứng dụng chưa được cấp quyền gọi điện.");
+      return;
+    }
+
+    const args = {
+      number: phoneNumber,
+      prompt: true, // Hiển thị xác nhận trước khi thực hiện cuộc gọi
+    };
+
+    call(args)
+      .then(() => console.log("Mở ứng dụng gọi điện thành công"))
+      .catch((error) => {
+        console.error("Không thể mở ứng dụng gọi điện :", error);
+        Alert.alert("Lỗi", "Không thể thực hiện cuộc gọi.");
+      });
+  };
   const getAddressToDisplay = () => {
     if (!request?.status) {
       return "Trạng thái không khả dụng"; // Default message when status is undefined
@@ -367,124 +426,229 @@ const BookingTraditional = ({ navigation, route }) => {
     }
     return "Không có thông tin địa chỉ";
   };
+
+  const handleRelocate = () => {
+    if (currentLocation && mapRef.current) {
+      mapRef.current.setCamera({
+        centerCoordinate: [currentLocation.longitude, currentLocation.latitude],
+        zoomLevel: 18, // Zoom mức phù hợp
+        animationDuration: 1000, // Thời gian hiệu ứng (ms)
+      });
+    } else {
+      Alert.alert("Lỗi", "Không thể xác định vị trí hiện tại.");
+    }
+  };
+
+  const openGoogleMaps = (startLocation, endLocation) => {
+    if (!startLocation || !endLocation) {
+      Alert.alert(
+        "Lỗi",
+        "Thông tin điểm bắt đầu hoặc điểm kết thúc không hợp lệ."
+      );
+      return;
+    }
+
+    const origin = `${startLocation.latitude},${startLocation.longitude}`;
+    const destination = `${endLocation.latitude},${endLocation.longitude}`;
+
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+    Linking.openURL(googleMapsUrl).catch((err) =>
+      Alert.alert("Lỗi", "Không thể mở Google Maps.")
+    );
+  };
+
   return (
     <View style={styles.container}>
       {currentLocation ? (
-        <VietmapGL.MapView
-          ref={mapRef}
-          style={styles.map}
-          styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
-        >
-          <VietmapGL.Camera
-            centerCoordinate={[
-              currentLocation?.longitude || pickupLocation.longitude,
-              currentLocation?.latitude || pickupLocation.latitude,
-            ]}
-            zoomLevel={12}
-          />
-          {routeData && (
+        <>
+          <VietmapGL.MapView
+            ref={mapRef}
+            style={styles.map}
+            styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
+          >
+            <VietmapGL.Camera
+              ref={mapRef} // Đảm bảo camera được liên kết với ref
+              centerCoordinate={[
+                currentLocation?.longitude || pickupLocation.longitude,
+                currentLocation?.latitude || pickupLocation.latitude,
+              ]}
+              zoomLevel={18} // Mức zoom ban đầu
+              animationMode="flyTo" // Hiệu ứng khi camera di chuyển
+              animationDuration={1000} // Thời gian hiệu ứng, tính bằng ms
+            />
+
+            {routeData && (
+              <VietmapGL.ShapeSource
+                id="routeSource"
+                shape={{
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: routeData.map(({ longitude, latitude }) => [
+                      longitude,
+                      latitude,
+                    ]),
+                  },
+                }}
+              >
+                <VietmapGL.LineLayer
+                  id="routeLayer"
+                  style={{
+                    lineColor: "blue",
+                    lineWidth: 5,
+                    lineOpacity: 0.8,
+                  }}
+                />
+              </VietmapGL.ShapeSource>
+            )}
+            {/* ShapeSource với các điểm */}
             <VietmapGL.ShapeSource
-              id="routeSource"
+              id="locationSource"
               shape={{
-                type: "Feature",
-                geometry: {
-                  type: "LineString",
-                  coordinates: routeData.map(({ longitude, latitude }) => [
-                    longitude,
-                    latitude,
-                  ]),
-                },
+                type: "FeatureCollection",
+                features: [
+                  {
+                    type: "Feature",
+                    geometry: {
+                      type: "Point",
+                      coordinates: [
+                        currentLocation.longitude,
+                        currentLocation.latitude,
+                      ],
+                    },
+                    properties: {
+                      color: "blue",
+                      title: "Vị trí hiện tại",
+                    },
+                  },
+                  {
+                    type: "Feature",
+                    geometry: {
+                      type: "Point",
+                      coordinates: [
+                        pickupLocation.longitude,
+                        pickupLocation.latitude,
+                      ],
+                    },
+                    properties: {
+                      color: "green",
+                      title: "Điểm đón",
+                    },
+                  },
+                  {
+                    type: "Feature",
+                    geometry: {
+                      type: "Point",
+                      coordinates: [
+                        destinationLocation.longitude,
+                        destinationLocation.latitude,
+                      ],
+                    },
+                    properties: {
+                      color: "red",
+                      title: "Điểm đến",
+                    },
+                  },
+                ],
               }}
             >
-              <VietmapGL.LineLayer
-                id="routeLayer"
+              {/* Vòng tròn để hiển thị vị trí */}
+              <VietmapGL.CircleLayer
+                id="circleLayer"
                 style={{
-                  lineColor: "blue",
-                  lineWidth: 5,
-                  lineOpacity: 0.8,
+                  circleColor: ["get", "color"],
+                  circleRadius: 8,
+                  circleStrokeWidth: 2,
+                  circleStrokeColor: "white",
+                }}
+              />
+
+              {/* Hiển thị nhãn tiêu đề */}
+              <VietmapGL.SymbolLayer
+                id="symbolLayer"
+                style={{
+                  textField: ["get", "title"],
+                  textSize: 14,
+                  textColor: "black",
+                  textHaloColor: "white",
+                  textHaloWidth: 2,
+                  textOffset: [0, 1.5],
                 }}
               />
             </VietmapGL.ShapeSource>
-          )}
-          {/* ShapeSource với các điểm */}
-          <VietmapGL.ShapeSource
-            id="locationSource"
-            shape={{
-              type: "FeatureCollection",
-              features: [
-                {
-                  type: "Feature",
-                  geometry: {
-                    type: "Point",
-                    coordinates: [
-                      currentLocation.longitude,
-                      currentLocation.latitude,
-                    ],
-                  },
-                  properties: {
-                    title: "Tài xế",
-                    icon: require("../../assets/current-location.png"),
-                  },
-                },
-                {
-                  type: "Feature",
-                  geometry: {
-                    type: "Point",
-                    coordinates: [
-                      pickupLocation.longitude,
-                      pickupLocation.latitude,
-                    ],
-                  },
-                  properties: {
-                    title: "Điểm đón",
-                    icon: require("../../assets/pickup-icon.png"),
-                  },
-                },
-                {
-                  type: "Feature",
-                  geometry: {
-                    type: "Point",
-                    coordinates: [
-                      destinationLocation.longitude,
-                      destinationLocation.latitude,
-                    ],
-                  },
-                  properties: {
-                    title: "Điểm đến",
-                    icon: require("../../assets/destination-icon.png"),
-                  },
-                },
-              ].filter(Boolean),
+          </VietmapGL.MapView>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("DriverScreen")}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.googleMapButton}
+            onPress={() => {
+              if (
+                request?.status === "confirmed" ||
+                request?.status === "on the way"
+              ) {
+                openGoogleMaps(currentLocation, pickupLocation);
+              } else if (
+                request?.status === "picked up" ||
+                request?.status === "on trip"
+              ) {
+                openGoogleMaps(pickupLocation, destinationLocation);
+              } else {
+                Alert.alert(
+                  "Lỗi",
+                  "Không thể điều hướng với trạng thái hiện tại."
+                );
+              }
             }}
           >
-            <VietmapGL.SymbolLayer
-              id="locationLayer"
-              style={{
-                iconImage: ["get", "icon"],
-                iconSize: 1,
-                textField: ["get", "title"],
-                textSize: 12,
-                textAnchor: "top",
-                textOffset: [0, 1.5],
-              }}
-            />
-          </VietmapGL.ShapeSource>
-        </VietmapGL.MapView>
+            <Ionicons name="navigate-circle" size={30} color="white" />
+          </TouchableOpacity>
+        </>
       ) : (
         <ActivityIndicator size="large" color="blue" />
       )}
+
       <View style={styles.serviceContainer}>
         <TouchableOpacity
-          style={styles.navigateButton}
-          onPress={handleNavigate}
+          style={styles.locationButton}
+          onPress={handleRelocate}
         >
-          <Ionicons name="navigate-circle" size={25} color="blue" />
-          <Text style={styles.navigateText}>Điều hướng</Text>
+          <Ionicons name="locate-outline" size={25} color="blue" />
+          <Text style={styles.navigateText}>Định vị</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.serviceButton}>
-          <Text style={styles.statusTime}> 1 . Đón khách</Text>
-          <Text style={styles.serviceText}>{bookingDetails.serviceName}</Text>
+          <Text style={styles.serviceText}>
+            Dịch vụ: {bookingDetails.serviceName}
+          </Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity
+          style={styles.navigateButton}
+          onPress={() => {
+            if (
+              request?.status === "confirmed" ||
+              request?.status === "on the way"
+            ) {
+              openGoogleMaps(currentLocation, pickupLocation);
+            } else if (
+              request?.status === "picked up" ||
+              request?.status === "on trip"
+            ) {
+              openGoogleMaps(pickupLocation, destinationLocation);
+            } else {
+              Alert.alert(
+                "Lỗi",
+                "Không thể điều hướng với trạng thái hiện tại."
+              );
+            }
+          }}
+        >
+          <Ionicons name="navigate-circle" size={25} color="blue" />
+          <Text style={styles.navigateText}>Điều hướng với Google Maps</Text>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={styles.navigateButton}
           onPress={handleNavigate}
@@ -506,19 +670,24 @@ const BookingTraditional = ({ navigation, route }) => {
             {bookingDetails.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
           </Text>
         </View>
-        {/* <Text style={styles.fareText}>{momentBook}</Text> */}
         <View style={styles.distanceContainer}>
-          <Text style={styles.distanceText}>Khoảng cách: {distance} km</Text>
+          <Text style={styles.distanceText}>
+            Khoảng cách:{" "}
+            {distance < 1
+              ? `${Math.round(distance * 1000)} m` // Hiển thị bằng mét nếu nhỏ hơn 1 km
+              : `${distance} km`}
+          </Text>
           <Text style={styles.durationText}>Thời gian: {duration} phút</Text>
         </View>
+
         <View style={styles.controlButtons}>
           <TouchableOpacity style={styles.button} onPress={() => handleChat()}>
             <Ionicons name="chatbox-outline" size={20} color="black" />
             <Text>Chat</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleCall}>
             <Ionicons name="call-outline" size={20} color="black" />
-            <Text>Gọi miễn phí</Text>
+            <Text>Gọi</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
@@ -526,9 +695,6 @@ const BookingTraditional = ({ navigation, route }) => {
           >
             <Ionicons name="help-outline" size={20} color="black" />
             <Text>Trung tâm hỗ trợ</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="black" />
           </TouchableOpacity>
         </View>
         <View style={styles.controlButtons}>
@@ -555,6 +721,7 @@ const BookingTraditional = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: "relative",
   },
   map: {
     flex: 2,
@@ -661,6 +828,39 @@ const styles = StyleSheet.create({
   },
   moreOptions: {
     paddingLeft: 10,
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    backgroundColor: "#ccc",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, // Bóng trên Android
+  },
+
+  googleMapButton: {
+    position: "absolute",
+    bottom: 480,
+    right: 20,
+    backgroundColor: "ccc",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 

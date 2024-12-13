@@ -31,6 +31,7 @@ const DriverScreen = ({ navigation }) => {
   const [driverEarnings, setDriverEarnings] = useState(0);
   const [activeBooking, setActiveBooking] = useState(null);
   const [request, setRequest] = useState(null);
+  const [hasCanceledRide, setHasCanceledRide] = useState(false);
 
   const toggleEarningsPopup = () => {
     setIsEarningsVisible(!isEarningsVisible);
@@ -62,11 +63,16 @@ const DriverScreen = ({ navigation }) => {
       socket.current.on("disconnect", handleSocketDisconnect);
       socket.current.on("newRideRequest", handleNewRideRequest);
       socket.current.on("rideCanceled", ({ requestId, reason }) => {
-        setActiveBooking(null);
-        AsyncStorage.removeItem("activeBooking");
-        Alert.alert("Thông báo", `Khách hàng đã hủy chuyến đi: ${reason}.`, [
-          { text: "Đã hiểu" },
-        ]);
+        if (!hasCanceledRide) {
+          // Kiểm tra trạng thái hủy chuyến
+          setHasCanceledRide(true); // Đánh dấu đã xử lý
+          setActiveBooking(null);
+          AsyncStorage.removeItem("activeBooking");
+          Alert.alert("Thông báo", `Khách hàng đã hủy chuyến đi: ${reason}.`, [
+            { text: "Đã hiểu" },
+          ]);
+          navigation.replace("DriverScreen");
+        }
       });
     }
 
@@ -77,7 +83,7 @@ const DriverScreen = ({ navigation }) => {
         socket.current = null;
       }
     };
-  }, []);
+  }, [hasCanceledRide]);
   // useEffect(() => {
   //   const clearAllStorage = async () => {
   //     try {
@@ -115,7 +121,7 @@ const DriverScreen = ({ navigation }) => {
           console.log("🚀 ~ request id :", parsedBooking.moment_book);
         }
       } catch (error) {
-        console.error("Error loading active booking:", error);
+        console.error("Error loading active booking: ", error);
       }
     };
 
@@ -195,6 +201,16 @@ const DriverScreen = ({ navigation }) => {
   };
 
   const handleNewRideRequest = (request) => {
+    if (activeBooking) {
+      console.log("Driver is busy. Ignoring new request.");
+      return;
+    }
+    if (rideRequest || modalVisible) {
+      console.log(
+        "Driver is already handling a request. Ignoring new request."
+      );
+      return; // Bỏ qua yêu cầu nếu tài xế đã có yêu cầu
+    }
     setRideRequest(request);
     setModalVisible(true);
 
@@ -308,21 +324,6 @@ const DriverScreen = ({ navigation }) => {
     }
   };
 
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return "N/A";
-    const R = 6371;
-    const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return (R * c).toFixed(1);
-  };
-
-  const toRadians = (degrees) => degrees * (Math.PI / 180);
   const currentLocationGeoJson = currentLocation
     ? {
         type: "FeatureCollection",
@@ -464,21 +465,21 @@ const DriverScreen = ({ navigation }) => {
             <Ionicons name="location-outline" size={24} color="black" />
             <Text style={styles.serviceText}>Xe ghép</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.serviceButton}>
-            <Ionicons name="location-outline" size={24} color="black" />
-            <Text style={styles.serviceText}>Điểm đến yêu thích</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.serviceButton}>
+
+          <TouchableOpacity
+            style={styles.serviceButton}
+            onPress={() => navigation.navigate("Earnings")}
+          >
             <Ionicons name="briefcase-outline" size={24} color="black" />
-            <Text style={styles.serviceText}>Tiền vốn hoạt động</Text>
+            <Text style={styles.serviceText}>Thu nhập</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.serviceButton}>
-            <Ionicons name="flash-outline" size={24} color="black" />
-            <Text style={styles.serviceText}>Tự động nhận</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.serviceButton}>
+
+          <TouchableOpacity
+            style={styles.serviceButton}
+            onPress={() => navigation.navigate("DriverProfile")}
+          >
             <MaterialIcons name="more-horiz" size={24} color="black" />
-            <Text style={styles.serviceText}>Xem thêm</Text>
+            <Text style={styles.serviceText}>Hồ sơ</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

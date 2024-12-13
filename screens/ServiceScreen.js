@@ -36,7 +36,7 @@ const ServiceScreen = () => {
         setServices(response.data.data);
       }
     } catch (err) {
-      console.error("Error fetching services: ", err);
+      console.error("Error fetching services:  ", err);
       setError("Không thể tải danh sách dịch vụ. Vui lòng thử lại.");
     } finally {
       setLoading(false);

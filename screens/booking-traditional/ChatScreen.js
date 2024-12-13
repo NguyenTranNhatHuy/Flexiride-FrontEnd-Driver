@@ -15,15 +15,8 @@ import { IP_ADDRESS } from "@env"; // Thay bằng địa chỉ IP backend của 
 import axios from "axios";
 
 const ChatScreenDriver = ({ route, navigation }) => {
-  const {
-    customerName,
-    customerPhone,
-    customerGender,
-    customerAvatar,
-    customerId,
-    roomId,
-    userId,
-  } = route.params;
+  const { customerName, customerGender, customerId, roomId, userId } =
+    route.params;
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -66,7 +59,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
         );
         setMessages(response.data);
       } catch (error) {
-        console.error("Failed to fetch messages:", error);
+        console.error("Failed to fetch messages: ", error);
       }
     };
 
@@ -126,7 +119,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
           style={styles.avatar}
         />
         <View style={styles.userInfo}>
-          <Text style={styles.otherUserName}>{customerName}</Text>
+          <Text style={styles.otherUserName}>Khách hàng: {customerName}</Text>
           <Text style={styles.otherUserVehicle}>{customerGender}</Text>
         </View>
         <TouchableOpacity>

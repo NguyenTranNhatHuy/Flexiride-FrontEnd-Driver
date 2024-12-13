@@ -36,7 +36,7 @@ const Earnings = ({ navigation }) => {
       const { totalIncome, totalTrips } = response.data;
       setSummary({ totalIncome, totalTrips });
     } catch (error) {
-      console.error("Error fetching summary:", error);
+      console.error("Error fetching summary: ", error);
     }
   };
 

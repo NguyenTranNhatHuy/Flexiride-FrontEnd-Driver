@@ -22,7 +22,7 @@ const TopUpScreen = ({ navigation }) => {
 
   const handleTopUp = async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ.");
+      Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ. ");
       return;
     }
 
@@ -194,7 +194,7 @@ const TopUpScreen = ({ navigation }) => {
       />
       {amount && (
         <Text style={styles.amountInWords}>
-          {numberToWords(Number(amount))}
+          Bằng chữ: {numberToWords(Number(amount))}
         </Text>
       )}
       <TouchableOpacity
