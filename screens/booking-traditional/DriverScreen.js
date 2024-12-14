@@ -352,6 +352,42 @@ const DriverScreen = ({ navigation }) => {
       Alert.alert("Lỗi", "Không thể làm mới vị trí hiện tại.");
     }
   };
+  useEffect(() => {
+    const updateDriverLocation = async () => {
+      if (!currentLocation) return;
+
+      try {
+        const locationData = {
+          driverId: authState.userId,
+          location: {
+            type: "Point",
+            coordinates: [currentLocation.longitude, currentLocation.latitude],
+          },
+        };
+
+        await axios.put(
+          `https://flexiride.onrender.com/driver/update-location`,
+          locationData
+        );
+
+        if (socket.current) {
+          socket.current.emit("driverLocationUpdate", locationData);
+        }
+
+        console.log(
+          "Driver location updated:",
+          locationData.location.coordinates
+        );
+      } catch (error) {
+        console.error("Error updating location:", error);
+      }
+    };
+
+    const intervalId = setInterval(updateDriverLocation, 10000); // Cập nhật mỗi 5 giây
+
+    return () => clearInterval(intervalId); // Cleanup khi component unmount
+  }, [currentLocation]);
+
   return (
     <View style={styles.container}>
       {currentLocation ? (

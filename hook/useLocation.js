@@ -71,7 +71,7 @@ const useLocation = () => {
         setLocationStatus("Đã lấy vị trí.");
       },
       (error) => {
-        console.error("Lỗi lấy vị trí lần đầu:", error.message);
+        // console.error("Lỗi lấy vị trí lần đầu:", error.message);
         fallbackLowAccuracyLocation();
       },
       { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
