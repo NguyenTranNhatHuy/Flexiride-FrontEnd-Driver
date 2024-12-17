@@ -98,7 +98,7 @@ const PaymentScreen = ({ route, navigation }) => {
       setIsLoading(true);
 
       const response = await axios.post(
-        `http://${IP_ADDRESS}:3000/payment-history/create-payos`,
+        `https://flexiride.onrender.com/payment-history/create-payos`,
         {
           userId: request.account_id,
           amount: parseFloat(request.price),

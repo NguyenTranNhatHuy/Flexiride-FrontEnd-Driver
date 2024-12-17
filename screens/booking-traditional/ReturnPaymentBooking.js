@@ -46,7 +46,7 @@ const ReturnBooking = ({ route, navigation }) => {
           activeBooking.moment_book
         );
         const response = await axios.get(
-          `http://${IP_ADDRESS}:3000/booking-traditional/request-by-moment/${activeBooking.moment_book}`
+          `https://flexiride.onrender.com/booking-traditional/request-by-moment/${activeBooking.moment_book}`
         );
 
         if (response.data) {
@@ -85,7 +85,7 @@ const ReturnBooking = ({ route, navigation }) => {
 
       // Update booking status to "completed"
       await axios.put(
-        `http://${IP_ADDRESS}:3000/booking-traditional/update-status/${request._id}`,
+        `https://flexiride.onrender.com/booking-traditional/update-status/${request._id}`,
         { status: "completed" }
       );
 
@@ -106,7 +106,7 @@ const ReturnBooking = ({ route, navigation }) => {
 
       // Call the payment history API
       const paymentResponse = await axios.post(
-        `http://${IP_ADDRESS}:3000/payment-history/return-successfully`,
+        `https://flexiride.onrender.com/payment-history/return-successfully`,
         paymentData,
         {
           headers: { Authorization: `Bearer ${authState.token}` },
