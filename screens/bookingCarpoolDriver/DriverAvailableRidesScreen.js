@@ -1,9 +1,21 @@
 // screens/DriverAvailableRidesScreen.js
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
-import { getDriverAvailableRides, acceptCarpoolRequest } from '../../service/BookingCarpoolApi';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  FlatList,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import {
+  getDriverAvailableRides,
+  acceptCarpoolRequest,
+} from "../../service/BookingCarpoolApi";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useAuth } from "../../provider/AuthProvider";
+import { Ionicons } from "@expo/vector-icons";
 
 export const DriverAvailableRidesScreen = ({ navigation }) => {
   const [rides, setRides] = useState([]);
@@ -12,21 +24,21 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
   const { authState, logout } = useAuth();
 
   useEffect(() => {
-    console.log("==================================================")
-    console.log("authState.token: ",authState.token);
+    console.log("==================================================");
+    console.log("authState.token: ", authState.token);
     fetchRides();
   }, []);
 
   const fetchRides = async () => {
     setLoading(true);
     try {
-      console.log("==================================================")
+      console.log("==================================================");
       const response = await getDriverAvailableRides(authState.token);
-      console.log("authState.token: ",response.data);
+      console.log("authState.token: ", response.data);
       setRides(response.data);
-      console.log("==================================================")
+      console.log("==================================================");
     } catch (error) {
-      console.error('Error fetching available rides   :', error);
+      // console.error('Error fetching available rides   :', error);
     } finally {
       setLoading(false);
     }
@@ -37,9 +49,9 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
     try {
       console.log("RequestID: ", requestId);
       await acceptCarpoolRequest(requestId, authState.token);
-      navigation.navigate('ManageDriverRides');
+      navigation.navigate("ManageDriverRides");
     } catch (error) {
-      console.error('Error accepting the request:', error);
+      // console.error("Error accepting the request:", error);
     } finally {
       setAccepting(null);
     }
@@ -48,30 +60,39 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      if (isNaN(date)) throw new Error('Invalid Date');
-      return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      if (isNaN(date)) throw new Error("Invalid Date");
+      return date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
     } catch (error) {
-      console.error('Error formatting date:', error.message);
-      return 'Invalid Date';
+      // console.error("Error formatting date:", error.message);
+      return "Invalid Date";
     }
   };
 
   const formatTime = (timeString) => {
     try {
       // Loại bỏ ký tự ":00" không cần thiết và khoảng trắng
-      const cleanedTimeString = timeString.replace(/\s*:\d{2}$/, '').trim();
+      const cleanedTimeString = timeString.replace(/\s*:\d{2}$/, "").trim();
 
       // Kiểm tra xem có chứa AM/PM không
-      const isPM = cleanedTimeString.toLowerCase().includes('pm');
-      const isAM = cleanedTimeString.toLowerCase().includes('am');
+      const isPM = cleanedTimeString.toLowerCase().includes("pm");
+      const isAM = cleanedTimeString.toLowerCase().includes("am");
 
       // Loại bỏ AM/PM nếu có
-      const timeWithoutMeridiem = cleanedTimeString.replace(/am|pm/gi, '').trim();
+      const timeWithoutMeridiem = cleanedTimeString
+        .replace(/am|pm/gi, "")
+        .trim();
 
       // Tách giờ và phút
-      const [hours, minutes] = timeWithoutMeridiem.split(':').map((t) => parseInt(t, 10));
+      const [hours, minutes] = timeWithoutMeridiem
+        .split(":")
+        .map((t) => parseInt(t, 10));
 
-      if (isNaN(hours) || isNaN(minutes)) throw new Error('Invalid Time Format');
+      if (isNaN(hours) || isNaN(minutes))
+        throw new Error("Invalid Time Format");
 
       // Chuyển đổi giờ sang định dạng 24 giờ nếu cần
       let formattedHours = hours;
@@ -79,18 +100,18 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
       if (isAM && hours === 12) formattedHours = 0;
 
       // Đảm bảo giờ và phút hiển thị 2 chữ số
-      const formattedTime = `${formattedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      const formattedTime = `${formattedHours
+        .toString()
+        .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
       return formattedTime;
     } catch (error) {
-      console.error('Error formatting time:', error.message);
-      return 'Invalid Time';
+      // console.error("Error formatting time:", error.message);
+      return "Invalid Time";
     }
   };
 
-
-
   const formatPrice = (price) => {
-    return price.toLocaleString('vi-VN');
+    return price.toLocaleString("vi-VN");
   };
 
   if (loading) {
@@ -108,8 +129,12 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
       <View style={styles.leftSection}>
         <Text style={styles.rideInfo}>Đi từ: {item.start_location}</Text>
         <Text style={styles.rideInfo}>Đến: {item.end_location}</Text>
-        <Text style={styles.rideInfo}>Ngày Xuất phát: {formatDate(item.date)}</Text>
-        <Text style={styles.rideInfo}>Thời gian xuất phát: {item.time_start}</Text>
+        <Text style={styles.rideInfo}>
+          Ngày Xuất phát: {formatDate(item.date)}
+        </Text>
+        <Text style={styles.rideInfo}>
+          Thời gian xuất phát: {item.time_start}
+        </Text>
         <Text style={styles.rideInfo}>Giá: {formatPrice(item.price)} VNĐ</Text>
         <TouchableOpacity
           style={styles.acceptButton}
@@ -117,13 +142,15 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
           disabled={accepting === item.id}
         >
           <Text style={styles.buttonText}>
-            {accepting === item.id ? 'Processing...' : 'Nhận chuyến'}
+            {accepting === item.id ? "Processing..." : "Nhận chuyến"}
           </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.rightSection}>
-        <Icon name="account-multiple" size={40} color="#4CAF50" />
-        <Text style={styles.numberCustomerText}>{item.numberCustomer} khách</Text>
+        {/* <Ionicons name="person" size={40} color="#4CAF50" /> */}
+        <Text style={styles.numberCustomerText}>
+          {item.numberCustomer} khách
+        </Text>
       </View>
     </View>
   );
@@ -131,7 +158,9 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {rides.length === 0 ? (
-        <Text style={styles.noRidesText}>No available rides at the moment.</Text>
+        <Text style={styles.noRidesText}>
+          No available rides at the moment.
+        </Text>
       ) : (
         <FlatList
           data={rides}
@@ -140,25 +169,38 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
             <View style={styles.card}>
               {/* Chia card thành hai phần */}
               <View style={styles.leftSection}>
-                <Text style={styles.rideInfo}>Đi từ: {item.start_location}</Text>
+                <Text style={styles.rideInfo}>
+                  Đi từ: {item.start_location}
+                </Text>
                 <Text style={styles.rideInfo}>Đến: {item.end_location}</Text>
-                <Text style={styles.rideInfo}>Ngày Xuất phát: {formatDate(item.date)}</Text>
-                <Text style={styles.rideInfo}>Thời gian xuất phát: {item.time_start}</Text>
-                <Text style={styles.rideInfo}>Giá: {formatPrice(item.price)} VNĐ</Text>
+                <Text style={styles.rideInfo}>
+                  Ngày Xuất phát: {formatDate(item.date)}
+                </Text>
+                <Text style={styles.rideInfo}>
+                  Thời gian xuất phát: {item.time_start}
+                </Text>
+                <Text style={styles.rideInfo}>
+                  Giá: {formatPrice(item.price)} VNĐ
+                </Text>
                 <TouchableOpacity
                   style={styles.acceptButton}
                   onPress={() => handleAcceptRequest(item.id)}
                   disabled={accepting === item.id}
                 >
                   <Text style={styles.buttonText}>
-                    {accepting === item.id ? 'Processing...' : 'Nhận chuyến'}
+                    {accepting === item.id ? "Processing..." : "Nhận chuyến"}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.rightSection}>
                 {/* Hiển thị số khách và biểu tượng */}
-                <Icon name="account-multiple" size={40} color="#4CAF50" />
-                <Text style={styles.numberCustomerText}>{item.numberCustomer} khách</Text>
+                <Image
+                  source={require("../../assets/guest.png")}
+                  style={styles.logo}
+                />
+                <Text style={styles.numberCustomerText}>
+                  {item.numberCustomer} khách
+                </Text>
               </View>
             </View>
           )}
@@ -166,17 +208,16 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
       )}
     </View>
   );
-
 };
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row', // Chia thành hai cột
-    backgroundColor: '#fff',
+    flexDirection: "row", // Chia thành hai cột
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 15,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -188,30 +229,30 @@ const styles = StyleSheet.create({
   },
   rightSection: {
     flex: 3, // Chiếm 30% chiều rộng
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   rideInfo: {
     fontSize: 16,
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   numberCustomerText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginTop: 5,
   },
   acceptButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     paddingVertical: 10,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

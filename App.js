@@ -329,22 +329,27 @@ export default function App() {
               <Stack.Screen
                 name="DriverAvailableRides"
                 component={DriverAvailableRidesScreen}
+                options={{ title: "Yêu cầu có sẵn" }}
               />
               <Stack.Screen
                 name="ManageDriverRides"
                 component={ManageDriverRidesScreen}
+                options={{ title: "Yêu cầu của tôi" }}
               />
               <Stack.Screen
                 name="PickupProgress"
                 component={PickupProgressScreen}
+                options={{ title: "Tiến trình di chuyển" }}
               />
               <Stack.Screen
                 name="ServiceSelection"
                 component={ServiceSelectionScreen}
+                options={{ title: "Lựa chọn dịch vụ" }}
               />
               <Stack.Screen
                 name="OptimalRoute"
                 component={OptimalRouteScreen}
+                options={{ title: "Lộ trình tốt nhất" }}
               />
               <Stack.Screen name="SingleRoute" component={SingleRouteScreen} />
               <Stack.Screen

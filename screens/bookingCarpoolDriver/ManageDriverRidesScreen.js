@@ -83,6 +83,23 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
     );
   }
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case "pending":
+        return "Đang chờ";
+      case "accepted":
+        return "Đã chấp nhận";
+      case "completed":
+        return "Đã hoàn thành";
+      case "ongoing":
+        return "Đang di chuyển";
+      case "done":
+        return "Đã đánh giá";
+      default:
+        return "Trạng thái không xác định";
+    }
+  };
+
   return (
     <View style={styles.container}>
       {rides.length === 0 ? (
@@ -133,7 +150,7 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
                     { color: getStatusTextColor(item.status) },
                   ]}
                 >
-                  Trạng thái: {item.status}
+                  Trạng thái: {getStatusText(item.status)}
                 </Text>
               </View>
             </TouchableOpacity>

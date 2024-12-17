@@ -223,6 +223,7 @@ const updateStartStatusRequest = async (rideId, driverToken) => {
 const updateCompleteStatusRequest = async (rideId, driverToken) => {
   const driverApi = createApiInstance(driverToken);
   try {
+    console.log("checking");
     const response = await driverApi.put(`/driver-rides/${rideId}/complete`);
     if (response.status === 200) {
       return response;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Platform, PermissionsAndroid, Alert } from "react-native";
+import { Platform, PermissionsAndroid, Alert, Linking } from "react-native";
 import Geolocation from "@react-native-community/geolocation";
 
 const useLocation = () => {
@@ -10,40 +10,45 @@ const useLocation = () => {
 
   useEffect(() => {
     const requestLocationPermission = async () => {
-      if (Platform.OS === "android") {
-        try {
+      try {
+        if (Platform.OS === "android") {
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             {
               title: "Quyền truy cập vị trí",
               message: "Ứng dụng cần quyền để truy cập vị trí của bạn",
+              buttonNeutral: "Hỏi sau",
+              buttonNegative: "Hủy",
+              buttonPositive: "Đồng ý",
             }
           );
 
           if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            // Quyền được cấp, lấy vị trí
             getOneTimeLocation();
             subscribeLocation();
           } else {
-            setLocationStatus("Quyền truy cập bị từ chối.");
+            setLocationStatus("Quyền truy cập vị trí bị từ chối.");
             Alert.alert(
               "Quyền bị từ chối",
-              "Bạn cần bật quyền truy cập vị trí trong cài đặt."
+              "Ứng dụng cần quyền truy cập vị trí để hoạt động. Vui lòng cấp quyền trong cài đặt.",
+              [
+                { text: "Hủy", style: "cancel" },
+                { text: "Mở cài đặt", onPress: openSettings },
+              ]
             );
           }
-        } catch (err) {
-          console.error("Lỗi khi yêu cầu quyền:", err);
+        } else {
+          getOneTimeLocation();
+          subscribeLocation();
         }
-      } else {
-        // iOS không cần quản lý quyền theo cách này
-        getOneTimeLocation();
-        subscribeLocation();
+      } catch (err) {
+        console.error("Lỗi khi yêu cầu quyền:", err);
       }
     };
 
     requestLocationPermission();
 
-    // Xóa theo dõi vị trí khi unmount
+    // Cleanup: Stop watching location when the component is unmounted
     return () => {
       if (watchID.current) {
         Geolocation.clearWatch(watchID.current);
@@ -51,7 +56,6 @@ const useLocation = () => {
     };
   }, []);
 
-  // Lấy vị trí hiện tại một lần
   const getOneTimeLocation = () => {
     setLocationStatus("Đang lấy vị trí...");
     Geolocation.getCurrentPosition(
@@ -59,26 +63,25 @@ const useLocation = () => {
         const { latitude, longitude, accuracy } = position.coords;
 
         if (accuracy > 50) {
-          console.warn("Vị trí không chính xác, độ chính xác > 50m");
+          console.warn("Độ chính xác thấp (>50m), đang tìm vị trí tốt hơn...");
         }
 
         setCurrentLocation({
           latitude,
           longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
         });
         setLocationStatus("Đã lấy vị trí.");
       },
       (error) => {
-        // console.error("Lỗi lấy vị trí lần đầu:", error.message);
+        console.error("Lỗi khi lấy vị trí một lần:", error.message);
         fallbackLowAccuracyLocation();
       },
-      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  // Lấy vị trí với độ chính xác thấp nếu lần đầu thất bại
   const fallbackLowAccuracyLocation = () => {
     Geolocation.getCurrentPosition(
       (position) => {
@@ -101,7 +104,6 @@ const useLocation = () => {
     );
   };
 
-  // Theo dõi vị trí khi di chuyển
   const subscribeLocation = () => {
     watchID.current = Geolocation.watchPosition(
       (position) => {
@@ -110,23 +112,22 @@ const useLocation = () => {
         setCurrentLocation({
           latitude,
           longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
         });
-        setLocationStatus("Cập nhật vị trí.");
+        setLocationStatus("Đã cập nhật vị trí.");
       },
       (error) => {
-        console.error("Lỗi theo dõi vị trí:", error);
+        console.error("Lỗi theo dõi vị trí:", error.message);
         setLocationStatus("Không thể theo dõi vị trí.");
       },
-      { enableHighAccuracy: false, distanceFilter: 10 }
+      { enableHighAccuracy: true, distanceFilter: 5 }
     );
   };
 
-  // Hàm để yêu cầu bật quyền vị trí trong cài đặt (chỉ cho Android)
   const openSettings = () => {
     if (Platform.OS === "android") {
-      PermissionsAndroid.openSettings();
+      Linking.openSettings();
     } else {
       Alert.alert(
         "Cài đặt vị trí",
