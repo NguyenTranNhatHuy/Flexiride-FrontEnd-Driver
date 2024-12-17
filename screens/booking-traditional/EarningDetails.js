@@ -21,7 +21,7 @@ const EarningsDetails = () => {
   const fetchEarningsDetail = async () => {
     try {
       const response = await axios.get(
-        `https://flexiride.onrender.com/payment-history/income/detail/${timeframe}/${driverId}`
+        `http://${IP_ADDRESS}:3000/payment-history/income/detail/${timeframe}/${driverId}`
       );
       setEarningsDetail(response.data);
     } catch (error) {
@@ -72,7 +72,9 @@ const EarningsDetails = () => {
               </Text>
               <Text style={styles.tripText}>
                 <Text style={styles.label}>Phương thức thanh toán: </Text>
-                {trip.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
+                {trip.paymentMethod === "cash"
+                  ? "Tiền mặt"
+                  : "Thanh toán online"}
               </Text>
               <Text style={styles.tripText}>
                 <Text style={styles.label}>Thu nhập ròng: </Text>

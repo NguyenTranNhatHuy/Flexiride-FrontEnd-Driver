@@ -180,9 +180,9 @@ const UpdateDriverInfo = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.headerText}>Cập nhập thông tin cá nhân</Text>
+          <Text style={styles.headerText}>Cập nhật thông tin cá nhân</Text>
           <Text style={styles.subHeaderText}>
-            Cung cấp thông tin cần cập nhập
+            Cung cấp thông tin cần cập nhật
           </Text>
 
           <View style={styles.inputContainer}>
@@ -232,7 +232,7 @@ const UpdateDriverInfo = ({ navigation, route }) => {
           </View>
 
           <TouchableOpacity style={styles.button} onPress={handleContinue}>
-            <Text style={styles.buttonText}>Cập nhập</Text>
+            <Text style={styles.buttonText}>Cập nhật</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

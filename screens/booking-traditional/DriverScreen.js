@@ -115,10 +115,8 @@ const DriverScreen = ({ navigation }) => {
       try {
         const booking = await AsyncStorage.getItem("activeBooking");
         if (booking) {
-          console.log("🚀 ~ loadActiveBooking ~ booking:", booking);
           const parsedBooking = JSON.parse(booking);
           setActiveBooking(parsedBooking);
-          console.log("🚀 ~ request id :", parsedBooking.moment_book);
         }
       } catch (error) {
         console.error("Error loading active booking: ", error);
@@ -147,10 +145,14 @@ const DriverScreen = ({ navigation }) => {
 
           if (response.data.status === "completed") {
             await AsyncStorage.removeItem("activeBooking");
+
             setActiveBooking(null);
           } else if (response.data.status === "canceled") {
+            await AsyncStorage.removeItem("activeBooking");
+
             setActiveBooking(null);
             await AsyncStorage.removeItem("activeBooking");
+            console.log("removed activebooking");
           }
         } else {
           Alert.alert(
@@ -315,7 +317,6 @@ const DriverScreen = ({ navigation }) => {
       );
       const { driverIncome } = response.data; // Thu nhập sau khi tính 70%
       setDriverEarnings(driverIncome);
-      console.log("🚀 ~ fetchEarnings ~ driverIncome :", driverIncome);
     } catch (error) {
       console.error("Error fetching driver earnings:", error);
       Alert.alert("Lỗi", "Không thể lấy thông tin thu nhập.");
@@ -373,11 +374,6 @@ const DriverScreen = ({ navigation }) => {
         if (socket.current) {
           socket.current.emit("driverLocationUpdate", locationData);
         }
-
-        console.log(
-          "Driver location updated:",
-          locationData.location.coordinates
-        );
       } catch (error) {
         console.error("Error updating location:", error);
       }
@@ -525,7 +521,9 @@ const DriverScreen = ({ navigation }) => {
             <Text style={styles.modalDistance}>{serviceName}</Text>
             <Text style={styles.modalPaymentMethod}>
               Phương thức thanh toán:{" "}
-              {rideRequest?.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
+              {rideRequest?.paymentMethod === "cash"
+                ? "Tiền mặt"
+                : "Thanh toán online"}
             </Text>
 
             {/* Giá cước */}

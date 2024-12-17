@@ -196,7 +196,7 @@ const DriverProfile = ({ route }) => {
             }
             style={styles.editButton}
           >
-            <Text style={styles.editButtonText}>Cập nhập</Text>
+            <Text style={styles.editButtonText}>Cập nhật</Text>
           </TouchableOpacity>
 
           <View style={styles.infoItem}>
@@ -237,14 +237,7 @@ const DriverProfile = ({ route }) => {
             <Ionicons name="lock-closed-outline" size={20} color="#007BFF" />
             <Text style={styles.utilityText}>Đổi mật khẩu</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.utilityItem}>
-            <Ionicons name="download-outline" size={20} color="#007BFF" />
-            <Text style={styles.utilityText}>Downloads</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.utilityItem}>
-            <Ionicons name="help-circle-outline" size={20} color="#007BFF" />
-            <Text style={styles.utilityText}>Trợ giúp</Text>
-          </TouchableOpacity>
+
           <TouchableOpacity
             onPress={handleLogout}
             style={styles.lastUtilityItem}

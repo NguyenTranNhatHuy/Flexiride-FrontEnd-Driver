@@ -36,7 +36,6 @@ import ChatScreenDriver from "./screens/booking-traditional/ChatScreen";
 import DriverProfile from "./screens/profile/DriverProfile";
 import { enableScreens } from "react-native-screens";
 import SimpleMap from "./screens/ShowMap";
-import Vietmap from "@vietmap/vietmap-gl-react-native";
 import VietMapNavigationScreen from "./screens/booking-traditional/navigation/VietMapNavigation";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DriverScreen from "./screens/booking-traditional/DriverScreen";
@@ -53,19 +52,22 @@ import CancelScreen from "./screens/wallet/CancelPaymentScreen";
 import TransactionHistoryScreen from "./screens/wallet/TransactionHistoryScreen";
 import WithdrawalScreen from "./screens/wallet/WithdrawalScreen";
 
-
 import { DriverAvailableRidesScreen } from "./screens/bookingCarpoolDriver/DriverAvailableRidesScreen";
 import { ManageDriverRidesScreen } from "./screens/bookingCarpoolDriver/ManageDriverRidesScreen";
 import { PickupProgressScreen } from "./screens/bookingCarpoolDriver/PickupProgressScreen";
 import { ServiceSelectionScreen } from "./screens/bookingCarpoolDriver/ServiceSelectionScreen";
 import ChangePassword from "./screens/auth/ChangePassword";
 import UpdateDriverInfo from "./screens/profile/UpdateDriverInfo";
-import OptimalRouteScreen from "./screens/bookingCarpoolDriver/OptimalRouteScreen"
+import OptimalRouteScreen from "./screens/bookingCarpoolDriver/OptimalRouteScreen";
 import SingleRouteScreen from "./screens/bookingCarpoolDriver/SingleRouteScreen";
+import Vietmap from "@vietmap/vietmap-gl-react-native";
+import CancelBooking from "./screens/booking-traditional/CancelPaymentBooking";
+import ReturnBooking from "./screens/booking-traditional/ReturnPaymentBooking";
+
 export default function App() {
   enableScreens();
+  // Vietmap.setApiKey(null);
   Vietmap.setApiKey(null);
-
   const linking = {
     prefixes: ["flexiride://"], // Cấu hình scheme
     config: {
@@ -81,6 +83,24 @@ export default function App() {
         },
         CancelScreen: {
           path: "CancelScreen",
+          parse: {
+            code: (code) => code,
+            id: (id) => id,
+            status: (status) => status,
+            orderCode: (orderCode) => orderCode,
+          },
+        },
+        ReturnBooking: {
+          path: "ReturnBooking",
+          parse: {
+            code: (code) => code,
+            id: (id) => id,
+            status: (status) => status,
+            orderCode: (orderCode) => orderCode,
+          },
+        },
+        CancelBooking: {
+          path: "CancelBooking",
           parse: {
             code: (code) => code,
             id: (id) => id,
@@ -306,11 +326,26 @@ export default function App() {
               />
 
               {/* Screens for booking carpool driver */}
-              <Stack.Screen name="DriverAvailableRides" component={DriverAvailableRidesScreen} />
-              <Stack.Screen name="ManageDriverRides" component={ManageDriverRidesScreen} />
-              <Stack.Screen name="PickupProgress" component={PickupProgressScreen} />
-              <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
-              <Stack.Screen name="OptimalRoute" component={OptimalRouteScreen} />
+              <Stack.Screen
+                name="DriverAvailableRides"
+                component={DriverAvailableRidesScreen}
+              />
+              <Stack.Screen
+                name="ManageDriverRides"
+                component={ManageDriverRidesScreen}
+              />
+              <Stack.Screen
+                name="PickupProgress"
+                component={PickupProgressScreen}
+              />
+              <Stack.Screen
+                name="ServiceSelection"
+                component={ServiceSelectionScreen}
+              />
+              <Stack.Screen
+                name="OptimalRoute"
+                component={OptimalRouteScreen}
+              />
               <Stack.Screen name="SingleRoute" component={SingleRouteScreen} />
               <Stack.Screen
                 name="TopUpScreen"
@@ -337,6 +372,16 @@ export default function App() {
                 component={WithdrawalScreen}
                 options={{ title: "Rút tiền" }}
               />
+              <Stack.Screen
+                name="ReturnBooking"
+                component={ReturnBooking}
+                options={{ title: "Giao dịch thành công" }}
+              />
+              <Stack.Screen
+                name="CancelBooking"
+                component={CancelBooking}
+                options={{ title: "Giao dịch payos bị hủy" }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>
@@ -344,7 +389,6 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

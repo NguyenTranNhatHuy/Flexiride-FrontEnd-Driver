@@ -21,6 +21,7 @@ import { useAuth } from "../../provider/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import io from "socket.io-client";
 import call from "react-native-phone-call";
+import { useFocusEffect } from "@react-navigation/native";
 
 const BookingTraditional = ({ navigation, route }) => {
   const { currentLocation } = useLocation();
@@ -42,9 +43,7 @@ const BookingTraditional = ({ navigation, route }) => {
   const { authState } = useAuth();
   const socket = useRef(null);
   const [hasCanceledRide, setHasCanceledRide] = useState(false);
-
   useEffect(() => {
-    console.log("booking detail data:     ", bookingDetails);
     fetchCustomerDetails(bookingDetails.customerId);
     fetchRequestDetail(momentBook);
   }, []);
@@ -95,7 +94,7 @@ const BookingTraditional = ({ navigation, route }) => {
 
     return () => {
       // Clear active booking if trip is completed
-      if (request?.status === "dropped off") {
+      if (request?.status === "completed") {
         AsyncStorage.removeItem("activeBooking");
       }
     };
@@ -118,8 +117,6 @@ const BookingTraditional = ({ navigation, route }) => {
   };
 
   const fetchRequestDetail = async (momentBook) => {
-    console.log("🚀 ~ fetchRequestDetail ~ momentBook:", momentBook);
-
     try {
       const response = await axios.get(
         `https://flexiride.onrender.com/booking-traditional/request-by-moment/${momentBook}`
@@ -127,7 +124,6 @@ const BookingTraditional = ({ navigation, route }) => {
 
       if (response.data) {
         setRequest(response.data);
-        console.log("🚀 ~ fetchRequestDetail ~ response.data:", response.data);
       } else {
         console.log("No request found for the given moment");
         Alert.alert(
@@ -314,7 +310,7 @@ const BookingTraditional = ({ navigation, route }) => {
       case "on trip":
         return "Đã trả khách";
       case "dropped off":
-        return "Hoàn thành chuyến";
+        return "Thanh toán";
 
       default:
         return "Cập nhật";
@@ -478,11 +474,6 @@ const BookingTraditional = ({ navigation, route }) => {
         if (socket.current) {
           socket.current.emit("driverLocationUpdate", locationData);
         }
-
-        console.log(
-          "Driver location updated:",
-          locationData.location.coordinates
-        );
       } catch (error) {
         console.error("Error updating location:", error);
       }
@@ -492,6 +483,18 @@ const BookingTraditional = ({ navigation, route }) => {
 
     return () => clearInterval(intervalId); // Cleanup khi component unmount
   }, [currentLocation]);
+  useFocusEffect(
+    React.useCallback(() => {
+      // Kiểm tra nếu trạng thái là "dropped off" khi quay lại
+      if (request?.status === "dropped off") {
+        navigation.navigate("PaymentScreen", {
+          bookingDetails,
+          requestId: request._id,
+          customerName: customer?.name,
+        });
+      }
+    }, [request, navigation])
+  );
   return (
     <View style={styles.container}>
       {currentLocation ? (
@@ -659,30 +662,7 @@ const BookingTraditional = ({ navigation, route }) => {
             Dịch vụ: {bookingDetails.serviceName}
           </Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={styles.navigateButton}
-          onPress={() => {
-            if (
-              request?.status === "confirmed" ||
-              request?.status === "on the way"
-            ) {
-              openGoogleMaps(currentLocation, pickupLocation);
-            } else if (
-              request?.status === "picked up" ||
-              request?.status === "on trip"
-            ) {
-              openGoogleMaps(pickupLocation, destinationLocation);
-            } else {
-              Alert.alert(
-                "Lỗi",
-                "Không thể điều hướng với trạng thái hiện tại."
-              );
-            }
-          }}
-        >
-          <Ionicons name="navigate-circle" size={25} color="blue" />
-          <Text style={styles.navigateText}>Điều hướng với Google Maps</Text>
-        </TouchableOpacity> */}
+
         <TouchableOpacity
           style={styles.navigateButton}
           onPress={handleNavigate}
@@ -701,7 +681,9 @@ const BookingTraditional = ({ navigation, route }) => {
             {formatCurrency(bookingDetails.price)}
           </Text>
           <Text style={styles.paymentMethodText}>
-            {bookingDetails.paymentMethod === "cash" ? "Tiền mặt" : "MoMo"}
+            {bookingDetails.paymentMethod === "cash"
+              ? "Tiền mặt"
+              : "Thanh toán online"}
           </Text>
         </View>
         <View style={styles.distanceContainer}>
