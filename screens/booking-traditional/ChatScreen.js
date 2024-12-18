@@ -8,6 +8,9 @@ import {
   StyleSheet,
   Image,
   Modal,
+  Platform,
+  PermissionsAndroid,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import io from "socket.io-client";
@@ -15,9 +18,14 @@ import { IP_ADDRESS } from "@env"; // Thay bằng địa chỉ IP backend của 
 import axios from "axios";
 
 const ChatScreenDriver = ({ route, navigation }) => {
-  const { customerName, customerGender, customerId, roomId, userId } =
-    route.params;
-
+  const {
+    customerName,
+    customerPhone,
+    customerGender,
+    customerId,
+    roomId,
+    userId,
+  } = route.params;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [quickTextModalVisible, setQuickTextModalVisible] = useState(false);
@@ -82,7 +90,46 @@ const ChatScreenDriver = ({ route, navigation }) => {
       setNewMessage("");
     }
   };
+  const requestCallPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+        {
+          title: "Cấp quyền gọi điện",
+          message: "Ứng dụng cần quyền để thực hiện cuộc gọi khẩn cấp.",
+          buttonPositive: "Đồng ý",
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
 
+  const handleCall = async (phoneNumber) => {
+    const hasPermission =
+      Platform.OS === "android" ? await requestCallPermission() : true;
+
+    if (!hasPermission) {
+      Alert.alert("Lỗi", "Ứng dụng chưa được cấp quyền gọi điện.");
+      return;
+    }
+
+    const url = `tel:${phoneNumber}`;
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (!supported) {
+          Alert.alert("Lỗi", "Thiết bị của bạn không hỗ trợ gọi điện.");
+        } else {
+          return Linking.openURL(url);
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi gọi điện:", err);
+        Alert.alert("Lỗi", `Không thể thực hiện cuộc gọi: ${err.message}`);
+      });
+  };
   const handleQuickTextSelect = (text) => {
     setNewMessage(text);
     setQuickTextModalVisible(false);
@@ -122,7 +169,7 @@ const ChatScreenDriver = ({ route, navigation }) => {
           <Text style={styles.otherUserName}>Khách hàng: {customerName}</Text>
           <Text style={styles.otherUserVehicle}>{customerGender}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => handleCall(customerPhone)}>
           <Ionicons name="call" size={24} color="white" />
         </TouchableOpacity>
       </View>
@@ -133,6 +180,14 @@ const ChatScreenDriver = ({ route, navigation }) => {
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderMessage}
         contentContainerStyle={styles.messagesContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyMessageContainer}>
+            <Text style={styles.emptyMessageText}>
+              Hiện chưa có tin nhắn nào. Nhấn vào nút '+' để chọn tin nhắn mẫu
+              và bắt đầu trò chuyện!
+            </Text>
+          </View>
+        }
       />
 
       {/* Input */}
@@ -287,6 +342,17 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     fontSize: 16,
+  },
+  emptyMessageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyMessageText: {
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
   },
 });
 

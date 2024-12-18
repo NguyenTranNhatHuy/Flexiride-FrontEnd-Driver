@@ -12,6 +12,7 @@ import {
   Alert,
   Modal,
   TouchableWithoutFeedback,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -20,6 +21,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker"; // Import ImagePicker from expo
 import { uploadImageToCloudinary } from "../../utils/CloudinaryConfig";
 import { updateDriver } from "../../service/DriverService";
+import axios from "axios";
 const DriverProfile = ({ route }) => {
   const { authState, logout } = useAuth();
   const [personalInfo, setPersonalInfo] = useState({});
@@ -28,11 +30,29 @@ const DriverProfile = ({ route }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false); // Manage modal visibility
   const navigation = useNavigation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshData = () => {
-    setPersonalInfo(authState.user.personalInfo);
-    setAddress(authState.user.personalInfo.address);
-    setBank(authState.user.bankAccount);
+  const refreshData = async () => {
+    try {
+      const updatedPersonalInfo = await axios.get(
+        `https://flexiride.onrender.com/driver/detail/${authState.userId}`
+      );
+      setPersonalInfo(updatedPersonalInfo.data.driver.personalInfo);
+      setAddress(updatedPersonalInfo.address);
+      setBank(authState.user.bankAccount);
+    } catch (error) {
+      console.error("Lỗi khi load lại dữ liệu:", error);
+    }
+  };
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error("Lỗi trong khi refresh:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   useFocusEffect(
@@ -150,10 +170,13 @@ const DriverProfile = ({ route }) => {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
       >
         <TouchableOpacity
           style={styles.header}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate("DriverScreen")}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
           <Text style={styles.headerText}>Thông tin cá nhân</Text>

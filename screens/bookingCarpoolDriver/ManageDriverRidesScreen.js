@@ -103,7 +103,7 @@ export const ManageDriverRidesScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {rides.length === 0 ? (
-        <Text style={styles.noRidesText}>You have no rides at the moment.</Text>
+        <Text style={styles.noRidesText}>Bạn không có yêu cầu nào.</Text>
       ) : (
         <FlatList
           data={rides}

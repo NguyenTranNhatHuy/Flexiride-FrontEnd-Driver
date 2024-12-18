@@ -158,9 +158,7 @@ export const DriverAvailableRidesScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {rides.length === 0 ? (
-        <Text style={styles.noRidesText}>
-          No available rides at the moment.
-        </Text>
+        <Text style={styles.noRidesText}>Không có yêu cầu nào.</Text>
       ) : (
         <FlatList
           data={rides}
@@ -226,6 +224,12 @@ const styles = StyleSheet.create({
   leftSection: {
     flex: 7, // Chiếm 70% chiều rộng
     paddingRight: 10,
+  },
+  noRidesText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#999",
+    marginTop: 20,
   },
   rightSection: {
     flex: 3, // Chiếm 30% chiều rộng

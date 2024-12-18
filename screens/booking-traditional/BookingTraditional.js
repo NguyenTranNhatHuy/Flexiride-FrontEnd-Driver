@@ -420,7 +420,7 @@ const BookingTraditional = ({ navigation, route }) => {
     } else if (["picked up", "on trip", "completed"].includes(request.status)) {
       return `Điểm đến: ${destinationLocation.address}`;
     }
-    return "Không có thông tin địa chỉ";
+    return "Khách đã xuống xe và tiến hành thanh toán ";
   };
 
   const handleRelocate = () => {
@@ -483,18 +483,25 @@ const BookingTraditional = ({ navigation, route }) => {
 
     return () => clearInterval(intervalId); // Cleanup khi component unmount
   }, [currentLocation]);
-  useFocusEffect(
-    React.useCallback(() => {
-      // Kiểm tra nếu trạng thái là "dropped off" khi quay lại
-      if (request?.status === "dropped off") {
-        navigation.navigate("PaymentScreen", {
-          bookingDetails,
-          requestId: request._id,
-          customerName: customer?.name,
-        });
-      }
-    }, [request, navigation])
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     // Kiểm tra nếu trạng thái là "dropped off" khi quay lại
+  //     if (request.status === "dropped off") {
+  //       navigation.navigate("PaymentScreen", {
+  //         bookingDetails,
+  //         requestId: request._id,
+  //         customerName: customer?.name,
+  //       });
+  //     }
+  //   }, [request, navigation])
+  // );
+  const handleNavigateToPayment = () => {
+    navigation.navigate("PaymentScreen", {
+      bookingDetails,
+      requestId: request._id,
+      customerName: customer?.name,
+    });
+  };
   return (
     <View style={styles.container}>
       {currentLocation ? (
@@ -693,7 +700,9 @@ const BookingTraditional = ({ navigation, route }) => {
               ? `${Math.round(distance * 1000)} m` // Hiển thị bằng mét nếu nhỏ hơn 1 km
               : `${distance} km`}
           </Text>
-          <Text style={styles.durationText}>Thời gian: {duration} phút</Text>
+          <Text style={styles.durationText}>
+            Thời gian: {duration ? `${duration} phút` : "0 Phút"}
+          </Text>
         </View>
 
         <View style={styles.controlButtons}>
@@ -714,12 +723,21 @@ const BookingTraditional = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.controlButtons}>
-          {request && (
+          {request && request.status !== "dropped off" && (
             <TouchableOpacity
               style={styles.statusBtn}
               onPress={handleStatusUpdate}
             >
               <Text style={styles.statusText}>{getButtonLabel()}</Text>
+            </TouchableOpacity>
+          )}
+
+          {request?.status === "dropped off" && (
+            <TouchableOpacity
+              style={styles.paymentButton}
+              onPress={handleNavigateToPayment}
+            >
+              <Text style={styles.paymentButtonText}>Đi đến thanh toán</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -877,6 +895,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 5,
+  },
+  paymentButton: {
+    marginTop: 10,
+    backgroundColor: "#4CAF50",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  paymentButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
@@ -44,6 +45,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
       if (response.data) {
         setRequest(response.data);
+        console.log("🚀 ~ fetchRequestDetail ~ response.data:", response.data);
       } else {
         console.log("No request found for the given moment");
         Alert.alert(
@@ -178,31 +180,59 @@ const PaymentScreen = ({ route, navigation }) => {
         <Ionicons name="arrow-back" size={28} color="#fff" />
       </TouchableOpacity>
 
-      {/* Payment Details */}
-      <View style={styles.paymentContainer}>
-        <Text style={styles.header}>Thanh toán</Text>
-        <Text style={styles.customerName}>Khách hàng: {customerName}</Text>
-        <Text style={styles.amount}>{formatCurrency(calculateTotal())}</Text>
-        <Text style={styles.paymentStatus}>
-          {request?.payment_method === "cash"
-            ? "Tiền mặt"
-            : "Thanh toán online"}
-        </Text>
-      </View>
+      {/* Nội dung cuộn */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Payment Details */}
+        <View style={styles.paymentContainer}>
+          <Text style={styles.header}>Thanh toán</Text>
+          <Text style={styles.customerName}>Khách hàng: {customerName}</Text>
+          <Text style={styles.amount}>{formatCurrency(calculateTotal())}</Text>
+        </View>
 
-      {/* Conditional Buttons */}
-      {request?.payment_method === "cash" ? (
-        <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={handleConfirmPayment}
-        >
-          <Text style={styles.confirmButtonText}>Xác nhận thanh toán</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity style={styles.confirmButton} onPress={handlePayment}>
-          <Text style={styles.confirmButtonText}>Thanh toán qua PayOS</Text>
-        </TouchableOpacity>
-      )}
+        {/* Trip Details */}
+        <View style={styles.detailsContainer}>
+          <Text style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Điểm đón: </Text>
+            {request?.pickup}
+          </Text>
+          <Text style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Điểm đến: </Text>
+            {request?.destination}
+          </Text>
+          <Text style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Giá cước: </Text>
+            {formatCurrency(request?.price || 0)}
+          </Text>
+          <Text style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Phương thức thanh toán: </Text>
+            {request?.payment_method === "cash"
+              ? "Tiền mặt"
+              : "Thanh toán online"}
+          </Text>
+          <Text style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Thời gian đặt: </Text>
+            {moment(request?.moment_book)
+              .tz("Asia/Ho_Chi_Minh")
+              .format("HH:mm, DD-MM-YYYY")}
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* Nút xác nhận thanh toán */}
+      <TouchableOpacity
+        style={styles.confirmButton}
+        onPress={
+          request?.payment_method === "cash"
+            ? handleConfirmPayment
+            : handlePayment
+        }
+      >
+        <Text style={styles.confirmButtonText}>
+          {request?.payment_method === "cash"
+            ? "Xác nhận thanh toán"
+            : "Thanh toán qua PayOS"}
+        </Text>
+      </TouchableOpacity>
 
       {/* Modal */}
       <Modal
@@ -241,7 +271,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1E1E1E",
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 100, // Để trống phía dưới cho nút xác nhận
   },
   backButton: {
     position: "absolute",
@@ -257,8 +290,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 10,
-    marginTop: 80,
     textAlign: "center",
+    marginTop: 60, // Khoảng cách để không che nút Back
   },
   customerName: {
     fontSize: 16,
@@ -276,35 +309,20 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     marginBottom: 10,
   },
-  paymentStatus: {
-    fontSize: 14,
-    color: "#aaa",
-  },
-  feesContainer: {
+  detailsContainer: {
     backgroundColor: "#2E2E2E",
-    borderRadius: 10,
     padding: 15,
-    marginBottom: 20,
+    borderRadius: 10,
+    marginVertical: 20,
   },
-  feeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  feeLabel: {
+  detailRow: {
     fontSize: 16,
     color: "#fff",
-    flex: 1,
-    marginLeft: 10,
+    marginBottom: 10,
   },
-  feeInput: {
-    backgroundColor: "#444",
-    color: "#fff",
-    borderRadius: 5,
-    padding: 10,
-    width: 100,
-    textAlign: "right",
+  detailLabel: {
+    fontWeight: "bold",
+    color: "#FFC107",
   },
   confirmButton: {
     position: "absolute",

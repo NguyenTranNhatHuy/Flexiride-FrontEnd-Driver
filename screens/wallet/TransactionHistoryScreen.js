@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import axios from "axios";
 import { IP_ADDRESS } from "@env";
@@ -17,6 +18,8 @@ const TransactionHistoryScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedSection, setExpandedSection] = useState(null);
   const { authState } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingSection, setIsLoadingSection] = useState(null);
 
   const fetchTransactions = async () => {
     try {
@@ -111,10 +114,34 @@ const TransactionHistoryScreen = () => {
     );
   };
 
-  const toggleSection = (section) => {
-    setExpandedSection((prev) => (prev === section ? null : section));
+  const toggleSection = async (section) => {
+    if (expandedSection === section) {
+      // Đóng accordion nếu đang mở
+      setExpandedSection(null);
+      return;
+    }
+
+    setIsLoadingSection(section);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setExpandedSection(section);
+    } catch (error) {
+      console.error("Error while toggling section:", error);
+    } finally {
+      setIsLoadingSection(null);
+    }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([fetchTransactions()]);
+    } catch (error) {
+      console.error("Error during refresh:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -125,7 +152,12 @@ const TransactionHistoryScreen = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+      }
+    >
       <TouchableOpacity
         style={[
           styles.accordionHeader,
@@ -137,7 +169,15 @@ const TransactionHistoryScreen = () => {
         <Text style={styles.accordionCount}>
           {groupedTransactions.topups.length} giao dịch
         </Text>
+        {isLoadingSection === "TOPUP" && (
+          <ActivityIndicator
+            size="small"
+            color="#FFB400"
+            style={{ marginLeft: 10 }}
+          />
+        )}
       </TouchableOpacity>
+
       {expandedSection === "TOPUP" &&
         groupedTransactions.topups.map((item) => renderTransactionItem(item))}
 
@@ -152,7 +192,15 @@ const TransactionHistoryScreen = () => {
         <Text style={styles.accordionCount}>
           {groupedTransactions.withdraws.length} giao dịch
         </Text>
+        {isLoadingSection === "WITHDRAW" && (
+          <ActivityIndicator
+            size="small"
+            color="#FFB400"
+            style={{ marginLeft: 10 }}
+          />
+        )}
       </TouchableOpacity>
+
       {expandedSection === "WITHDRAW" &&
         groupedTransactions.withdraws.map((item) =>
           renderTransactionItem(item)

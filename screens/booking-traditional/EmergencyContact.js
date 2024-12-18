@@ -21,7 +21,6 @@ const EmergencyContactsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
 
   const { authState } = useAuth();
-  const driverId = "673170d4b61da1537e89b5af";
   useEffect(() => {
     console.log("token  : " + authState.user_id);
   }, []);
@@ -50,7 +49,7 @@ const EmergencyContactsScreen = ({ route, navigation }) => {
   const fetchEmergencyContact = async () => {
     try {
       const response = await axios.get(
-        `https://flexiride.onrender.com/driver/detail/${driverId}`
+        `https://flexiride.onrender.com/driver/detail/${authState.user_id}`
       );
       if (response.data && response.data.driver) {
         setEmergencyContact(response.data.driver.personalInfo.emergencyContact);
@@ -81,22 +80,6 @@ const EmergencyContactsScreen = ({ route, navigation }) => {
       });
   };
 
-  //   const handleText = (phoneNumber) => {
-  //     const url = `sms:${phoneNumber}`;
-
-  //     Linking.canOpenURL(url)
-  //       .then((supported) => {
-  //         if (!supported) {
-  //           Alert.alert("Lỗi", "Thiết bị không hỗ trợ gửi tin nhắn.");
-  //         } else {
-  //           return Linking.openURL(url);
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.error("Lỗi khi gửi tin nhắn:", err);
-  //         Alert.alert("Lỗi", `Không thể gửi tin nhắn. Chi tiết: ${err.message}`);
-  //       });
-  //   };
   const handleText = (phoneNumber) => {
     SendSMS.send(
       {
