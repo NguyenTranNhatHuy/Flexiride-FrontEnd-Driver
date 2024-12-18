@@ -84,6 +84,20 @@ const DriverScreen = ({ navigation }) => {
       }
     };
   }, [hasCanceledRide]);
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on("notification", (message) => {
+        Alert.alert(message.title, message.body);
+      });
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.off("notification");
+      }
+    };
+  }, []);
+
   // useEffect(() => {
   //   const clearAllStorage = async () => {
   //     try {
@@ -239,6 +253,19 @@ const DriverScreen = ({ navigation }) => {
         Alert.alert(
           "Lỗi",
           "Bạn phải chọn ít nhất một dịch vụ trước khi online."
+        );
+        return;
+      }
+      const responseDriverDetail = await axios.get(
+        `https://flexiride.onrender.com/driver/detail/${authState.userId}`
+      );
+      if (
+        !responseDriverDetail.data.driver.isActive ||
+        responseDriverDetail.data.driver.lockStatus
+      ) {
+        Alert.alert(
+          "Thông báo",
+          "Tài khoản của bạn đã bị khóa, vui lòng kiểm tra email và liên hệ admin để được giải quyết!"
         );
         return;
       }
