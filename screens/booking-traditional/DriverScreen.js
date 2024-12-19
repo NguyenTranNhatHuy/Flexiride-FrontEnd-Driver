@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  Image,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import io from "socket.io-client";
@@ -32,6 +33,15 @@ const DriverScreen = ({ navigation }) => {
   const [activeBooking, setActiveBooking] = useState(null);
   const [request, setRequest] = useState(null);
   const [hasCanceledRide, setHasCanceledRide] = useState(false);
+  const [driverInfo, setDriverInfo] = useState(false);
+  const [averageRate, setAverageRate] = useState(0);
+  const defaultLocation = {
+    latitude: 15.968937458815745,
+    longitude: 108.26089129515142,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+  const locationToUse = currentLocation || defaultLocation;
 
   const toggleEarningsPopup = () => {
     setIsEarningsVisible(!isEarningsVisible);
@@ -259,6 +269,10 @@ const DriverScreen = ({ navigation }) => {
       const responseDriverDetail = await axios.get(
         `https://flexiride.onrender.com/driver/detail/${authState.userId}`
       );
+      console.log(
+        "🚀 ~ handleGoOnline ~ responseDriverDetail:",
+        responseDriverDetail.data.driver.personalInfo.avatar
+      );
       if (
         !responseDriverDetail.data.driver.isActive ||
         responseDriverDetail.data.driver.lockStatus
@@ -360,10 +374,7 @@ const DriverScreen = ({ navigation }) => {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [
-                currentLocation.longitude,
-                currentLocation.latitude,
-              ],
+              coordinates: [locationToUse.longitude, locationToUse.latitude],
             },
             properties: {
               name: "Current Location",
@@ -406,10 +417,47 @@ const DriverScreen = ({ navigation }) => {
       }
     };
 
-    const intervalId = setInterval(updateDriverLocation, 10000); // Cập nhật mỗi 5 giây
+    const intervalId = setInterval(updateDriverLocation, 5000); // Cập nhật mỗi 5 giây
 
     return () => clearInterval(intervalId); // Cleanup khi component unmount
   }, [currentLocation]);
+
+  useEffect(() => {
+    const fetchDriverDetail = async () => {
+      try {
+        const response = await axios.get(
+          `https://flexiride.onrender.com/driver/detail/${authState.userId}`
+        );
+
+        if (response.data) {
+          setDriverInfo(response.data.driver.personalInfo);
+        } else {
+          Alert.alert("Lỗi", "Lỗi khi lấy thông tin tài xế.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin tài xế:", error);
+        Alert.alert("Lỗi", "Lỗi khi lấy thông tin tài xế.");
+      } finally {
+        // setLoading(false);
+      }
+    };
+    const fetchAverageRate = async () => {
+      try {
+        const response = await axios.get(
+          `https://flexiride.onrender.com/driver/${authState.userId}/average-rating`
+        );
+
+        if (response.data && response.data.averageRate) {
+          setAverageRate(response.data.averageRate.toFixed(1)); // Làm tròn đến 1 chữ số
+        }
+      } catch (error) {
+        console.error("Error fetching average rate:", error);
+        setAverageRate(0); // Nếu có lỗi, đặt giá trị mặc định
+      }
+    };
+    fetchDriverDetail();
+    fetchAverageRate();
+  }, [authState.userId]);
 
   return (
     <View style={styles.container}>
@@ -421,10 +469,7 @@ const DriverScreen = ({ navigation }) => {
           styleURL={`https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${VIETMAP_API_KEY}`}
         >
           <VietmapGL.Camera
-            centerCoordinate={[
-              currentLocation.longitude,
-              currentLocation.latitude,
-            ]}
+            centerCoordinate={[locationToUse.longitude, locationToUse.latitude]}
             zoomLevel={13}
           />
 
@@ -458,9 +503,17 @@ const DriverScreen = ({ navigation }) => {
         style={styles.profileButton}
         onPress={() => navigation.navigate("DriverProfile")}
       >
-        <Ionicons name="person-circle-outline" size={50} color="black" />
+        <Image
+          source={{
+            uri: driverInfo.avatar
+              ? driverInfo.avatar
+              : "https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg", // Ảnh mặc định
+          }}
+          style={styles.avatar}
+        />
+
         <View style={styles.ratingContainer}>
-          <Text style={styles.ratingText}>5.0</Text>
+          <Text style={styles.ratingText}>{averageRate}</Text>
         </View>
       </TouchableOpacity>
       <View style={styles.bottomLeftControls}>
@@ -720,8 +773,8 @@ const styles = StyleSheet.create({
   },
   ratingContainer: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: -10,
+    right: -10,
     backgroundColor: "#FFC107",
     borderRadius: 50,
     paddingHorizontal: 6,
@@ -982,6 +1035,12 @@ const styles = StyleSheet.create({
   rewardRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    marginLeft: 10,
   },
 });
 

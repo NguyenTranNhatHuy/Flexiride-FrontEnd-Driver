@@ -7,8 +7,15 @@ const useLocation = () => {
   const [locationStatus, setLocationStatus] = useState("Đang lấy vị trí...");
   const [error, setError] = useState(null);
   const watchID = useRef(null);
-
+  const defaultLocation = {
+    latitude: 15.968937458815745,
+    longitude: 108.26089129515142,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
   useEffect(() => {
+    setCurrentLocation(defaultLocation); // Gán vị trí mặc định
+
     const requestLocationPermission = async () => {
       if (Platform.OS === "android") {
         try {
@@ -59,7 +66,7 @@ const useLocation = () => {
         const { latitude, longitude, accuracy } = position.coords;
 
         if (accuracy > 50) {
-          console.warn("Vị trí không chính xác, độ chính xác > 50m");
+          // console.warn("Vị trí không chính xác, độ chính xác > 50m");
         }
 
         setCurrentLocation({
@@ -72,6 +79,9 @@ const useLocation = () => {
       },
       (error) => {
         // console.error("Lỗi lấy vị trí lần đầu:", error.message);
+        setCurrentLocation(defaultLocation); // Gán vị trí mặc định
+        console.log("Sử dụng vị trí mặc định:", defaultLocation);
+
         fallbackLowAccuracyLocation();
       },
       { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }

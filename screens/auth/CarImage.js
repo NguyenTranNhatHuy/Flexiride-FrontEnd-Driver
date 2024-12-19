@@ -82,10 +82,7 @@ const CarImage = ({ navigation }) => {
   // Function to handle saving data
   const handleSave = async () => {
     if (!frontImage || !backImage) {
-      Alert.alert(
-        "Thông báo",
-        "Bạn cần tải lên cả hình đầu xe và đuôi xe."
-      );
+      Alert.alert("Thông báo", "Bạn cần tải lên cả hình đầu xe và đuôi xe.");
       return;
     }
 
